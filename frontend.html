@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>iMate1 — Crypto Mining</title>
+<style>
+:root{--bg:#03070d;--panel:#07111c;--blue:#00a8ff;--green:#20e58b;--orange:#ff9d25;--text:#f4f8ff;--muted:#93a4b8;--danger:#ff5268}
+*{box-sizing:border-box}body{margin:0;background:#000;color:var(--text);font-family:Inter,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit}button{cursor:pointer}
+.app{width:min(100%,520px);min-height:100vh;margin:auto;background:radial-gradient(circle at 50% 25%,rgba(0,128,255,.11),transparent 35%),linear-gradient(180deg,#02060b,#06101a 55%,#02050a);position:relative;padding-bottom:86px}
+.demo{position:sticky;top:0;z-index:40;text-align:center;background:#251800;color:#ffd36a;font-size:11px;padding:7px;border-bottom:1px solid #654700}
+header{padding:18px 16px 10px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-weight:900;letter-spacing:1px;font-size:22px}.logo small{display:block;color:var(--blue);font-size:10px;letter-spacing:1.5px;margin-top:2px;font-weight:600}
+.icon{width:40px;height:40px;border:1px solid #17415e;border-radius:12px;background:#06111c;color:white;font-size:18px}
+.content{padding:0 14px}h2{font-size:18px;margin:16px 0 10px}.muted{color:var(--muted);font-size:13px;line-height:1.4}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:10px 0 14px}
+.stat,.card{background:linear-gradient(145deg,rgba(7,18,29,.98),rgba(3,9,16,.98));border:1px solid #0869a9;border-radius:16px;box-shadow:0 0 18px rgba(0,132,255,.10)}
+.stat{padding:13px}.stat span{font-size:11px;color:var(--muted)}.stat b{display:block;font-size:16px;margin-top:5px}
+.green{color:var(--green)}.orange{color:var(--orange)}.blue{color:#49bfff}
+.card{padding:14px;margin:10px 0}
+.machine-top{display:flex;gap:12px}
+.machine-img{width:38%;min-height:138px;border-radius:11px;background:linear-gradient(135deg,#111b25,#03070b);display:flex;align-items:center;justify-content:center;border:1px solid #17364d;position:relative}
+.machine-img:before{content:"";width:70px;height:96px;border-radius:8px;background:linear-gradient(90deg,#111,#394754 48%,#111);box-shadow:0 0 22px rgba(0,174,255,.25);border:1px solid #647382}
+.machine-img:after{content:attr(data-series);position:absolute;font-weight:900;font-size:32px;color:#19c8ff;text-shadow:0 0 15px #009cff}
+.machine-info{flex:1}.tag{display:inline-block;font-size:10px;padding:3px 7px;border-radius:999px;border:1px solid #126b9c;color:#56caff;margin-bottom:6px}
+.machine h3{font-size:15px;margin:2px 0 8px;color:#28baff}
+.row{display:flex;justify-content:space-between;gap:8px;margin:6px 0;font-size:12px}.row span:first-child{color:var(--muted)}
+.btn{width:100%;border:0;border-radius:11px;padding:13px 14px;font-weight:800;color:#fff;background:linear-gradient(90deg,#087be8,#16b7ff);box-shadow:0 0 14px rgba(0,149,255,.28);margin-top:10px;font-size:14px}
+.btn.secondary{background:#0b1723;border:1px solid #18506f;box-shadow:none}.btn.danger{background:#65182a}.btn:disabled{opacity:.55}
+.progress{height:7px;background:#0b1a28;border-radius:20px;overflow:hidden;margin:8px 0}.progress i{display:block;height:100%;background:linear-gradient(90deg,#007cff,#2ee2ff);border-radius:20px}
+.empty{text-align:center;padding:32px 10px;color:var(--muted);font-size:14px}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,520px);height:76px;background:rgba(2,7,13,.97);border-top:1px solid #12344a;display:grid;grid-template-columns:repeat(5,1fr);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+.nav{border:0;background:none;color:#73879b;font-size:10px}.nav b{display:block;font-size:20px;line-height:24px}.nav.active{color:#1ebcff}
+.page{display:none}.page.active{display:block}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:50;display:none;align-items:flex-end;justify-content:center}
+.modal.open{display:flex}.sheet{width:min(100%,520px);background:#07111c;border:1px solid #075d92;border-radius:22px 22px 0 0;padding:18px 16px 28px;max-height:92vh;overflow-y:auto}
+.field{margin:11px 0}.field label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-weight:600}
+.field input,.field select{width:100%;background:#030912;border:1px solid #18374e;color:#fff;border-radius:10px;padding:12px;outline:none}
+.close{float:right;background:none;border:0;color:#9fb2c6;font-size:24px;line-height:1}
+.notice{padding:11px;border-radius:12px;background:#071b2b;border:1px solid #114b70;color:#b8dfff;font-size:12px;margin:10px 0;line-height:1.45}
+.kpi{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #102638;font-size:13px;gap:10px}
+.badge{font-size:10px;padding:4px 7px;border-radius:8px;background:#062a20;color:#52e3a5;font-weight:700}
+.auth-screen{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px 18px 40px}
+.auth-logo{text-align:center;margin-bottom:28px}.auth-logo h1{margin:0;font-size:32px;letter-spacing:2px}.auth-logo p{color:var(--blue);font-size:12px;letter-spacing:2px;margin:6px 0 0}
+.tabs{display:flex;gap:8px;margin-bottom:18px}
+.tabs button{flex:1;padding:11px;border-radius:10px;border:1px solid #184a68;background:#06111c;color:var(--muted);font-weight:700}
+.tabs button.active{background:linear-gradient(90deg,#087be8,#16b7ff);color:#fff;border-color:transparent}
+.ref-box{background:#041018;border:1px dashed #1a5a7a;border-radius:12px;padding:12px;margin:12px 0;font-size:13px;word-break:break-all}
+.copy-btn{display:inline-block;margin-top:8px;padding:8px 14px;font-size:12px;border-radius:8px;border:1px solid #1a6a9a;background:#0a1f2e;color:#7fd4ff;font-weight:700}
+.admin-badge{display:inline-block;background:#3a1a00;color:#ffb84d;font-size:10px;padding:3px 8px;border-radius:6px;margin-left:6px;font-weight:700}
+.hidden{display:none!important}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#0d2a1a;border:1px solid #1a7a4a;color:#7dffb5;padding:10px 18px;border-radius:10px;font-size:13px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90%}
+.toast.show{opacity:1}
+.status-pending{color:#ffb84d}.status-approved{color:var(--green)}.status-rejected{color:var(--danger)}
+
+.machine-img.laptop-photo{background-color:#0a1520;background-size:cover;background-position:center}
+.machine-img.laptop-photo:before,.machine-img.laptop-photo:after{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="demo">DEMO / TEST MODE — Backend auth active • No real money processed</div>
+
+<!-- AUTH -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-logo"><h1>iMate1</h1><p>CRYPTO MINING</p></div>
+  <div class="tabs">
+    <button class="active" id="tabLogin" onclick="switchAuth('login')">LOG IN</button>
+    <button id="tabSignup" onclick="switchAuth('signup')">SIGN UP</button>
+  </div>
+  <div id="loginForm">
+    <div class="field"><label>EMAIL OR PHONE</label><input id="loginId" placeholder="email or +256..." autocomplete="username"></div>
+    <div class="field"><label>PASSWORD</label><input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn" id="btnLogin" onclick="doLogin()">LOG IN</button>
+    <p class="muted" style="text-align:center;margin-top:14px;font-size:12px">Secure login for registered members</p>
+  </div>
+  <div id="signupForm" class="hidden">
+    <div class="field"><label>FULL NAME</label><input id="suName" placeholder="Your legal name"></div>
+    <div class="field"><label>MOBILE NUMBER (+256)</label><input id="suPhone" placeholder="+256 7XX XXX XXX" inputmode="tel"></div>
+    <div class="field"><label>EMAIL</label><input id="suEmail" type="email" placeholder="you@example.com"></div>
+    <div class="field"><label>PASSWORD</label><input id="suPass" type="password" placeholder="Create a password"></div>
+    <div class="field"><label>GOVERNMENT ID TYPE</label><select id="suIdType"><option>National ID</option><option>Passport</option><option>Driving Licence</option></select></div>
+    <div class="field"><label>ID NUMBER (demo)</label><input id="suIdNum" placeholder="Enter ID number"></div>
+    <div class="field"><label>INVITATION CODE (optional)</label><input id="suInvite" placeholder="Friend's code" value="IMXT2Y0M8D"></div>
+    <div class="notice">Demo only. No real KYC documents are uploaded.</div>
+    <button class="btn" id="btnSignup" onclick="doSignup()">CREATE ACCOUNT</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="hidden">
+  <header>
+    <div class="logo">iMate1<small>CRYPTO MINING</small></div>
+    <button class="icon" onclick="openModal('accountModal')">☰</button>
+  </header>
+  <main class="content">
+    <section id="home" class="page active">
+      <div class="card" style="padding:16px">
+        <div class="muted">Welcome back, <span id="welcomeName">User</span></div>
+        <h2 style="margin:4px 0 12px">Mining Dashboard</h2>
+        <div class="stats">
+          <div class="stat"><span>Active Machines</span><b id="statMachines">0</b></div>
+          <div class="stat"><span>Total Invested</span><b id="statInvested">UGX 0</b></div>
+          <div class="stat"><span>Projected Earnings</span><b class="green" id="statEarnings">UGX 0</b></div>
+          <div class="stat"><span>Available Balance</span><b class="orange" id="statBalance">UGX 0</b></div>
+        </div>
+        <div class="notice">🎁 <b>5% Welcome Bonus</b> credited after your first successful machine purchase.</div>
+      </div>
+      <h2>Mining Machines</h2>
+      <div class="muted" style="margin-bottom:8px">20 weekday cycles • 25% daily • 5% withdrawal fee</div>
+      <div id="machineList"></div>
+    </section>
+
+    <section id="machines" class="page">
+      <h2>My Machines</h2>
+      <div class="muted">Your active 20-weekday mining cycles.</div>
+      <div id="myMachines"></div>
+    </section>
+
+    <section id="income" class="page">
+      <h2>Income & Withdrawals</h2>
+      <div class="card">
+        <div class="kpi"><span>Available balance</span><b class="orange" id="incomeBalance">UGX 0</b></div>
+        <div class="kpi"><span>Withdrawal fee</span><b>5%</b></div>
+        <div class="kpi"><span>Minimum deposit</span><b>UGX 3,000</b></div>
+        <button class="btn" onclick="openDepositModal()">DEPOSIT FUNDS</button>
+        <button class="btn secondary" onclick="openModal('withdrawModal')">REQUEST WITHDRAWAL</button>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 8px;font-size:15px">My Deposit Requests</h3>
+        <div id="myDeposits"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 8px;font-size:15px">My Withdrawal Requests</h3>
+        <div id="myWithdrawals"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 8px;font-size:15px">Transaction History</h3>
+        <div id="transactions"></div>
+      </div>
+    </section>
+
+    <section id="team" class="page">
+      <h2>Invite Friends</h2>
+      <div class="card">
+        <div class="muted">Share your code or link. Friends who register with it are linked to you.</div>
+        <div class="kpi" style="border:0;padding-top:14px"><span>Your Invitation Code</span><b id="myInviteCode" class="blue">—</b></div>
+        <div class="ref-box">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Invite link</div>
+          <span id="myInviteLink">—</span><br>
+          <button class="copy-btn" onclick="copyInvite()">COPY LINK</button>
+        </div>
+        <div class="kpi"><span>Successful referrals</span><b id="refCount">0</b></div>
+        <div class="kpi"><span>Referral rewards earned</span><b class="green" id="refEarnings">UGX 0</b></div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 8px;font-size:15px">Referral Payouts</h3>
+        <div class="muted" style="margin-bottom:8px">You earn <b>5%</b> of each referred member's first machine purchase.</div>
+        <div id="refPayouts"></div>
+      </div>
+    </section>
+
+    <section id="my" class="page">
+      <h2>My Account</h2>
+      <div class="card">
+        <div class="kpi"><span>Name</span><b id="profileName">—</b></div>
+        <div class="kpi"><span>Phone</span><b id="profilePhone">—</b></div>
+        <div class="kpi"><span>Email</span><b id="profileEmail">—</b></div>
+        <div class="kpi"><span>KYC</span><b class="badge">VERIFIED DEMO</b></div>
+        <div class="kpi hidden" id="adminRow"><span>Role</span><b>ADMIN <span class="admin-badge">OWNER</span></b></div>
+        <a id="adminLink" class="btn secondary hidden" href="/admin" style="display:block;text-align:center;text-decoration:none;margin-top:10px">OPEN ADMIN DASHBOARD</a>
+      </div>
+      <div class="card">
+        <button class="btn secondary" onclick="logout()">LOG OUT</button>
+      </div>
+    </section>
+  </main>
+  <nav class="bottom">
+    <button class="nav active" data-page="home"><b>⌂</b>Home</button>
+    <button class="nav" data-page="machines"><b>⛏</b>Machines</button>
+    <button class="nav" data-page="income"><b>₿</b>Income</button>
+    <button class="nav" data-page="team"><b>👥</b>Team</button>
+    <button class="nav" data-page="my"><b>♙</b>My</button>
+  </nav>
+</div>
+</div>
+
+<!-- MODALS -->
+<div class="modal" id="accountModal" onclick="if(event.target===this)closeModal('accountModal')">
+  <div class="sheet">
+    <button class="close" onclick="closeModal('accountModal')">×</button>
+    <h2 style="margin-top:0">Menu</h2>
+    <button class="btn secondary" onclick="closeModal('accountModal');goPage('team')">Invite Friends</button>
+    <button class="btn secondary" onclick="closeModal('accountModal');openModal('depositModal')">How to Deposit</button>
+    <button class="btn danger" style="margin-top:8px" onclick="logout()">Log Out</button>
+  </div>
+</div>
+
+<div class="modal" id="buyModal" onclick="if(event.target===this)closeModal('buyModal')">
+  <div class="sheet">
+    <button class="close" onclick="closeModal('buyModal')">×</button>
+    <h2 id="buyTitle" style="margin-top:0">Purchase</h2>
+    <div id="buyDetails"></div>
+    <div class="notice">Demo purchase — no real payment is taken.</div>
+    <button class="btn" id="btnBuy" onclick="confirmPurchase()">CONFIRM DEMO PURCHASE</button>
+    <button class="btn secondary" onclick="closeModal('buyModal')">CANCEL</button>
+  </div>
+</div>
+
+<div class="modal" id="depositModal" onclick="if(event.target===this)closeModal('depositModal')">
+  <div class="sheet">
+    <button class="close" onclick="closeModal('depositModal')">×</button>
+    <h2 style="margin-top:0">How to Deposit</h2>
+    <div class="notice">Send the exact amount using official channels only. Admin personal details are never shown to members.</div>
+    <div class="card">
+      <div style="font-size:12px;color:var(--muted)">Official Mobile Money (demo)</div>
+      <div style="font-weight:700;margin-top:4px">iMate1 Collections</div>
+      <div class="muted" style="margin-top:4px">Details appear only after you start a purchase.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:12px;color:var(--muted)">Official USDT (TRC20)</div>
+      <div style="font-weight:700;margin-top:4px">Network: TRC20 only</div>
+      <div class="muted" style="margin-top:4px">Address shown only after purchase initiation.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="withdrawModal" onclick="if(event.target===this)closeModal('withdrawModal')">
+  <div class="sheet">
+    <button class="close" onclick="closeModal('withdrawModal')">×</button>
+    <h2 style="margin-top:0">Withdrawal</h2>
+    <div class="field"><label>AMOUNT (UGX)</label><input id="withdrawAmount" type="number" min="1" placeholder="10000" inputmode="numeric"></div>
+    <div id="withdrawCalc" class="notice">Enter amount to calculate 5% fee.</div>
+    <button class="btn" id="btnWithdraw" onclick="doWithdraw()">SUBMIT FOR ADMIN REVIEW</button>
+  </div>
+</div>
+
+
+<div class="modal" id="depositFundsModal" onclick="if(event.target===this)closeModal('depositFundsModal')">
+  <div class="sheet">
+    <button class="close" onclick="closeModal('depositFundsModal')">×</button>
+    <h2 style="margin-top:0">Deposit Funds</h2>
+    <div class="notice">Minimum deposit: <b>UGX 3,000</b>. Send to the official channel, then submit.</div>
+    <div class="field"><label>AMOUNT (UGX)</label><input id="depositAmount" type="number" min="3000" placeholder="3000" inputmode="numeric"></div>
+    <div class="field"><label>PAYMENT METHOD</label>
+      <select id="depositMethod" onchange="updateDepositChannels()">
+        <option value="mm">Mobile Money (UGX)</option>
+        <option value="usdt">USDT TRC20 (USD)</option>
+      </select>
+    </div>
+    <div id="depositChannels" class="card" style="margin:10px 0"></div>
+    <div class="field"><label>TRANSACTION REFERENCE (optional)</label><input id="depositRef" placeholder="MM confirmation or TxID"></div>
+    <button class="btn" id="btnDeposit" onclick="submitDeposit()">SUBMIT DEPOSIT REQUEST</button>
+    <button class="btn secondary" onclick="closeModal('depositFundsModal')">CANCEL</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = location.origin;
+let token = localStorage.getItem('imate1_token') || '';
+let user = null;
+let machines = [];
+let selectedMachine = null;
+
+const money = n => 'UGX ' + Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800)}
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+
+async function api(path, opts={}){
+  const headers = {'Content-Type':'application/json'};
+  if(token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + path, {...opts, headers});
+  const data = await res.json().catch(()=>({}));
+  if(res.status === 401){ logout(); throw new Error('Session expired'); }
+  if(!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function switchAuth(mode){
+  document.getElementById('tabLogin').classList.toggle('active', mode==='login');
+  document.getElementById('tabSignup').classList.toggle('active', mode==='signup');
+  document.getElementById('loginForm').classList.toggle('hidden', mode!=='login');
+  document.getElementById('signupForm').classList.toggle('hidden', mode!=='signup');
+}
+
+function showApp(loggedIn){
+  document.getElementById('authScreen').classList.toggle('hidden', loggedIn);
+  document.getElementById('mainApp').classList.toggle('hidden', !loggedIn);
+}
+
+async function doLogin(){
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true;
+  try{
+    const data = await api('/api/login', {
+      method:'POST',
+      body: JSON.stringify({
+        identifier: document.getElementById('loginId').value.trim(),
+        password: document.getElementById('loginPass').value
+      })
+    });
+    token = data.token;
+    user = data.user;
+    localStorage.setItem('imate1_token', token);
+    showApp(true);
+    render();
+    toast('Welcome, ' + user.name.split(' ')[0]);
+  }catch(e){ alert(e.message); }
+  finally{ btn.disabled = false; }
+}
+
+async function doSignup(){
+  const btn = document.getElementById('btnSignup');
+  btn.disabled = true;
+  try{
+    const data = await api('/api/register', {
+      method:'POST',
+      body: JSON.stringify({
+        name: document.getElementById('suName').value.trim(),
+        phone: document.getElementById('suPhone').value.trim(),
+        email: document.getElementById('suEmail').value.trim(),
+        password: document.getElementById('suPass').value,
+        id_type: document.getElementById('suIdType').value,
+        id_num: document.getElementById('suIdNum').value.trim(),
+        invite_code: document.getElementById('suInvite').value.trim()
+      })
+    });
+    token = data.token;
+    user = data.user;
+    localStorage.setItem('imate1_token', token);
+    showApp(true);
+    render();
+    toast('Account created');
+  }catch(e){ alert(e.message); }
+  finally{ btn.disabled = false; }
+}
+
+function logout(){
+  token = '';
+  user = null;
+  localStorage.removeItem('imate1_token');
+  showApp(false);
+}
+
+document.querySelectorAll('.nav[data-page]').forEach(btn=>{
+  btn.onclick = ()=>{
+    document.querySelectorAll('.nav').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+    document.getElementById(btn.dataset.page).classList.add('active');
+    render();
+  };
+});
+function goPage(p){
+  document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active', x.dataset.page===p));
+  document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active', x.id===p));
+}
+
+function businessDaysElapsed(start){
+  let d=new Date(start), now=new Date(), count=0;
+  d.setHours(0,0,0,0); now.setHours(0,0,0,0);
+  while(d<now){ d.setDate(d.getDate()+1); if(d.getDay()!==0&&d.getDay()!==6) count++; }
+  return Math.min(count,20);
+}
+function businessDaysFrom(start, count){
+  let d=new Date(start), added=0;
+  while(added<count){ d.setDate(d.getDate()+1); if(d.getDay()!==0&&d.getDay()!==6) added++; }
+  return d;
+}
+
+function machineCard(m){
+  const rank = m.id===10?'FLAGSHIP':m.id>=7?'PREMIUM':m.id>=4?'STANDARD':'STARTER';
+  const photo = m.photo || '';
+  return `<div class="card machine">
+    <div class="machine-top">
+      <div class="machine-img laptop-photo" style="background-image:url('${photo}');background-size:cover;background-position:center;"></div>
+      <div class="machine-info">
+        <span class="tag">${rank}</span>
+        <h3>${m.name}</h3>
+        <div class="row"><span>Price</span><b>${money(m.price)}</b></div>
+        <div class="row"><span>Daily projected</span><b class="green">${money(m.daily)}</b></div>
+        <div class="row"><span>Cycle</span><b>20 weekdays</b></div>
+        <div class="row"><span>Total projected</span><b>${money(m.daily*20)}</b></div>
+      </div>
+    </div>
+    <button class="btn" onclick="selectMachine(${m.id})">VIEW & BUY</button>
+  </div>`;
+}
+
+function selectMachine(id){
+  selectedMachine = machines.find(x=>x.id===id);
+  document.getElementById('buyTitle').textContent = selectedMachine.name;
+  document.getElementById('buyDetails').innerHTML = `
+    <div class="card" style="margin:0">
+      <div class="kpi"><span>Purchase price</span><b>${money(selectedMachine.price)}</b></div>
+      <div class="kpi"><span>Daily projected</span><b class="green">${money(selectedMachine.daily)}</b></div>
+      <div class="kpi"><span>20-weekday total</span><b>${money(selectedMachine.daily*20)}</b></div>
+      <div class="kpi"><span>Welcome bonus</span><b>${user.bonus_claimed?'Already credited':'5% after this purchase'}</b></div>
+    </div>`;
+  openModal('buyModal');
+}
+
+async function confirmPurchase(){
+  if(!selectedMachine) return;
+  const btn = document.getElementById('btnBuy');
+  btn.disabled = true;
+  try{
+    const data = await api('/api/purchase', {
+      method:'POST',
+      body: JSON.stringify({machine_id: selectedMachine.id})
+    });
+    user = data.user;
+    closeModal('buyModal');
+    render();
+    toast('Purchase confirmed');
+    setTimeout(()=>openModal('depositModal'), 500);
+  }catch(e){ alert(e.message); }
+  finally{ btn.disabled = false; }
+}
+
+async function doWithdraw(){
+  const amount = Number(document.getElementById('withdrawAmount').value||0);
+  const btn = document.getElementById('btnWithdraw');
+  btn.disabled = true;
+  try{
+    const data = await api('/api/withdraw', {
+      method:'POST',
+      body: JSON.stringify({amount})
+    });
+    user = data.user;
+    closeModal('withdrawModal');
+    render();
+    toast('Withdrawal submitted for admin review');
+  }catch(e){ alert(e.message); }
+  finally{ btn.disabled = false; }
+}
+
+document.getElementById('withdrawAmount').addEventListener('input', e=>{
+  const a=Number(e.target.value||0), fee=a*0.05, net=a-fee;
+  document.getElementById('withdrawCalc').innerHTML =
+    `Requested: <b>${money(a)}</b><br>5% fee: <b>${money(fee)}</b><br>Net: <b class="green">${money(net)}</b>`;
+});
+
+
+const DEPOSIT_MM = '0780509960';
+const DEPOSIT_USDT = 'TLvT3czNGgpPH3oXURZFtyd4XTQUL2NhGy';
+function updateDepositChannels(){
+  const method = document.getElementById('depositMethod').value;
+  const el = document.getElementById('depositChannels');
+  if(method === 'mm'){
+    el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:6px">Send UGX via Mobile Money to</div>
+      <div style="font-weight:800;font-size:18px;letter-spacing:1px">${DEPOSIT_MM}</div>
+      <div class="muted" style="margin-top:6px">MTN / Airtel • UGX only</div>
+      <button class="copy-btn" type="button" onclick="navigator.clipboard.writeText('${DEPOSIT_MM}').then(()=>toast('Number copied'))">COPY NUMBER</button>`;
+  } else {
+    el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:6px">Send USDT on TRC20 only to</div>
+      <div style="font-weight:700;font-size:13px;word-break:break-all">${DEPOSIT_USDT}</div>
+      <div class="muted" style="margin-top:6px">TRC20 only — other networks will be lost</div>
+      <button class="copy-btn" type="button" onclick="navigator.clipboard.writeText('${DEPOSIT_USDT}').then(()=>toast('Address copied'))">COPY ADDRESS</button>`;
+  }
+}
+function openDepositModal(){
+  document.getElementById('depositAmount').value = '';
+  document.getElementById('depositRef').value = '';
+  document.getElementById('depositMethod').value = 'mm';
+  updateDepositChannels();
+  openModal('depositFundsModal');
+}
+async function submitDeposit(){
+  const amount = Number(document.getElementById('depositAmount').value||0);
+  const method = document.getElementById('depositMethod').value;
+  const reference = document.getElementById('depositRef').value.trim();
+  if(amount < 3000){ alert('Minimum deposit is UGX 3,000'); return; }
+  const btn = document.getElementById('btnDeposit');
+  btn.disabled = true;
+  try{
+    const data = await api('/api/deposit', {
+      method:'POST',
+      body: JSON.stringify({amount, method, reference})
+    });
+    user = data.user;
+    closeModal('depositFundsModal');
+    render();
+    toast('Deposit request submitted — send funds to the shown channel');
+  }catch(e){ alert(e.message); }
+  finally{ btn.disabled = false; }
+}
+
+function copyInvite(){
+  const link = document.getElementById('myInviteLink').textContent;
+  navigator.clipboard.writeText(link).then(()=>toast('Copied')).catch(()=>prompt('Copy:', link));
+}
+
+async function render(){
+  if(!user) return;
+  document.getElementById('machineList').innerHTML = machines.map(machineCard).join('');
+
+  // My machines
+  const el = document.getElementById('myMachines');
+  if(!user.machines || !user.machines.length){
+    el.innerHTML = '<div class="empty">No machines yet. Buy one from Home.</div>';
+  } else {
+    el.innerHTML = user.machines.map(x=>{
+      const done = businessDaysElapsed(x.start);
+      const pct = done/20*100;
+      const maturity = businessDaysFrom(x.start, 20);
+      const projected = Math.min(done,20)*x.daily;
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h3 style="margin:0;color:#24baff;font-size:15px">${x.name}</h3>
+          <span class="badge">${done>=20?'MATURED':'ACTIVE'}</span>
+        </div>
+        <div class="row"><span>Purchase</span><b>${money(x.price)}</b></div>
+        <div class="row"><span>Projected earned</span><b class="green">${money(projected)}</b></div>
+        <div class="row"><span>Progress</span><b>${done}/20 weekdays</b></div>
+        <div class="progress"><i style="width:${pct}%"></i></div>
+        <div class="row"><span>Maturity</span><b>${maturity.toLocaleDateString()}</b></div>
+      </div>`;
+    }).join('');
+  }
+
+  // Transactions
+  const txEl = document.getElementById('transactions');
+  if(!user.transactions || !user.transactions.length){
+    txEl.innerHTML = '<div class="empty">No transactions yet.</div>';
+  } else {
+    txEl.innerHTML = user.transactions.map(t=>`
+      <div class="kpi"><span>${t.type}<small style="display:block;color:#687e92;font-size:11px">${t.date}</small></span>
+      <b class="${t.amount>=0?'green':''}">${t.amount>=0?'+':''}${money(t.amount)}</b></div>`).join('');
+  }
+
+  // My withdrawals
+  try{
+    const wd = await api('/api/withdrawals/mine');
+    const wEl = document.getElementById('myWithdrawals');
+    if(!wd.withdrawals.length){
+      wEl.innerHTML = '<div class="empty">No withdrawal requests.</div>';
+    } else {
+      wEl.innerHTML = wd.withdrawals.map(w=>`
+        <div class="kpi">
+          <span>${money(w.amount)} <small style="display:block;color:#687e92">${new Date(w.created_at).toLocaleString()}</small></span>
+          <b class="status-${w.status}">${w.status.toUpperCase()}</b>
+        </div>`).join('');
+    }
+  }catch(e){}
+
+  const invested = (user.machines||[]).reduce((s,x)=>s+x.price,0);
+  const projected = (user.machines||[]).reduce((s,x)=>s+x.daily*20,0);
+  document.getElementById('statMachines').textContent = (user.machines||[]).length;
+  document.getElementById('statInvested').textContent = money(invested);
+  document.getElementById('statEarnings').textContent = money(projected);
+  document.getElementById('statBalance').textContent = money(user.balance);
+  document.getElementById('incomeBalance').textContent = money(user.balance);
+  document.getElementById('welcomeName').textContent = user.name.split(' ')[0];
+  document.getElementById('profileName').textContent = user.name;
+  document.getElementById('profilePhone').textContent = user.phone;
+  document.getElementById('profileEmail').textContent = user.email;
+  document.getElementById('adminRow').classList.toggle('hidden', !user.is_admin);
+  document.getElementById('adminLink').classList.toggle('hidden', !user.is_admin);
+  document.getElementById('myInviteCode').textContent = user.invite_code;
+  document.getElementById('myInviteLink').textContent = location.origin + '/?ref=' + user.invite_code;
+  
+  document.getElementById('refCount').textContent = user.referral_count || 0;
+  const depEl = document.getElementById('myDeposits');
+  if(depEl){
+    const deps = user.deposits || [];
+    if(!deps.length) depEl.innerHTML = '<div class="empty">No deposits yet. Minimum UGX 3,000.</div>';
+    else depEl.innerHTML = deps.map(d => `<div class="kpi"><span>${d.method}<small style="display:block;color:#687e92;font-size:11px">${d.date||d.created_at||''} · Ref: ${d.reference||'—'}</small></span><b class="${d.status==='confirmed'?'green':'orange'}">${money(d.amount)} · ${d.status}</b></div>`).join('');
+  }
+  document.getElementById('refEarnings').textContent = money(user.referral_earnings || 0);
+  const payEl = document.getElementById('refPayouts');
+  const payouts = user.referral_payouts || [];
+  if(!payouts.length){
+    payEl.innerHTML = '<div class="empty">No referral payouts yet.</div>';
+  } else {
+    payEl.innerHTML = payouts.map(p => `
+      <div class="kpi">
+        <span>${p.from}<small style="display:block;color:#687e92;font-size:11px">${p.machine} · ${p.date}</small></span>
+        <b class="green">+${money(p.amount)}</b>
+      </div>`).join('');
+  }
+}
+
+async function init(){
+  try{
+    const m = await api('/api/machines');
+    machines = (m.machines||[]).slice().sort((a,b)=>b.price-a.price);
+  }catch(e){ console.error(e); }
+
+  const params = new URLSearchParams(location.search);
+  if(params.get('ref')){
+    document.getElementById('suInvite').value = params.get('ref').toUpperCase();
+    switchAuth('signup');
+  }
+
+  if(token){
+    try{
+      const data = await api('/api/me');
+      user = data.user;
+      showApp(true);
+      render();
+    }catch(e){ logout(); }
+  } else {
+    showApp(false);
+  }
+}
+init();
+</script>
+</body>
+</html>
