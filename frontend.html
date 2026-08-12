@@ -8,14 +8,22 @@
 :root{--bg:#03070d;--panel:#07111c;--blue:#00a8ff;--green:#20e58b;--orange:#ff9d25;--text:#f4f8ff;--muted:#93a4b8;--danger:#ff5268}
 *{box-sizing:border-box}body{margin:0;background:#000;color:var(--text);font-family:Inter,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
 button,input,select{font:inherit}button{cursor:pointer}
-.app{width:min(100%,520px);min-height:100vh;margin:auto;background:radial-gradient(circle at 50% 25%,rgba(0,128,255,.11),transparent 35%),linear-gradient(180deg,#02060b,#06101a 55%,#02050a);position:relative;padding-bottom:86px}
+.app{
+  position:relative;
+  z-index:1;
+  width:min(100%,520px);
+  min-height:100vh;
+  margin:auto;
+  background:transparent;
+  padding-bottom:90px;
+}
 .demo{position:sticky;top:0;z-index:40;text-align:center;background:#251800;color:#ffd36a;font-size:11px;padding:7px;border-bottom:1px solid #654700}
 header{padding:18px 16px 10px;display:flex;align-items:center;justify-content:space-between}
 .logo{font-weight:900;letter-spacing:1px;font-size:22px}.logo small{display:block;color:var(--blue);font-size:10px;letter-spacing:1.5px;margin-top:2px;font-weight:600}
 .icon{width:40px;height:40px;border:1px solid #17415e;border-radius:12px;background:#06111c;color:white;font-size:18px}
-.content{padding:0 14px}h2{font-size:18px;margin:16px 0 10px}.muted{color:var(--muted);font-size:13px;line-height:1.4}
+.content{padding:0 14px;background:transparent;position:relative;z-index:1}h2{font-size:18px;margin:16px 0 10px}.muted{color:var(--muted);font-size:13px;line-height:1.4}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:10px 0 14px}
-.stat,.card{background:linear-gradient(145deg,rgba(7,18,29,.98),rgba(3,9,16,.98));border:1px solid #0869a9;border-radius:16px;box-shadow:0 0 18px rgba(0,132,255,.10)}
+.stat,.card{background:linear-gradient(145deg,rgba(7,18,29,.78),rgba(3,9,16,.72));border:1px solid #0869a9;border-radius:16px;box-shadow:0 0 18px rgba(0,132,255,.10)}
 .stat{padding:13px}.stat span{font-size:11px;color:var(--muted)}.stat b{display:block;font-size:16px;margin-top:5px}
 .green{color:var(--green)}.orange{color:var(--orange)}.blue{color:#49bfff}
 .card{padding:14px;margin:10px 0}
@@ -30,9 +38,9 @@ header{padding:18px 16px 10px;display:flex;align-items:center;justify-content:sp
 .btn.secondary{background:#0b1723;border:1px solid #18506f;box-shadow:none}.btn.danger{background:#65182a}.btn:disabled{opacity:.55}
 .progress{height:7px;background:#0b1a28;border-radius:20px;overflow:hidden;margin:8px 0}.progress i{display:block;height:100%;background:linear-gradient(90deg,#007cff,#2ee2ff);border-radius:20px}
 .empty{text-align:center;padding:32px 10px;color:var(--muted);font-size:14px}
-.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,520px);height:76px;background:rgba(2,7,13,.97);border-top:1px solid #12344a;display:grid;grid-template-columns:repeat(5,1fr);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,520px);height:76px;background:rgba(2,7,13,.88);border-top:1px solid #12344a;display:grid;grid-template-columns:repeat(5,1fr);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
 .nav{border:0;background:none;color:#73879b;font-size:10px}.nav b{display:block;font-size:20px;line-height:24px}.nav.active{color:#1ebcff}
-.page{display:none}.page.active{display:block}
+.page{display:none;background:transparent}.page.active{display:block;background:transparent}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:50;display:none;align-items:flex-end;justify-content:center}
 .modal.open{display:flex}.sheet{width:min(100%,520px);background:#07111c;border:1px solid #075d92;border-radius:22px 22px 0 0;padding:18px 16px 28px;max-height:92vh;overflow-y:auto}
 .field{margin:11px 0}.field label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-weight:600}
@@ -41,7 +49,7 @@ header{padding:18px 16px 10px;display:flex;align-items:center;justify-content:sp
 .notice{padding:11px;border-radius:12px;background:#071b2b;border:1px solid #114b70;color:#b8dfff;font-size:12px;margin:10px 0;line-height:1.45}
 .kpi{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #102638;font-size:13px;gap:10px}
 .badge{font-size:10px;padding:4px 7px;border-radius:8px;background:#062a20;color:#52e3a5;font-weight:700}
-.auth-screen{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px 18px 40px}
+.auth-screen{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px 18px 40px;position:relative;z-index:1}
 .auth-logo{text-align:center;margin-bottom:28px}.auth-logo h1{margin:0;font-size:32px;letter-spacing:2px}.auth-logo p{color:var(--blue);font-size:12px;letter-spacing:2px;margin:6px 0 0}
 .tabs{display:flex;gap:8px;margin-bottom:18px}
 .tabs button{flex:1;padding:11px;border-radius:10px;border:1px solid #184a68;background:#06111c;color:var(--muted);font-weight:700}
@@ -56,9 +64,280 @@ header{padding:18px 16px 10px;display:flex;align-items:center;justify-content:sp
 
 .machine-img.laptop-photo{background-color:#0a1520;background-size:cover;background-position:center}
 .machine-img.laptop-photo:before,.machine-img.laptop-photo:after{display:none!important}
+
+/* Animated space wallpaper */
+body{
+  margin:0;
+  background:#000;
+  color:var(--text);
+  font-family:Inter,system-ui,-apple-system,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  overflow-x:hidden;
+}
+.space-bg{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  overflow:hidden;
+  background:#02010a;
+}
+#mainApp, #authScreen, .page, .content, header {
+  background: transparent !important;
+}
+
+.space-bg .warp-img{
+  position:absolute;inset:-15%;
+  background:url("/static/space-wallpaper.jpg") center center / cover no-repeat;
+  animation: warpZoom 14s linear infinite;
+  opacity:0.75; filter:saturate(1.2) brightness(0.9);
+}
+.space-bg .warp{
+  position:absolute;
+  inset:-20%;
+  background:
+    radial-gradient(ellipse at center, transparent 0%, #02010a 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Ccircle cx='1' cy='1' r='0.5' fill='%23fff' opacity='0.8'/%3E%3C/svg%3E");
+  background-size: cover, 3px 3px;
+  animation: warpZoom 12s linear infinite;
+  opacity:0.9;
+}
+.space-bg .warp2{
+  position:absolute;
+  inset:-30%;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, #fff, transparent),
+    radial-gradient(1px 1px at 30% 60%, #aaf, transparent),
+    radial-gradient(1.5px 1.5px at 50% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 70% 80%, #ccf, transparent),
+    radial-gradient(1px 1px at 90% 40%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 15% 70%, #8cf, transparent),
+    radial-gradient(1px 1px at 45% 90%, #fff, transparent),
+    radial-gradient(1px 1px at 65% 15%, #aef, transparent),
+    radial-gradient(2px 2px at 80% 55%, #fff, transparent),
+    radial-gradient(1px 1px at 25% 45%, #def, transparent);
+  background-size: 200% 200%;
+  animation: starStreak 8s linear infinite;
+  opacity:0.85;
+}
+.space-bg .glow{
+  position:absolute;
+  inset:0;
+  background:radial-gradient(circle at 50% 50%, rgba(80,40,160,0.35) 0%, transparent 55%),
+             radial-gradient(circle at 50% 50%, rgba(20,60,180,0.25) 0%, transparent 70%);
+  animation: pulseGlow 6s ease-in-out infinite alternate;
+}
+@keyframes warpZoom{
+  0%{ transform: scale(1) translateZ(0); opacity:0.7; }
+  100%{ transform: scale(1.35) translateZ(0); opacity:1; }
+}
+@keyframes starStreak{
+  0%{ transform: scale(1); background-position: 50% 50%; }
+  100%{ transform: scale(1.6); background-position: 50% 50%; }
+}
+@keyframes pulseGlow{
+  0%{ opacity:0.6; }
+  100%{ opacity:1; }
+}
+.app{
+  position:relative;
+  z-index:1;
+  width:min(100%,520px);
+  min-height:100vh;
+  margin:auto;
+  background:rgba(2,6,11,0.55);
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+  padding-bottom:90px;
+}
+
+
+/* HUT8-style particle wave background */
+.space-bg{
+  position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;
+  background:#000;
+}
+#particleCanvas{
+  position:absolute; inset:0; width:100%; height:100%; display:block;
+}
+#mainApp, #authScreen, .page, .content, header {
+  background: transparent !important;
+}
+.app{
+  position:relative; z-index:1;
+  width:min(100%,520px); min-height:100vh; margin:auto;
+  background:transparent; padding-bottom:90px;
+}
+.wallet-bar{
+  display:flex; align-items:center; justify-content:space-between;
+  background:rgba(0,20,40,0.55); border:1px solid rgba(0,180,255,0.35);
+  border-radius:16px; padding:14px 16px; margin:10px 0 14px;
+  box-shadow:0 0 20px rgba(0,150,255,0.12);
+}
+.wallet-bar .side span{display:block;font-size:11px;color:#7eb8d8}
+.wallet-bar .side b{font-size:20px;color:#fff}
+.wallet-bar .side b.green{color:#2ee6a8}
+.wallet-bar .arrow{color:#1ebcff;font-size:14px}
+.menu-wrap{
+  background:rgba(0,25,50,0.45); border:1.5px solid rgba(0,170,255,0.45);
+  border-radius:18px; padding:14px 10px; margin-bottom:14px;
+  box-shadow:0 0 24px rgba(0,140,255,0.15);
+}
+.menu-grid{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:12px 6px;
+}
+.menu-item{
+  background:none; border:0; color:#c8e8ff; font-size:11px;
+  display:flex; flex-direction:column; align-items:center; gap:6px; padding:4px;
+}
+.menu-item .ico{
+  width:48px; height:48px; border-radius:14px;
+  background:linear-gradient(145deg,#0a8fff,#1ec8ff);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 14px rgba(0,160,255,0.4);
+}
+.menu-item .ico svg{width:24px;height:24px}
+.stat, .card, .product-card, .kpi{
+  background:rgba(0,20,40,0.55) !important;
+  border:1px solid rgba(0,170,255,0.35) !important;
+  box-shadow:0 0 16px rgba(0,140,255,0.1);
+}
+.bottom{
+  background:rgba(0,8,18,0.92) !important;
+  border-top:1px solid rgba(0,140,255,0.25) !important;
+}
+.nav.active{color:#1ebcff !important}
+.btn{
+  background:linear-gradient(90deg,#0088ee,#00c6ff) !important;
+  box-shadow:0 0 16px rgba(0,160,255,0.35) !important;
+}
+.demo{
+  background:rgba(20,10,0,0.85); color:#ffd36a;
+}
+.sheet{
+  background:rgba(5,15,28,0.95) !important;
+  border-color:rgba(0,150,255,0.4) !important;
+}
+
+
+/* ===== LIVE SPACE WALLPAPER (always behind all pages) ===== */
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: #000 !important;
+}
+.space-bg {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  background: #02010a !important;
+}
+.space-bg .warp-img {
+  position: absolute;
+  inset: -25%;
+  background: url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1600&q=80") center center / cover no-repeat;
+  animation: spaceZoom 18s linear infinite;
+  opacity: 0.85;
+  filter: saturate(1.3) brightness(0.85) contrast(1.1);
+}
+.space-bg .warp-stars {
+  position: absolute;
+  inset: -40%;
+  background-image:
+    radial-gradient(1.5px 1.5px at 8% 12%, #fff, transparent),
+    radial-gradient(1px 1px at 22% 48%, #a8d8ff, transparent),
+    radial-gradient(2px 2px at 38% 22%, #fff, transparent),
+    radial-gradient(1px 1px at 55% 70%, #cde, transparent),
+    radial-gradient(1.5px 1.5px at 70% 35%, #fff, transparent),
+    radial-gradient(1px 1px at 85% 60%, #9cf, transparent),
+    radial-gradient(2px 2px at 12% 80%, #fff, transparent),
+    radial-gradient(1px 1px at 48% 8%, #def, transparent),
+    radial-gradient(1px 1px at 92% 18%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 65% 88%, #bdf, transparent),
+    radial-gradient(1px 1px at 30% 92%, #fff, transparent),
+    radial-gradient(1px 1px at 78% 78%, #ace, transparent);
+  background-size: 100% 100%;
+  animation: spaceStreak 10s linear infinite;
+  opacity: 0.9;
+}
+#particleCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0.7;
+}
+.space-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 20%, rgba(0,0,15,0.55) 100%),
+    linear-gradient(180deg, rgba(10,20,60,0.25), transparent 40%, rgba(0,0,20,0.4));
+  animation: spacePulse 7s ease-in-out infinite alternate;
+}
+@keyframes spaceZoom {
+  0%   { transform: scale(1) translate(0,0); }
+  50%  { transform: scale(1.25) translate(-2%, 1%); }
+  100% { transform: scale(1.45) translate(0,0); }
+}
+@keyframes spaceStreak {
+  0%   { transform: scale(1) rotate(0deg); opacity: 0.6; }
+  100% { transform: scale(1.8) rotate(2deg); opacity: 1; }
+}
+@keyframes spacePulse {
+  0%   { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* App chrome transparent so wallpaper shows on Home / Machines / Income / My */
+.app,
+#mainApp,
+#authScreen,
+.page,
+.page.active,
+.content,
+header,
+main {
+  background: transparent !important;
+  position: relative;
+  z-index: 1;
+}
+.app {
+  width: min(100%, 520px);
+  min-height: 100vh;
+  margin: auto;
+  padding-bottom: 90px;
+}
+/* Semi-transparent cards so stars remain visible behind UI */
+.stat, .card, .product-card, .kpi, .wallet-bar, .menu-wrap, .stat-box {
+  background: rgba(0, 18, 36, 0.58) !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.bottom {
+  background: rgba(0, 8, 18, 0.88) !important;
+  z-index: 30;
+}
+.auth-screen {
+  background: transparent !important;
+}
+.auth-logo, .tabs, .field input, .field select {
+  position: relative;
+  z-index: 2;
+}
+
 </style>
 </head>
 <body>
+<div class="space-bg" aria-hidden="true"><canvas id="particleCanvas"></canvas></div>
+  <div class="warp"></div>
+  <div class="warp2"></div>
+  <div class="glow"></div>
+</div>
+
 <div class="app">
 <div class="demo">DEMO / TEST MODE — Backend auth active • No real money processed</div>
 
@@ -609,6 +888,67 @@ async function init(){
   }
 }
 init();
+
+/* ===== Moving starfield (behind all tabs) ===== */
+(function initSpaceParticles(){
+  var canvas = document.getElementById("particleCanvas");
+  if(!canvas) return;
+  var ctx = canvas.getContext("2d");
+  var stars = [];
+  var w = 0, h = 0;
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  function spawn(){
+    stars = [];
+    var n = Math.min(120, Math.floor((w*h)/9000));
+    for(var i=0;i<n;i++){
+      stars.push({
+        x: Math.random()*w - w/2,
+        y: Math.random()*h - h/2,
+        z: Math.random()*w,
+        pz: 0
+      });
+    }
+  }
+  function tick(){
+    if(!ctx) return;
+    ctx.fillStyle = "rgba(2,1,10,0.35)";
+    ctx.fillRect(0,0,w,h);
+    var cx = w/2, cy = h/2;
+    for(var i=0;i<stars.length;i++){
+      var s = stars[i];
+      s.pz = s.z;
+      s.z -= 12;
+      if(s.z <= 0){
+        s.x = Math.random()*w - w/2;
+        s.y = Math.random()*h - h/2;
+        s.z = w;
+        s.pz = s.z;
+      }
+      var k = 128 / s.z;
+      var px = s.x * k + cx;
+      var py = s.y * k + cy;
+      var pk = 128 / s.pz;
+      var ppx = s.x * pk + cx;
+      var ppy = s.y * pk + cy;
+      var size = (1 - s.z/w) * 2.2;
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(180,220,255," + (0.4 + (1-s.z/w)*0.6) + ")";
+      ctx.lineWidth = size;
+      ctx.moveTo(ppx, ppy);
+      ctx.lineTo(px, py);
+      ctx.stroke();
+    }
+    requestAnimationFrame(tick);
+  }
+  resize();
+  spawn();
+  tick();
+  window.addEventListener("resize", function(){ resize(); spawn(); });
+})();
+
 </script>
 </body>
 </html>
