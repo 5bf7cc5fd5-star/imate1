@@ -462,7 +462,7 @@ def seed_admin():
             "email": ADMIN_EMAIL,
             "password_hash": hash_password(ADMIN_PASSWORD),
             "id_type": "National ID",
-            "id_num": "ADMIN-DEMO",
+            "id_num": "ADMIN",
             "invite_code": "IMXT2Y0M8D",
             "referred_by": None,
             "balance": 0,
@@ -575,7 +575,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(404, {"error": "Not found"})
 
         if path == "/api/health":
-            return self._json(200, {"ok": True, "service": "iMate1", "mode": "DEMO"})
+            return self._json(200, {"ok": True, "service": "iMate1", "mode": "live"})
 
         if path == "/api/machines":
             return self._json(200, {"machines": MACHINES_SORTED if "MACHINES_SORTED" in dir() else sorted(MACHINES, key=lambda m: m["price"], reverse=True)})
@@ -1140,7 +1140,7 @@ if __name__ == "__main__":
     seed_admin()
     print(f"""
 ╔══════════════════════════════════════════════╗
-║           iMate1 Backend (DEMO)              ║
+║           iMate1 Backend              ║
 ╠══════════════════════════════════════════════╣
 ║  App:    http://localhost:{PORT}/               ║
 ║  Admin:  http://localhost:{PORT}/admin          ║
