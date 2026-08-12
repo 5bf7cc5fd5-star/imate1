@@ -10,6 +10,7 @@ iMate1 Backend
 """
 
 import json
+import secrets
 import os
 import hmac
 import hashlib
@@ -33,6 +34,7 @@ DATA_DIR = Path(__file__).parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 USERS_FILE = DATA_DIR / "users.json"
 WITHDRAWALS_FILE = DATA_DIR / "withdrawals.json"
+OTPS_FILE = DATA_DIR / "otps.json"
 
 ADMIN_EMAIL = "k_hmed@yahoo.com"
 ADMIN_PHONE = "+256780509960"
@@ -462,6 +464,97 @@ def gen_invite_code():
     return "IM" + "".join(random.choices(chars, k=6))
 
 
+
+
+def _load_otps():
+    try:
+        if OTPS_FILE.exists():
+            data = json.loads(OTPS_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, list):
+                return data
+    except Exception:
+        pass
+    return []
+
+def _save_otps(items):
+    OTPS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    OTPS_FILE.write_text(json.dumps(items, indent=2), encoding="utf-8")
+
+def purge_expired_otps():
+    now = time.time()
+    items = [o for o in _load_otps() if float(o.get("exp", 0)) > now]
+    _save_otps(items)
+    return items
+
+def create_email_otp(email, purpose="signup", ttl_seconds=180):
+    """Always 6 digits, stored max 3 minutes."""
+    email = (email or "").strip().lower()
+    ttl_seconds = max(60, min(180, int(ttl_seconds or 180)))
+    # cryptographically stronger random 6-digit
+    code = f"{secrets.randbelow(1000000):06d}"
+    now = time.time()
+    items = purge_expired_otps()
+    # remove existing for same email+purpose
+    items = [o for o in items if not (o.get("email") == email and o.get("purpose") == purpose)]
+    rec = {
+        "email": email,
+        "code": code,
+        "purpose": purpose,
+        "created": now,
+        "exp": now + ttl_seconds,
+        "ttl_seconds": ttl_seconds,
+    }
+    items.append(rec)
+    _save_otps(items)
+    return rec
+
+def verify_email_otp(email, code, purpose="signup"):
+    email = (email or "").strip().lower()
+    code = (code or "").strip()
+    if not re.fullmatch(r"\d{6}", code or ""):
+        return False, "OTP must be exactly 6 digits"
+    items = purge_expired_otps()
+    for o in items:
+        if o.get("email") == email and o.get("purpose") == purpose and str(o.get("code")) == code:
+            # one-time: remove
+            items = [x for x in items if x is not o]
+            _save_otps(items)
+            return True, "ok"
+    return False, "Invalid or expired OTP (valid 3 minutes only)"
+
+
+def send_otp_email(to_email, code, purpose="signup", ttl_seconds=180):
+    """Send OTP via SMTP if configured. Returns (ok, message)."""
+    host = os.environ.get("SMTP_HOST", "").strip()
+    user = os.environ.get("SMTP_USER", "").strip()
+    password = os.environ.get("SMTP_PASS", "").strip()
+    mail_from = os.environ.get("SMTP_FROM", user).strip()
+    port = int(os.environ.get("SMTP_PORT", "587") or 587)
+    if not host or not user or not password:
+        return False, "SMTP not configured"
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        mins = max(1, int(ttl_seconds) // 60)
+        body = (
+            f"Your iMate1 verification code is: {code}\n\n"
+            f"Purpose: {purpose}\n"
+            f"This code expires in {mins} minute(s) (maximum 3 minutes).\n"
+            f"If you did not request this, ignore this email.\n"
+        )
+        msg = MIMEText(body)
+        msg["Subject"] = f"iMate1 OTP: {code}"
+        msg["From"] = mail_from or user
+        msg["To"] = to_email
+        with smtplib.SMTP(host, port, timeout=20) as smtp:
+            smtp.starttls()
+            smtp.login(user, password)
+            smtp.sendmail(msg["From"], [to_email], msg.as_string())
+        return True, "sent"
+    except Exception as e:
+        return False, str(e)
+
+
 def seed_admin():
     users = get_users()
     if not any(u["email"] == ADMIN_EMAIL for u in users):
@@ -650,6 +743,38 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         body = self._read_json()
 
+        if path == "/api/otp/send":
+            email = (body.get("email") or "").strip().lower()
+            purpose = (body.get("purpose") or "signup").strip()
+            try:
+                ttl = int(body.get("ttl_seconds") or 180)
+            except Exception:
+                ttl = 180
+            ttl = max(60, min(180, ttl))  # max 3 minutes
+            if not email or "@" not in email:
+                return self._json(400, {"ok": False, "error": "valid email required"})
+            rec = create_email_otp(email, purpose, ttl)
+            ok, msg = send_otp_email(email, rec["code"], purpose, ttl)
+            # Never return the code in production responses when email sent;
+            # include only when SMTP missing so ops can test.
+            resp = {
+                "ok": True,
+                "email_sent": ok,
+                "message": msg if ok else "OTP stored 3 minutes; email not sent (configure SMTP)",
+                "ttl_seconds": ttl,
+                "digits": 6,
+            }
+            if not ok:
+                resp["debug_code"] = rec["code"]
+            return self._json(200, resp)
+        if path == "/api/otp/verify":
+            email = (body.get("email") or "").strip().lower()
+            code = (body.get("code") or "").strip()
+            purpose = (body.get("purpose") or "signup").strip()
+            ok, msg = verify_email_otp(email, code, purpose)
+            if not ok:
+                return self._json(400, {"ok": False, "error": msg})
+            return self._json(200, {"ok": True, "message": "verified"})
         if path == "/api/momo/webhook":
             return self._momo_webhook(body)
         if path == "/api/register":

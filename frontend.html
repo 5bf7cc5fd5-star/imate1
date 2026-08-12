@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <title>iMate1</title>
+<!-- NO_OTP_BUILD:2026-08-12 -->
 <!-- IMATE1_BUILD:2026-08-12-training-v12 -->
 <style>
 :root{--bg:#03070d;--blue:#00a8ff;--green:#20e58b;--orange:#ff9d25;--text:#f4f8ff;--muted:#93a4b8}
@@ -482,8 +483,6 @@ main {
 }
 
 
-.otp-box{display:flex;gap:8px;align-items:center}
-.otp-box input{flex:1}
 .user-admin-row{border-bottom:1px solid #12344a;padding:10px 0;font-size:12px}
 .user-admin-row b{color:#7ec8ff}
 .warn-sec{background:#3a1a00;border:1px solid #8a5000;color:#ffc870;padding:10px;border-radius:10px;font-size:11px;margin:8px 0;line-height:1.4}
@@ -547,20 +546,6 @@ main {
     <div class="field"><label>EMAIL</label><input id="suEmail" type="email"></div>
     <div class="field"><label>PASSWORD</label><input id="suPass" type="password"></div>
     <div class="field"><label>INVITATION CODE</label><input id="suInvite" value="IMXT2Y0M8D"></div>
-    <div class="field"><label>VERIFY WITH</label>
-      <select id="suOtpMethod" onchange="onOtpMethodChange()">
-        <option value="email">Email OTP (free)</option>
-        <option value="phone">Phone SMS OTP (customer pays SMS fee)</option>
-      </select>
-    </div>
-    <div class="notice" id="otpFeeNote" class="hidden" style="display:none">Phone OTP: SMS fee <b>UGX 200</b> is charged to the customer (deducted after first deposit or paid at signup if balance allows).</div>
-    <div class="field"><label>OTP CODE</label>
-      <div class="otp-box">
-        <input id="suOtp" placeholder="6-digit code" inputmode="numeric" maxlength="6">
-        <button type="button" class="btn secondary" style="margin:0;width:auto;padding:12px 14px;white-space:nowrap" onclick="sendSignupOtp()">SEND OTP</button>
-      </div>
-    </div>
-    <p class="muted" id="otpStatus" style="font-size:11px;margin:4px 0 10px"></p>
     <button type="button" class="btn" onclick="doSignup()">CREATE ACCOUNT</button>
   </div>
 </div>
@@ -568,7 +553,7 @@ main {
 <div id="mainApp" class="hidden">
   <header>
     <div class="logo">iMate1<small>CRYPTO MINING</small> <span id="adminBadgeHdr" class="admin-badge hidden">ADMIN</span></div>
-    <button type="button" class="icon-btn" onclick="openModal('accountModal')">&#9776;</button>
+    <button type="button" class="icon-btn" onclick="openSettings()">&#9776;</button>
   </header>
   <main class="content">
     
@@ -610,7 +595,7 @@ main {
             <ol>
               <li>Tap <span class="hi">Sign Up</span> and enter your name, phone, email & password.</li>
               <li>Use invitation code <span class="hi">IMXT2Y0M8D</span> (or your friend’s code).</li>
-              <li>Verify with <span class="hi">OTP</span> on email or phone, then create your account.</li>
+              <li>Create your account and log in.</li>
             </ol>
 
             <h4>2) Fund your wallet</h4>
@@ -748,7 +733,7 @@ main {
           <div class="ico"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg></div>
           <span>Manager</span>
         </button>
-        <button type="button" class="menu-item" onclick="openModal('accountModal')">
+        <button type="button" class="menu-item" onclick="openSettings()">
           <div class="ico"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
           <span>Settings</span>
         </button>
@@ -779,8 +764,38 @@ main {
 
 <div class="modal" id="accountModal" onclick="if(event.target===this)closeModal('accountModal')"><div class="sheet">
   <button type="button" class="close" onclick="closeModal('accountModal')">×</button>
-  <h2 style="margin-top:0">Menu</h2>
-  <button type="button" class="btn secondary" onclick="closeModal('accountModal');goPage('team')">Invite</button>
+  <h2 style="margin-top:0">Settings</h2>
+  <p class="muted" style="margin-top:0">Manage security, payout accounts, and login password.</p>
+
+  <div class="card" style="margin:10px 0">
+    <h3 style="margin:0 0 8px;font-size:14px">Withdraw fund password</h3>
+    <div class="muted" style="font-size:11px;margin-bottom:8px">Required when requesting a withdrawal.</div>
+    <div class="field"><label>WITHDRAW PASSWORD</label><input id="setWdPass" type="password" placeholder="Create or update"></div>
+    <div class="field"><label>CONFIRM WITHDRAW PASSWORD</label><input id="setWdPass2" type="password" placeholder="Confirm"></div>
+    <button type="button" class="btn" onclick="saveWithdrawPassword()">SAVE WITHDRAW PASSWORD</button>
+  </div>
+
+  <div class="card" style="margin:10px 0">
+    <h3 style="margin:0 0 8px;font-size:14px">Payout accounts</h3>
+    <div class="field"><label>BANK NAME / ACCOUNT NAME</label><input id="setBankName" placeholder="Bank or account name"></div>
+    <div class="field"><label>BANK ACCOUNT NUMBER</label><input id="setBankNumber" placeholder="Account number"></div>
+    <div class="field"><label>MTN UGANDA (MOBILE MONEY)</label><input id="setMtn" placeholder="07xxxxxxxx" inputmode="tel"></div>
+    <div class="field"><label>AIRTEL MONEY</label><input id="setAirtel" placeholder="07xxxxxxxx" inputmode="tel"></div>
+    <div class="field"><label>BINANCE / USDT TRC20 WALLET</label><input id="setTrc20" placeholder="T..." style="font-size:12px"></div>
+    <button type="button" class="btn" onclick="savePayoutAccounts()">SAVE PAYOUT DETAILS</button>
+  </div>
+
+  <div class="card" style="margin:10px 0">
+    <h3 style="margin:0 0 8px;font-size:14px">Reset login password</h3>
+    <div class="field"><label>CURRENT PASSWORD</label><input id="setCurPass" type="password" placeholder="Current password"></div>
+    <div class="field"><label>NEW PASSWORD</label><input id="setNewPass" type="password" placeholder="New password"></div>
+    <div class="field"><label>CONFIRM NEW PASSWORD</label><input id="setNewPass2" type="password" placeholder="Confirm new password"></div>
+    <button type="button" class="btn" onclick="changeLoginPassword()">UPDATE LOGIN PASSWORD</button>
+    <p class="muted" style="margin-top:10px;font-size:11px">If current password is wrong, contact support.</p>
+    <button type="button" class="btn secondary" onclick="closeModal('accountModal');openChat()">CONTACT SUPPORT</button>
+  </div>
+
+  <button type="button" class="btn secondary" onclick="closeModal('accountModal');goPage('team')">Invite friends</button>
   <button type="button" class="btn secondary" onclick="closeModal('accountModal');openDepositModal()">Deposit</button>
   <button type="button" class="btn danger" style="margin-top:8px" onclick="logout()">Log Out</button>
 </div></div>
@@ -1061,47 +1076,12 @@ function switchAuth(mode){
 }
 
 
-var pendingSignupOtp = null;
-var OTP_SMS_FEE = 200;
-var resetTokenPending = null;
 
-function onOtpMethodChange(){
-  var m = document.getElementById("suOtpMethod");
-  var note = document.getElementById("otpFeeNote");
-  if(!m||!note) return;
-  note.style.display = m.value === "phone" ? "block" : "none";
-}
 
-function sendSignupOtp(){
-  var method = (document.getElementById("suOtpMethod")||{}).value || "email";
-  var email = (document.getElementById("suEmail")||{}).value || "";
-  var phone = (document.getElementById("suPhone")||{}).value || "";
-  var status = document.getElementById("otpStatus");
-  if(method === "email"){
-    if(!email || email.indexOf("@") < 0){ alert("Enter a valid email first"); return; }
-  } else {
-    var dig = normalizePhone(phone);
-    if(!dig || dig.length < 10){ alert("Enter a valid phone first"); return; }
-  }
-  var code = String(Math.floor(100000 + Math.random()*900000));
-  pendingSignupOtp = {
-    code: code,
-    method: method,
-    email: email.trim().toLowerCase(),
-    phone: phone.trim(),
-    fee: method === "phone" ? OTP_SMS_FEE : 0,
-    exp: Date.now() + 10*60*1000
-  };
-  /* Demo / until SMTP or SMS API is connected: show code to complete signup */
-  if(status){
-    if(method === "email"){
-      status.innerHTML = "OTP generated for <b>"+email+"</b>. Email gateway not connected yet — use code: <b style=\"color:#20e58b\">"+code+"</b> (valid 10 min).";
-    } else {
-      status.innerHTML = "SMS OTP for <b>"+phone+"</b> · Fee <b>UGX "+OTP_SMS_FEE+"</b> will apply. SMS gateway not connected yet — use code: <b style=\"color:#20e58b\">"+code+"</b>.";
-    }
-  }
-  toast("OTP ready");
-}
+
+
+
+
 
 function openForgotPassword(){
   openModal("forgotModal");
@@ -1237,21 +1217,8 @@ if(_rst){ resetTokenPending = _rst; setTimeout(function(){ openModal("resetModal
 }
 
 function doSignup(){
-  if(!pendingSignupOtp || !pendingSignupOtp.code){
-    alert("Send and enter OTP first");
-    return;
-  }
-  if(Date.now() > (pendingSignupOtp.exp||0)){
-    alert("OTP expired — send a new one");
-    return;
-  }
-  var otpIn = (document.getElementById("suOtp")||{}).value || "";
-  if(String(otpIn).trim() !== String(pendingSignupOtp.code)){
-    alert("Wrong OTP code");
-    return;
-  }
 
-  ensureState();
+ensureState();
   var name=(document.getElementById("suName").value||"").trim();
   var phone=(document.getElementById("suPhone").value||"").trim();
   var email=(document.getElementById("suEmail").value||"").trim().toLowerCase();
@@ -1267,7 +1234,7 @@ function doSignup(){
   }
   var nu={ id:"u_"+Date.now(), name:name, phone:phone, email:email, password:pass, inviteCode:genCode(),
     referredBy:referredBy, balance:0, machines:[], transactions:[], bonus:false,
-    referralEarnings:0, referralPayouts:[], deposits:[], chats:[], withdrawals:[], pendingWithdraw:0, isAdmin:false, otpFeeDue: (pendingSignupOtp&&pendingSignupOtp.fee)||0, otpMethod: (pendingSignupOtp&&pendingSignupOtp.method)||"email" };
+    referralEarnings:0, referralPayouts:[], deposits:[], chats:[], withdrawals:[], pendingWithdraw:0, isAdmin:false };
   state.users.push(nu); state.currentUserId=nu.id; save(); showApp(); toast("Account created");
 }
 
@@ -1810,6 +1777,70 @@ function confirmDepositDemo(depId){
 }
 
 /* ===== WITHDRAW ===== */
+
+function fillSettingsForm(){
+  var user = currentUser(); if(!user) return;
+  var p = user.payout || {};
+  var el;
+  el = document.getElementById("setBankName"); if(el) el.value = p.bankName || "";
+  el = document.getElementById("setBankNumber"); if(el) el.value = p.bankNumber || "";
+  el = document.getElementById("setMtn"); if(el) el.value = p.mtn || "";
+  el = document.getElementById("setAirtel"); if(el) el.value = p.airtel || "";
+  el = document.getElementById("setTrc20"); if(el) el.value = p.trc20 || "";
+  el = document.getElementById("setWdPass"); if(el) el.value = "";
+  el = document.getElementById("setWdPass2"); if(el) el.value = "";
+  el = document.getElementById("setCurPass"); if(el) el.value = "";
+  el = document.getElementById("setNewPass"); if(el) el.value = "";
+  el = document.getElementById("setNewPass2"); if(el) el.value = "";
+}
+function openSettings(){
+  fillSettingsForm();
+  openModal("accountModal");
+}
+function saveWithdrawPassword(){
+  var user = currentUser(); if(!user) return;
+  var p1 = (document.getElementById("setWdPass")||{}).value || "";
+  var p2 = (document.getElementById("setWdPass2")||{}).value || "";
+  if(p1.length < 4){ alert("Withdraw password must be at least 4 characters"); return; }
+  if(p1 !== p2){ alert("Withdraw passwords do not match"); return; }
+  user.withdrawPassword = p1;
+  save();
+  toast("Withdraw password saved");
+  document.getElementById("setWdPass").value = "";
+  document.getElementById("setWdPass2").value = "";
+}
+function savePayoutAccounts(){
+  var user = currentUser(); if(!user) return;
+  user.payout = {
+    bankName: ((document.getElementById("setBankName")||{}).value || "").trim(),
+    bankNumber: ((document.getElementById("setBankNumber")||{}).value || "").trim(),
+    mtn: ((document.getElementById("setMtn")||{}).value || "").trim(),
+    airtel: ((document.getElementById("setAirtel")||{}).value || "").trim(),
+    trc20: ((document.getElementById("setTrc20")||{}).value || "").trim()
+  };
+  save();
+  toast("Payout details saved");
+}
+function changeLoginPassword(){
+  var user = currentUser(); if(!user) return;
+  var cur = (document.getElementById("setCurPass")||{}).value || "";
+  var n1 = (document.getElementById("setNewPass")||{}).value || "";
+  var n2 = (document.getElementById("setNewPass2")||{}).value || "";
+  if(!cur){ alert("Enter your current password"); return; }
+  if(String(user.password||"") !== String(cur)){
+    alert("Current password is wrong.\\n\\nYou can contact support for help resetting your account.");
+    return;
+  }
+  if(n1.length < 4){ alert("New password must be at least 4 characters"); return; }
+  if(n1 !== n2){ alert("New passwords do not match"); return; }
+  user.password = n1;
+  save();
+  toast("Login password updated");
+  document.getElementById("setCurPass").value = "";
+  document.getElementById("setNewPass").value = "";
+  document.getElementById("setNewPass2").value = "";
+}
+
 function openWithdraw(){
   var user=currentUser(); if(!user) return;
   var bals=calcBalances(user);
@@ -1819,6 +1850,17 @@ function openWithdraw(){
   openModal("withdrawModal");
 }
 function doWithdraw(){
+  var user = currentUser(); if(!user) return;
+  if(user.withdrawPassword){
+    var wp = prompt("Enter your withdraw fund password:");
+    if(wp === null) return;
+    if(String(wp) !== String(user.withdrawPassword)){ alert("Wrong withdraw password"); return; }
+  } else {
+    alert("Please set a Withdraw fund password in Settings first.");
+    openSettings();
+    return;
+  }
+
   var user=currentUser(); if(!user) return;
   var bals=calcBalances(user);
   var amount=Number(document.getElementById("withdrawAmount").value||0);
