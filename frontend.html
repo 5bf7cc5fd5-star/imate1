@@ -1751,6 +1751,7 @@ body.ucl-on .space-bg { opacity: 0.05; }
         <h3 style="margin:0 0 8px;color:#ffb84d">Admin Dashboard</h3>
         <div class="muted" style="margin-bottom:10px">Full admin: deposits & withdrawals. Support staff: customer password help only.</div>
         <button type="button" class="btn" onclick="goPage('income')">OPEN APPROVALS (Income)</button>
+        <div id="adminPendingDepositsHome" style="margin-top:12px"></div>
         <a class="btn secondary" style="display:block;text-align:center;text-decoration:none;margin-top:8px" href="/admin" target="_blank">OPEN /admin PANEL</a>
         <div class="muted" style="margin-top:8px;font-size:11px">Login: k_hmed@yahoo.com</div>
         <div class="warn-sec">Security note: passwords are stored for admin support on this build. Hash passwords before scaling publicly.</div>
@@ -1862,6 +1863,13 @@ body.ucl-on .space-bg { opacity: 0.05; }
         <h3 style="margin:0 0 8px;font-size:15px">My club shares</h3>
         <div id="myMachines"></div>
       </div>
+      
+      <div class="card" id="adminApprovalsCard" style="display:none;border-color:#ff9d25">
+        <h3 style="margin:0 0 8px;color:#ffb84d">Admin — Pending approvals</h3>
+        <p class="muted" style="font-size:12px;margin:0 0 10px">Customer deposits waiting for your confirmation (Transaction ID).</p>
+        <div id="adminPendingDeposits"><div class="muted">Loading…</div></div>
+      </div>
+
       <div class="card">
         <h3 style="margin:0 0 8px;font-size:15px">Deposits & Withdrawals</h3>
         <div class="muted" style="margin-bottom:8px"></div>
@@ -3663,6 +3671,130 @@ function autoVerifyDeposit(user, dep){
 function creditDepositLocal(user, dep, note){
   /* Only admin confirmDepositDemo may credit */
   return;
+}
+
+
+function listAllPendingDeposits(){
+  ensureState();
+  var rows = [];
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u || u.isAdmin || u.isSupport) continue;
+    var deps = u.deposits || [];
+    for(var j=0;j<deps.length;j++){
+      var d = deps[j];
+      if(!d) continue;
+      var st = String(d.status||"").toLowerCase();
+      if(st === "pending" || st === "submitted" || st === "awaiting" || st === ""){
+        rows.push({ user: u, dep: d });
+      }
+    }
+  }
+  // newest first
+  rows.sort(function(a,b){
+    return String(b.dep.date||b.dep.created_at||"").localeCompare(String(a.dep.date||a.dep.created_at||""));
+  });
+  return rows;
+}
+
+function renderAdminPendingDeposits(){
+  var user = currentUser();
+  var card = document.getElementById("adminApprovalsCard");
+  var box = document.getElementById("adminPendingDeposits");
+  var boxHome = document.getElementById("adminPendingDepositsHome");
+  if(!user || !user.isAdmin){
+    if(card) card.style.display = "none";
+    if(boxHome) boxHome.innerHTML = "";
+    return;
+  }
+  if(card) card.style.display = "block";
+  var rows = listAllPendingDeposits();
+  var html = "";
+  if(!rows.length){
+    html = '<div class="empty">No pending deposits right now.</div>';
+  } else {
+    for(var i=0;i<rows.length;i++){
+      var u = rows[i].user;
+      var d = rows[i].dep;
+      var amt = Number(d.amount||0);
+      var tx = d.reference || d.provider_ref || d.txId || d.txid || "—";
+      var when = d.date || d.created_at || "—";
+      var method = d.method || d.network || "—";
+      var sender = d.sender || "—";
+      html += '<div class="notice" style="margin-bottom:10px">'+
+        '<div><b>'+(u.name||"Member")+'</b> · '+(u.phone||"")+'</div>'+
+        '<div class="muted" style="font-size:11px">'+(u.email||"")+'</div>'+
+        '<div style="margin-top:6px">Amount: <b class="green">'+money(amt)+'</b></div>'+
+        '<div>Method: <b>'+method+'</b></div>'+
+        '<div>Sender: <b>'+sender+'</b></div>'+
+        '<div>Tx ID: <b class="blue" style="word-break:break-all">'+tx+'</b></div>'+
+        '<div class="muted" style="font-size:11px">'+when+'</div>'+
+        '<div style="display:flex;gap:8px;margin-top:8px">'+
+          '<button type="button" class="btn" style="flex:1;margin:0" onclick="adminApproveDeposit(\''+u.id+'\',\''+d.id+'\')">APPROVE</button>'+
+          '<button type="button" class="btn secondary" style="flex:1;margin:0" onclick="adminRejectDeposit(\''+u.id+'\',\''+d.id+'\')">REJECT</button>'+
+        '</div></div>';
+    }
+  }
+  if(box) box.innerHTML = html;
+  if(boxHome) boxHome.innerHTML = '<div style="font-size:12px;color:#ffb84d;margin-bottom:6px">Pending deposits: <b>'+rows.length+'</b></div>' + html;
+}
+
+function adminApproveDeposit(userId, depId){
+  var me = currentUser();
+  if(!me || !me.isAdmin){ alert("Admin only"); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u || u.id !== userId) continue;
+    var deps = u.deposits || [];
+    for(var j=0;j<deps.length;j++){
+      if(deps[j].id === depId){
+        var d = deps[j];
+        if(String(d.status).toLowerCase() === "confirmed" || String(d.status).toLowerCase() === "approved"){
+          toast("Already approved"); return;
+        }
+        d.status = "confirmed";
+        d.approvedAt = new Date().toLocaleString();
+        d.approvedBy = me.email || "admin";
+        u.balance = Number(u.balance||0) + Number(d.amount||0);
+        u.transactions = u.transactions || [];
+        u.transactions.unshift({
+          date: new Date().toLocaleString(),
+          type: "Deposit approved — "+(d.method||"MoMo/USDT"),
+          amount: Number(d.amount||0)
+        });
+        try{ creditReferrerDividend(u, d.amount); }catch(e){}
+        save();
+        toast("Approved "+money(d.amount)+" for "+(u.name||"member"));
+        renderAdminPendingDeposits();
+        try{ render(); }catch(e){}
+        return;
+      }
+    }
+  }
+  alert("Deposit not found. Member may have used a different device (local data only).");
+}
+
+function adminRejectDeposit(userId, depId){
+  var me = currentUser();
+  if(!me || !me.isAdmin){ alert("Admin only"); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u || u.id !== userId) continue;
+    var deps = u.deposits || [];
+    for(var j=0;j<deps.length;j++){
+      if(deps[j].id === depId){
+        deps[j].status = "rejected";
+        deps[j].rejectedAt = new Date().toLocaleString();
+        save();
+        toast("Deposit rejected");
+        renderAdminPendingDeposits();
+        return;
+      }
+    }
+  }
+  alert("Deposit not found");
 }
 
 function confirmDepositDemo(depId){
