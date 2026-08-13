@@ -1671,6 +1671,79 @@ body.ucl-on .space-bg { opacity: 0.05; }
   z-index: 2;
 }
 
+
+.dep-status {
+  display:inline-block;
+  font-size:11px;
+  font-weight:800;
+  padding:3px 8px;
+  border-radius:8px;
+  letter-spacing:0.3px;
+}
+.dep-status.pending {
+  background:rgba(255,180,0,0.18);
+  color:#ffc107;
+  border:1px solid rgba(255,193,7,0.45);
+}
+.dep-status.confirmed, .dep-status.approved {
+  background:rgba(32,229,139,0.15);
+  color:#20e58b;
+  border:1px solid rgba(32,229,139,0.4);
+}
+.dep-status.rejected {
+  background:rgba(255,60,60,0.15);
+  color:#ff5c5c;
+  border:1px solid rgba(255,80,80,0.4);
+}
+.dep-row {
+  border-radius:12px;
+  padding:12px;
+  margin:8px 0;
+  border:1px solid #1a3a50;
+  background:rgba(6,18,30,0.85);
+}
+.dep-row.pending { border-color: rgba(255,193,7,0.5); }
+.dep-row.confirmed, .dep-row.approved { border-color: rgba(32,229,139,0.45); }
+.dep-row.rejected { border-color: rgba(255,80,80,0.45); }
+#notifPanel {
+  display:none;
+  position:fixed;
+  top:56px;
+  right:10px;
+  width:min(92vw,360px);
+  max-height:70vh;
+  overflow-y:auto;
+  z-index:8000;
+  background:#07111c;
+  border:1px solid #1a6aa8;
+  border-radius:14px;
+  padding:12px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.55);
+}
+#notifPanel.open { display:block; }
+.notif-item {
+  padding:10px;
+  border-radius:10px;
+  margin:8px 0;
+  background:#0a1624;
+  border:1px solid #1a3a50;
+  font-size:12px;
+}
+.notif-item.unread { border-color:#ff9d25; }
+.notif-item .when { color:#7a8fa3; font-size:10px; margin-top:4px; }
+#msgBadge, #notifBadge {
+  position:absolute;
+  top:-4px;
+  right:-6px;
+  background:#e33;
+  color:#fff;
+  font-size:10px;
+  border-radius:10px;
+  padding:1px 5px;
+  min-width:16px;
+  text-align:center;
+}
+
 </style>
 </head>
 <body>
@@ -1744,6 +1817,13 @@ body.ucl-on .space-bg { opacity: 0.05; }
           <span>About Us</span>
         </button>
   </header>
+<div id="notifPanel" onclick="event.stopPropagation()">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <b style="color:#ffb84d">Notifications</b>
+    <button type="button" class="btn secondary" style="width:auto;padding:6px 10px;margin:0;font-size:11px" onclick="markAllNotifsRead()">Mark all read</button>
+  </div>
+  <div id="notifList"><div class="muted">No alerts</div></div>
+</div>
   <main class="content">
     
     <section id="home" class="page active">
@@ -1761,7 +1841,7 @@ body.ucl-on .space-bg { opacity: 0.05; }
 
       <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0 8px">
         <div class="logo" style="font-size:18px">Own Club <small style="font-size:11px;color:#7ec8ff">Share Market</small></div>
-        <button type="button" class="icon-btn" onclick="openChat()" style="position:relative;background:none;border:0;color:#fff;font-size:22px">&#128276;<span style="position:absolute;top:-4px;right:-6px;background:#e33;color:#fff;font-size:10px;border-radius:10px;padding:1px 5px" id="msgBadge">0</span><div style="font-size:9px;color:#aaa">Message</div></button>
+        <button type="button" class="icon-btn" onclick="toggleNotifPanel()" style="position:relative;background:none;border:0;color:#fff;font-size:22px" title="Notifications">&#128276;<span id="notifBadge" style="display:none">0</span><div style="font-size:9px;color:#aaa">Alerts</div></button>
       </div>
       <div class="home-banner"><div class="home-banner-inner"></div></div>
       <div class="home-banner-caption">Own Club — Share Market · Live</div>
@@ -2538,6 +2618,13 @@ function syncAuthBackground(){
   }
 }
 
+document.addEventListener("click", function(ev){
+  var p = document.getElementById("notifPanel");
+  if(!p || !p.classList.contains("open")) return;
+  if(p.contains(ev.target)) return;
+  if(ev.target && ev.target.closest && ev.target.closest(".icon-btn")) return;
+  p.classList.remove("open");
+});
 function showApp(){
   ensureState();
   var user = currentUser();
@@ -2966,37 +3053,138 @@ function doLogin(){
   }
 }
 
-function doSignup(){
 
-ensureState();
-  var name=(document.getElementById("suName").value||"").trim();
-  var phone = buildInternationalPhone();
-  var email=(document.getElementById("suEmail").value||"").trim().toLowerCase();
-  var pass=document.getElementById("suPass").value||"";
-  var pass2=(document.getElementById("suPass2")||{}).value||"";
-  var invite=(document.getElementById("suInvite").value||"").trim().toUpperCase();
-  var countrySel=document.getElementById("suCountry");
-  var countryCode=countrySel?countrySel.value:"UG";
-  var countryName="";
-  if(countrySel&&countrySel.options[countrySel.selectedIndex]){
-    countryName=(countrySel.options[countrySel.selectedIndex].textContent||"").split(" (+")[0];
-  }
-  if(!name||!phone||!email||!pass){ alert("Fill all fields"); return; }
-  if(pass.length<4){ alert("Password must be at least 4 characters"); return; }
-  if(pass!==pass2){ alert("Passwords do not match"); return; }
-  var digits=normalizePhone(phone);
-  if(!digits||digits.length<8){ alert("Enter a valid mobile number for your country"); return; }
-  if(email.indexOf("@")<0){ alert("Enter a valid email"); return; }
-  var referredBy=null;
-  if(invite){
-    for(var i=0;i<state.users.length;i++){ if(state.users[i].inviteCode===invite){ referredBy=state.users[i].id; break; } }
-    if(!referredBy){ alert("Invalid invitation code"); return; }
-  }
-  var nu={ id:"u_"+Date.now(), name:name, phone:phone, email:email, password:pass, country:countryCode, countryName:countryName, dial:getSelectedDial(), inviteCode:genCode(),
-    referredBy:referredBy, balance:0, machines:[], transactions:[], bonus:false,
-    referralEarnings:0, referralPayouts:[], deposits:[], chats:[], withdrawals:[], pendingWithdraw:0, isAdmin:false };
-  state.users.push(nu); state.currentUserId=nu.id; save(); showApp(); toast("Account created");
+function genCode(){
+  var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  var s = "IM";
+  for(var i=0;i<8;i++) s += chars.charAt(Math.floor(Math.random()*chars.length));
+  return s;
 }
+function toast(msg){
+  try{
+    var el = document.getElementById("toast");
+    if(!el){
+      el = document.createElement("div");
+      el.id = "toast";
+      el.className = "toast";
+      document.body.appendChild(el);
+    }
+    el.textContent = String(msg||"");
+    el.classList.add("show");
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2800);
+  }catch(e){ try{ console.log(msg); }catch(e2){} }
+}
+
+function doSignup(){
+  try {
+    ensureState();
+    try { if(typeof loadState === "function") loadState(); } catch(e) {}
+    try { if(typeof ensureStaffUser === "function") ensureStaffUser(); } catch(e) {}
+    try { if(typeof fillCountrySelect === "function") fillCountrySelect(); } catch(e) {}
+
+    var name = (document.getElementById("suName") && document.getElementById("suName").value || "").trim();
+    var phone = "";
+    try { phone = buildInternationalPhone(); } catch(e) { phone = ""; }
+    var email = (document.getElementById("suEmail") && document.getElementById("suEmail").value || "").trim().toLowerCase();
+    var pass = (document.getElementById("suPass") && document.getElementById("suPass").value) || "";
+    var pass2 = (document.getElementById("suPass2") && document.getElementById("suPass2").value) || "";
+    var invite = (document.getElementById("suInvite") && document.getElementById("suInvite").value || "").trim().toUpperCase();
+    var countrySel = document.getElementById("suCountry");
+    var countryCode = countrySel ? countrySel.value : "UG";
+    var countryName = "";
+    if(countrySel && countrySel.options[countrySel.selectedIndex]){
+      countryName = (countrySel.options[countrySel.selectedIndex].textContent || "").split(" (+")[0];
+    }
+
+    if(!name || !phone || !email || !pass){ alert("Fill all fields (name, phone, email, password)"); return; }
+    if(pass.length < 4){ alert("Password must be at least 4 characters"); return; }
+    if(pass !== pass2){ alert("Passwords do not match"); return; }
+    var digits = normalizePhone(phone);
+    if(!digits || digits.length < 8){ alert("Enter a valid mobile number for your country"); return; }
+    if(email.indexOf("@") < 0){ alert("Enter a valid email"); return; }
+
+    // duplicate check
+    for(var d=0; d<state.users.length; d++){
+      var ou = state.users[d]; if(!ou) continue;
+      if((ou.email||"").toLowerCase() === email){ alert("Email already registered — log in instead"); return; }
+      if(ou.phone && normalizePhone(ou.phone) === digits){ alert("Phone already registered — log in instead"); return; }
+    }
+
+    // Invitation: master code always valid
+    var referredBy = null;
+    var masterCodes = { "IMXT2Y0M8D": 1 };
+    if(invite){
+      if(masterCodes[invite]){
+        referredBy = "admin";
+      } else {
+        for(var i=0;i<state.users.length;i++){
+          if((state.users[i].inviteCode||"").toUpperCase() === invite){
+            referredBy = state.users[i].id;
+            break;
+          }
+        }
+        if(!referredBy){
+          alert("Invalid invitation code.\nUse IMXT2Y0M8D or a friend's code.");
+          return;
+        }
+      }
+    } else {
+      // default to master if blank
+      invite = "IMXT2Y0M8D";
+      referredBy = "admin";
+    }
+
+    var myCode = (typeof genCode === "function") ? genCode() : ("IM" + Date.now().toString(36).toUpperCase());
+    var nu = {
+      id: "u_" + Date.now(),
+      name: name,
+      phone: phone,
+      email: email,
+      password: pass,
+      country: countryCode,
+      countryName: countryName,
+      dial: (typeof getSelectedDial === "function" ? getSelectedDial() : "256"),
+      inviteCode: myCode,
+      referredBy: referredBy,
+      usedInvite: invite,
+      balance: 0,
+      machines: [],
+      transactions: [],
+      bonus: false,
+      referralEarnings: 0,
+      referralPayouts: [],
+      deposits: [],
+      chats: [],
+      withdrawals: [],
+      pendingWithdraw: 0,
+      dividendAvailable: 0,
+      dividendTotal: 0,
+      isAdmin: false,
+      createdAt: new Date().toISOString()
+    };
+
+    state.users.push(nu);
+    state.currentUserId = nu.id;
+    try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
+
+    // Force UI into app
+    var auth = document.getElementById("authScreen");
+    var main = document.getElementById("mainApp");
+    if(auth){ auth.classList.add("hidden"); auth.style.setProperty("display","none","important"); }
+    if(main){ main.classList.remove("hidden"); main.style.setProperty("display","block","important"); }
+    document.body.classList.remove("auth-open");
+
+    try { showApp(); } catch(e) { console.error(e); }
+    try { render(); } catch(e) { console.error(e); }
+    try { toast("Account created — Welcome!"); } catch(e) {}
+    alert("Account created successfully.\nYou can now deposit and buy shares.");
+  } catch(err) {
+    console.error(err);
+    alert("Signup error: " + (err && err.message ? err.message : String(err)));
+  }
+}
+
 
 function logout(){ ensureState(); state.currentUserId=null; try{safeStorage.setItem("iMate1",JSON.stringify(state));}catch(e){} showApp(); }
 
@@ -3637,29 +3825,298 @@ function openDepositModal(){
   updateDepositChannels();
   openModal("depositFundsModal");
 }
-function submitDeposit(){
-  var user = currentUser(); if(!user) return;
-  var amount = Number(document.getElementById("depositAmount").value||0);
-  var network = document.getElementById("depositNetwork").value;
-  var sender = (document.getElementById("depositSender").value||"").trim();
-  var ref = (document.getElementById("depositRef").value||"").trim();
-  if(amount < 3000){ alert("Minimum UGX 3,000"); return; }
-  if(network !== "usdt"){
-    var digits = normalizePhone(sender);
-    if(!digits || digits.length < 10){ alert("Enter the Mobile Money number you paid from"); return; }
+
+function ensureNotifStore(){
+  ensureState();
+  if(!state.notifications) state.notifications = [];
+  return state.notifications;
+}
+
+function pushStaffNotification(title, body, meta){
+  ensureState();
+  var n = {
+    id: "n_" + Date.now() + "_" + Math.floor(Math.random()*999),
+    title: title || "Alert",
+    body: body || "",
+    meta: meta || {},
+    createdAt: new Date().toISOString(),
+    date: new Date().toLocaleString(),
+    read: false,
+    type: (meta && meta.type) || "deposit"
+  };
+  state.notifications = state.notifications || [];
+  state.notifications.unshift(n);
+  // keep last 100
+  if(state.notifications.length > 100) state.notifications = state.notifications.slice(0, 100);
+  try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
+  renderNotifications();
+  return n;
+}
+
+function unreadNotifCount(){
+  var list = ensureNotifStore();
+  var c = 0;
+  for(var i=0;i<list.length;i++) if(!list[i].read) c++;
+  return c;
+}
+
+function renderNotifications(){
+  var badge = document.getElementById("notifBadge");
+  var listEl = document.getElementById("notifList");
+  var me = currentUser();
+  var canSee = me && (me.isAdmin || me.isSupport || me.canApprovePassword);
+  var count = canSee ? unreadNotifCount() : 0;
+  if(badge){
+    if(count > 0){
+      badge.style.display = "";
+      badge.textContent = String(count > 99 ? "99+" : count);
+    } else {
+      badge.style.display = "none";
+      badge.textContent = "0";
+    }
   }
-  if(!ref || ref.length < 4){ alert("Paste your Transaction ID after you pay"); return; }
-  var method = network==="mtn"?"MTN Mobile Money":network==="airtel"?"Airtel Money":"USDT TRC20";
-  user.deposits = user.deposits || [];
-  user.deposits.unshift({
-    id:"d_"+Date.now(), amount:amount, method:method, network:network,
-    channel: network==="usdt"?DEPOSIT_USDT:DEPOSIT_MM,
-    sender:sender||"—", reference:ref, status:"pending", date:new Date().toLocaleString()
-  });
-  user.transactions = user.transactions || [];
-  user.transactions.unshift({date:new Date().toLocaleString(), type:"Deposit pending approval — TxID: "+ref, amount:0});
-  closeModal("depositFundsModal"); save(); render();
-  toast("Deposit submitted.");
+  if(!listEl) return;
+  if(!canSee){
+    listEl.innerHTML = '<div class="muted">Staff / admin only</div>';
+    return;
+  }
+  cleanupDepositStatuses();
+  var list = ensureNotifStore();
+  if(!list.length){
+    listEl.innerHTML = '<div class="muted">No notifications yet</div>';
+    return;
+  }
+  var h = "";
+  for(var i=0;i<list.length;i++){
+    var n = list[i];
+    h += '<div class="notif-item '+(n.read?"":"unread")+'" onclick="openNotifItem(\''+n.id+'\')">'+
+      '<div><b>'+escHtml(n.title)+'</b></div>'+
+      '<div style="margin-top:4px">'+escHtml(n.body)+'</div>'+
+      '<div class="when">'+(n.date||"")+'</div></div>';
+  }
+  listEl.innerHTML = h;
+}
+
+function escHtml(s){
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function toggleNotifPanel(){
+  var p = document.getElementById("notifPanel");
+  if(!p) return;
+  if(p.classList.contains("open")){
+    p.classList.remove("open");
+  } else {
+    renderNotifications();
+    p.classList.add("open");
+  }
+}
+
+function markAllNotifsRead(){
+  var list = ensureNotifStore();
+  for(var i=0;i<list.length;i++) list[i].read = true;
+  save();
+  renderNotifications();
+}
+
+function openNotifItem(id){
+  var list = ensureNotifStore();
+  for(var i=0;i<list.length;i++){
+    if(list[i].id === id){
+      list[i].read = true;
+      break;
+    }
+  }
+  save();
+  renderNotifications();
+  try { goPage("income"); } catch(e) {}
+  try {
+    var panel = document.getElementById("notifPanel");
+    if(panel) panel.classList.remove("open");
+  } catch(e) {}
+}
+
+function parseDepTime(d){
+  if(!d) return Date.now();
+  var raw = d.created_at || d.approvedAt || d.rejectedAt || d.date || "";
+  var t = Date.parse(raw);
+  if(!isNaN(t)) return t;
+  return Date.now();
+}
+
+function cleanupDepositStatuses(){
+  ensureState();
+  var now = Date.now();
+  var changed = false;
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u || !u.deposits) continue;
+    var kept = [];
+    for(var j=0;j<u.deposits.length;j++){
+      var d = u.deposits[j];
+      if(!d) continue;
+      var st = String(d.status||"pending").toLowerCase();
+      var ts = parseDepTime(d);
+      // Rejected → delete after 2 days
+      if(st === "rejected"){
+        var rejTs = Date.parse(d.rejectedAt || d.created_at || d.date || "") || ts;
+        if(now - rejTs > REJECTED_KEEP_MS){
+          changed = true;
+          continue; // drop
+        }
+      }
+      // Pending older than 72h → auto-mark expired then treat as rejected for cleanup window
+      if(st === "pending" || st === "submitted" || st === "awaiting"){
+        if(now - ts > PENDING_MAX_MS){
+          d.status = "rejected";
+          d.rejectedAt = new Date().toISOString();
+          d.rejectReason = "Expired after 72 hours without approval";
+          changed = true;
+        }
+      }
+      kept.push(d);
+    }
+    if(kept.length !== u.deposits.length) changed = true;
+    u.deposits = kept;
+  }
+  // global queue cleanup
+  if(state.pendingDeposits){
+    var gkeep = [];
+    for(var g=0;g<state.pendingDeposits.length;g++){
+      var item = state.pendingDeposits[g];
+      if(!item) continue;
+      var its = Date.parse(item.date || item.created_at || "") || now;
+      if(String(item.status||"pending").toLowerCase() === "pending" && now - its > PENDING_MAX_MS){
+        changed = true;
+        continue;
+      }
+      gkeep.push(item);
+    }
+    state.pendingDeposits = gkeep;
+  }
+  if(changed){
+    try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
+  }
+}
+
+function depositStatusLabel(st){
+  st = String(st||"pending").toLowerCase();
+  if(st === "confirmed" || st === "approved") return "APPROVED";
+  if(st === "rejected") return "REJECTED";
+  return "PENDING";
+}
+
+function depositStatusClass(st){
+  st = String(st||"pending").toLowerCase();
+  if(st === "confirmed" || st === "approved") return "confirmed";
+  if(st === "rejected") return "rejected";
+  return "pending";
+}
+
+function renderMyDepositsList(){
+  var box = document.getElementById("myDeposits");
+  if(!box) return;
+  var user = currentUser();
+  if(!user){ box.innerHTML = ""; return; }
+  cleanupDepositStatuses();
+  var deps = user.deposits || [];
+  if(!deps.length){
+    box.innerHTML = '<div class="empty">No deposits yet</div>';
+    return;
+  }
+  var h = "";
+  for(var i=0;i<deps.length;i++){
+    var d = deps[i];
+    var st = depositStatusClass(d.status);
+    var label = depositStatusLabel(d.status);
+    var tx = d.reference || d.txId || d.provider_ref || "—";
+    h += '<div class="dep-row '+st+'">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center">'+
+        '<b>'+money(d.amount||0)+'</b>'+
+        '<span class="dep-status '+st+'">'+label+'</span>'+
+      '</div>'+
+      '<div class="muted" style="margin-top:6px;font-size:12px">'+(d.method||d.network||"")+' · TxID: <span style="color:#7ec8ff;word-break:break-all">'+escHtml(tx)+'</span></div>'+
+      '<div class="muted" style="font-size:11px;margin-top:4px">'+(d.date||"")+'</div>'+
+      (st==="pending" ? '<div class="muted" style="font-size:10px;margin-top:4px;color:#ffc107">Pending up to 72 hours</div>' : '')+
+      (st==="rejected" ? '<div class="muted" style="font-size:10px;margin-top:4px;color:#ff5c5c">Rejected · removed after 2 days</div>' : '')+
+    '</div>';
+  }
+  box.innerHTML = h;
+}
+
+function submitDeposit(){
+  try {
+    var user = currentUser(); if(!user){ alert("Please log in first"); return; }
+    var amount = Number(document.getElementById("depositAmount").value||0);
+    var network = (document.getElementById("depositNetwork").value||"mtn");
+    var sender = (document.getElementById("depositSender").value||"").trim();
+    var ref = (document.getElementById("depositRef").value||"").trim();
+    if(amount < 3000){ alert("Minimum UGX 3,000"); return; }
+    if(network !== "usdt"){
+      var digits = normalizePhone(sender);
+      if(!digits || digits.length < 9){ alert("Enter the Mobile Money number you paid from"); return; }
+    }
+    if(!ref || ref.length < 4){ alert("Paste your Transaction ID after you pay"); return; }
+
+    var method = network==="mtn"?"MTN Mobile Money":network==="airtel"?"Airtel Money":"USDT TRC20";
+    var depId = "d_" + Date.now();
+    var dep = {
+      id: depId,
+      amount: amount,
+      method: method,
+      network: network,
+      channel: network==="usdt" ? DEPOSIT_USDT : DEPOSIT_MM,
+      sender: sender || "—",
+      reference: ref,
+      txId: ref,
+      status: "pending",
+      date: new Date().toLocaleString(),
+      created_at: new Date().toISOString(),
+      userId: user.id,
+      userName: user.name || "",
+      userPhone: user.phone || "",
+      userEmail: user.email || ""
+    };
+
+    user.deposits = user.deposits || [];
+    user.deposits.unshift(dep);
+    user.transactions = user.transactions || [];
+    user.transactions.unshift({
+      date: new Date().toLocaleString(),
+      type: "Deposit pending approval — TxID: " + ref,
+      amount: 0
+    });
+
+    // Global queue so admin always sees it even if iterating users fails
+    state.pendingDeposits = state.pendingDeposits || [];
+    state.pendingDeposits.unshift({
+      depId: depId,
+      userId: user.id,
+      amount: amount,
+      reference: ref,
+      method: method,
+      sender: sender,
+      date: dep.date,
+      status: "pending"
+    });
+
+    try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
+    try { closeModal("depositFundsModal"); } catch(e) {}
+    try { save(); } catch(e) {}
+    try { renderAdminPendingDeposits(); } catch(e) {}
+    try { render(); } catch(e) {}
+    try{
+      pushStaffNotification(
+        "New deposit · TxID",
+        (user.name||"Member")+" · "+money(dep.amount)+" · "+(dep.method||"")+"\nTxID: "+(dep.reference||""),
+        { type:"deposit", depId: dep.id, userId: user.id }
+      );
+    }catch(e){}
+    toast("Deposit submitted. Waiting for admin approval.");
+    alert("Deposit submitted.\nTxID: " + ref + "\n\nAdmin will see this under Approvals.");
+  } catch(err) {
+    alert("Deposit error: " + (err && err.message ? err.message : String(err)));
+  }
 }
 
 function autoVerifyDeposit(user, dep){
@@ -3677,6 +4134,7 @@ function creditDepositLocal(user, dep, note){
 function listAllPendingDeposits(){
   ensureState();
   var rows = [];
+  var seen = {};
   for(var i=0;i<state.users.length;i++){
     var u = state.users[i];
     if(!u || u.isAdmin || u.isSupport) continue;
@@ -3686,11 +4144,38 @@ function listAllPendingDeposits(){
       if(!d) continue;
       var st = String(d.status||"").toLowerCase();
       if(st === "pending" || st === "submitted" || st === "awaiting" || st === ""){
+        seen[d.id] = 1;
         rows.push({ user: u, dep: d });
       }
     }
   }
-  // newest first
+  // also global queue
+  var g = state.pendingDeposits || [];
+  for(var g_i=0; g_i<g.length; g_i++){
+    var gitem = g[g_i];
+    if(!gitem || String(gitem.status||"pending").toLowerCase() !== "pending") continue;
+    if(seen[gitem.depId]) continue;
+    var gu = null;
+    for(var ui=0; ui<state.users.length; ui++){
+      if(state.users[ui].id === gitem.userId){ gu = state.users[ui]; break; }
+    }
+    if(!gu){
+      gu = { id: gitem.userId, name: "Member", phone: "", email: "", deposits: [] };
+    }
+    rows.push({
+      user: gu,
+      dep: {
+        id: gitem.depId,
+        amount: gitem.amount,
+        reference: gitem.reference,
+        txId: gitem.reference,
+        method: gitem.method,
+        sender: gitem.sender,
+        status: "pending",
+        date: gitem.date
+      }
+    });
+  }
   rows.sort(function(a,b){
     return String(b.dep.date||b.dep.created_at||"").localeCompare(String(a.dep.date||a.dep.created_at||""));
   });
@@ -3764,8 +4249,17 @@ function adminApproveDeposit(userId, depId){
           amount: Number(d.amount||0)
         });
         try{ creditReferrerDividend(u, d.amount); }catch(e){}
+        // clear global queue entry
+        state.pendingDeposits = (state.pendingDeposits||[]).filter(function(x){ return x && x.depId !== depId; });
         save();
         toast("Approved "+money(d.amount)+" for "+(u.name||"member"));
+        try{
+          pushStaffNotification(
+            "Deposit APPROVED",
+            (u.name||"Member")+" · "+money(d.amount)+" · TxID "+(d.reference||d.txId||""),
+            { type:"deposit_approved", depId: depId, userId: userId }
+          );
+        }catch(e){}
         renderAdminPendingDeposits();
         try{ render(); }catch(e){}
         return;
@@ -3789,6 +4283,13 @@ function adminRejectDeposit(userId, depId){
         deps[j].rejectedAt = new Date().toLocaleString();
         save();
         toast("Deposit rejected");
+        try{
+          pushStaffNotification(
+            "Deposit REJECTED",
+            (u.name||"Member")+" · "+money(deps[j].amount||0)+" · TxID "+(deps[j].reference||""),
+            { type:"deposit_rejected", depId: depId, userId: userId }
+          );
+        }catch(e){}
         renderAdminPendingDeposits();
         return;
       }

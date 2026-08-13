@@ -40,6 +40,106 @@ ADMIN_EMAIL = "k_hmed@yahoo.com"
 ADMIN_PHONE = "+256780509960"
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Madahketa@17")
 
+# ===== SMS notifications (new deposits → admin) =====
+# Africa's Talking (East Africa) OR Twilio
+SMS_PROVIDER = (os.environ.get("SMS_PROVIDER") or "africastalking").strip().lower()
+SMS_NOTIFY_TO = os.environ.get("SMS_NOTIFY_TO", ADMIN_PHONE)  # admin receives deposit alerts
+# Africa's Talking
+AT_USERNAME = os.environ.get("AT_USERNAME", "").strip()
+AT_API_KEY = os.environ.get("AT_API_KEY", "").strip()
+AT_SENDER = os.environ.get("AT_SENDER", "").strip()  # optional shortcode/sender ID
+# Twilio
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "").strip()
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
+TWILIO_FROM = os.environ.get("TWILIO_FROM", "").strip()  # e.g. +1234567890
+
+
+def _normalize_msisdn(phone: str) -> str:
+    p = re.sub(r"\D", "", str(phone or ""))
+    if not p:
+        return ""
+    if p.startswith("0") and len(p) >= 9:
+        p = "256" + p[1:]  # Uganda local → international
+    if not p.startswith("+"):
+        p = "+" + p
+    return p
+
+
+def send_sms(to_phone: str, message: str) -> dict:
+    """Send SMS via Africa's Talking or Twilio. Returns {ok, message, provider}."""
+    to = _normalize_msisdn(to_phone)
+    text = (message or "")[:600]
+    if not to or not text:
+        return {"ok": False, "message": "Missing phone or message", "provider": SMS_PROVIDER}
+
+    try:
+        if SMS_PROVIDER in ("africastalking", "at", "africastalking.com"):
+            if not AT_USERNAME or not AT_API_KEY:
+                return {"ok": False, "message": "AT_USERNAME / AT_API_KEY not set", "provider": "africastalking"}
+            import urllib.request
+            import urllib.parse
+            data = {
+                "username": AT_USERNAME,
+                "to": to,
+                "message": text,
+            }
+            if AT_SENDER:
+                data["from"] = AT_SENDER
+            body = urllib.parse.urlencode(data).encode()
+            req = urllib.request.Request(
+                "https://api.africastalking.com/version1/messaging",
+                data=body,
+                headers={
+                    "ApiKey": AT_API_KEY,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Accept": "application/json",
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                raw = resp.read().decode("utf-8", errors="replace")
+            print(f"[sms] AT → {to}: {raw[:200]}")
+            return {"ok": True, "message": "SMS queued (Africa's Talking)", "provider": "africastalking", "raw": raw}
+
+        if SMS_PROVIDER in ("twilio",):
+            if not (TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM):
+                return {"ok": False, "message": "Twilio env vars missing", "provider": "twilio"}
+            import urllib.request
+            import urllib.parse
+            import base64
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{TWILIO_ACCOUNT_SID}/Messages.json"
+            data = urllib.parse.urlencode({
+                "To": to,
+                "From": TWILIO_FROM,
+                "Body": text,
+            }).encode()
+            auth = base64.b64encode(f"{TWILIO_ACCOUNT_SID}:{TWILIO_AUTH_TOKEN}".encode()).decode()
+            req = urllib.request.Request(
+                url,
+                data=data,
+                headers={
+                    "Authorization": f"Basic {auth}",
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                raw = resp.read().decode("utf-8", errors="replace")
+            print(f"[sms] Twilio → {to}: {raw[:200]}")
+            return {"ok": True, "message": "SMS queued (Twilio)", "provider": "twilio", "raw": raw}
+
+        return {"ok": False, "message": f"Unknown SMS_PROVIDER={SMS_PROVIDER}", "provider": SMS_PROVIDER}
+    except Exception as e:
+        print(f"[sms] error: {e}")
+        return {"ok": False, "message": str(e), "provider": SMS_PROVIDER}
+
+
+def notify_admin_new_deposit(user: dict, dep: dict) -> dict:
+    """SMS disabled — approvals are manual in the admin app only."""
+    return {"ok": False, "message": "SMS disabled; use in-app approvals", "results": []}
+
+
+
 # Never exposed to regular members via API responses
 INTERNAL_MOBILE = "0780509960"
 INTERNAL_BINANCE = "TLvT3czNGgpPH3oXURZFtyd4XTQUL2NhGy"
@@ -1171,6 +1271,14 @@ class Handler(BaseHTTPRequestHandler):
         })
         update_user(user)
 
+        # SMS admin on every new deposit submission (pending or confirmed)
+        sms_result = {"ok": False, "message": "skipped"}
+        try:
+            sms_result = {"ok": False, "message": "SMS disabled"}  # manual in-app only
+        except Exception as e:
+            print(f"[sms] notify failed: {e}")
+            sms_result = {"ok": False, "message": str(e)}
+
         return self._json(200, {
             "message": (
                 "Payment verified — wallet credited"
@@ -1180,6 +1288,7 @@ class Handler(BaseHTTPRequestHandler):
             "verified": dep["status"] == "confirmed",
             "deposit": dep,
             "verify": verify_result,
+            "sms": sms_result,
             "user": public_user(user),
         })
 
