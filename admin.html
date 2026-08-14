@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>iMate1 Admin Dashboard</title>
+<style>
+:root{--bg:#0a0f16;--card:#0d1520;--border:#1a3a55;--blue:#00a8ff;--green:#20e58b;--orange:#ff9d25;--red:#ff5268;--text:#e8f0ff;--muted:#8aa0b8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}
+.header{background:#07111c;border-bottom:1px solid var(--border);padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.header h1{margin:0;font-size:20px}.header h1 span{color:var(--blue);font-weight:600;font-size:13px;margin-left:8px}
+.header a{color:var(--muted);text-decoration:none;font-size:13px;margin-left:16px}
+.header a:hover{color:var(--blue)}
+.container{max-width:1100px;margin:0 auto;padding:24px 16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+.stat label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.stat b{font-size:22px}
+.green{color:var(--green)}.orange{color:var(--orange)}.blue{color:var(--blue)}.red{color:var(--red)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px}
+.card h2{margin:0 0 14px;font-size:16px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid #122536}
+th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase}
+.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.badge.pending{background:#3a2a00;color:#ffb84d}
+.badge.approved{background:#0a2e1a;color:#52e3a5}
+.badge.rejected{background:#3a0a12;color:#ff7a8a}
+.btn{border:0;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;margin-right:6px}
+.btn.approve{background:#0a5c35;color:#7dffb5}
+.btn.reject{background:#5c0a1a;color:#ff8a9a}
+.btn:disabled{opacity:.4;cursor:default}
+.login-box{max-width:380px;margin:80px auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px}
+.login-box h2{margin:0 0 18px;text-align:center}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}
+.field input{width:100%;background:#060d14;border:1px solid #1a3a55;color:#fff;border-radius:8px;padding:11px}
+.btn-primary{width:100%;background:linear-gradient(90deg,#087be8,#16b7ff);color:#fff;border:0;border-radius:10px;padding:12px;font-weight:800;cursor:pointer;margin-top:8px}
+.hidden{display:none!important}
+.demo{background:#251800;color:#ffd36a;text-align:center;font-size:11px;padding:6px}
+.note{font-size:11px;color:var(--muted);margin-top:4px}
+.empty{text-align:center;padding:30px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="demo">iMate1 Admin — Approve deposits & withdrawals</div>
+
+<!-- LOGIN -->
+<div id="loginView" class="login-box">
+  <h2>iMate1 Admin</h2>
+  <div class="field"><label>EMAIL</label><input id="adminEmail" value="k_hmed@yahoo.com"></div>
+  <div class="field"><label>PASSWORD</label><input id="adminPass" type="password" value="Madahketa@17"></div>
+  <button class="btn-primary" onclick="adminLogin()">LOG IN</button>
+  <p class="note" style="text-align:center;margin-top:14px">URL: /admin · Email k_hmed@yahoo.com · Same password as member admin account.</p>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashView" class="hidden">
+  <div class="header">
+    <h1>iMate1 <span>ADMIN</span></h1>
+    <div>
+      <a href="/">← Member App</a>
+      <a href="#" onclick="logout();return false">Log out</a>
+    </div>
+  </div>
+  <div class="container">
+    <div class="stats" id="statsRow">
+      <div class="stat"><label>Total Users</label><b id="sUsers">—</b></div>
+      <div class="stat"><label>Total Invested</label><b class="blue" id="sInvested">—</b></div>
+      <div class="stat"><label>Pending Withdrawals</label><b class="orange" id="sPending">—</b></div>
+      <div class="stat"><label>Pending Amount</label><b class="orange" id="sPendingAmt">—</b></div>
+      <div class="stat"><label>Referral Payouts</label><b class="green" id="sRefPay">—</b></div>
+    </div>
+
+    <div class="card">
+      <h2>Withdrawal Requests</h2>
+      <div id="wdTable"></div>
+    </div>
+
+    <div class="card">
+      <h2>All Members</h2>
+      <div id="usersTable"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = location.origin;
+let token = localStorage.getItem('imate1_admin_token') || '';
+
+const money = n => 'UGX ' + Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});
+
+async function api(path, opts={}){
+  const headers = {'Content-Type':'application/json'};
+  if(token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + path, {...opts, headers});
+  const data = await res.json().catch(()=>({}));
+  if(res.status === 401){ logout(); throw new Error('Unauthorized'); }
+  if(!res.ok) throw new Error(data.error || 'Error');
+  return data;
+}
+
+function showDash(on){
+  document.getElementById('loginView').classList.toggle('hidden', on);
+  document.getElementById('dashView').classList.toggle('hidden', !on);
+}
+
+async function adminLogin(){
+  try{
+    const data = await api('/api/login', {
+      method:'POST',
+      body: JSON.stringify({
+        identifier: document.getElementById('adminEmail').value.trim(),
+        password: document.getElementById('adminPass').value
+      })
+    });
+    if(!data.user.is_admin){
+      alert('This account is not an admin.');
+      return;
+    }
+    token = data.token;
+    localStorage.setItem('imate1_admin_token', token);
+    showDash(true);
+    loadAll();
+  }catch(e){ alert(e.message); }
+}
+
+function logout(){
+  token = '';
+  localStorage.removeItem('imate1_admin_token');
+  showDash(false);
+}
+
+async function loadAll(){
+  try{
+    const [stats, wds, users] = await Promise.all([
+      api('/api/admin/stats'),
+      api('/api/admin/withdrawals'),
+      api('/api/admin/users')
+    ]);
+    document.getElementById('sUsers').textContent = stats.total_users;
+    document.getElementById('sInvested').textContent = money(stats.total_invested);
+    document.getElementById('sPending').textContent = stats.pending_withdrawals;
+    document.getElementById('sPendingAmt').textContent = money(stats.pending_amount);
+    document.getElementById('sRefPay').textContent = money(stats.total_referral_payouts || 0);
+
+    // Withdrawals table
+    const wdEl = document.getElementById('wdTable');
+    if(!wds.withdrawals.length){
+      wdEl.innerHTML = '<div class="empty">No withdrawal requests yet.</div>';
+    } else {
+      wdEl.innerHTML = `<table>
+        <thead><tr>
+          <th>Date</th><th>User</th><th>Phone</th><th>Amount</th><th>Fee</th><th>Net</th><th>Status</th><th>Action</th>
+        </tr></thead>
+        <tbody>${wds.withdrawals.map(w=>`
+          <tr>
+            <td>${new Date(w.created_at).toLocaleString()}</td>
+            <td>${w.user_name||'—'}</td>
+            <td>${w.user_phone||'—'}</td>
+            <td>${money(w.amount)}</td>
+            <td>${money(w.fee)}</td>
+            <td class="green">${money(w.net)}</td>
+            <td><span class="badge ${w.status}">${w.status}</span></td>
+            <td>${w.status==='pending' ? `
+              <button class="btn approve" onclick="act('${w.id}','approve')">Approve</button>
+              <button class="btn reject" onclick="act('${w.id}','reject')">Reject</button>
+            ` : (w.admin_note || '—')}</td>
+          </tr>`).join('')}
+        </tbody></table>`;
+    }
+
+    // Users table
+    const uEl = document.getElementById('usersTable');
+    uEl.innerHTML = `<table>
+      <thead><tr>
+        <th>Name</th><th>Phone</th><th>Email</th><th>Balance</th><th>Machines</th><th>Referrals</th><th>Joined</th>
+      </tr></thead>
+      <tbody>${users.users.map(u=>`
+        <tr>
+          <td>${u.name}${u.is_admin?' <span class="badge approved">ADMIN</span>':''}</td>
+          <td>${u.phone}</td>
+          <td>${u.email}</td>
+          <td class="orange">${money(u.balance)}</td>
+          <td>${(u.machines||[]).length}</td>
+          <td>${u.referral_count||0}</td>
+          <td>${u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}</td>
+        </tr>`).join('')}
+      </tbody></table>`;
+  }catch(e){
+    console.error(e);
+    if(e.message.includes('Unauthorized')||e.message.includes('Admin')) logout();
+  }
+}
+
+async function act(id, action){
+  const note = action==='reject' ? prompt('Rejection reason (optional):') || '' : '';
+  try{
+    await api('/api/admin/withdrawals/action', {
+      method:'POST',
+      body: JSON.stringify({id, action, note})
+    });
+    loadAll();
+  }catch(e){ alert(e.message); }
+}
+
+// Auto-login if token exists
+(async()=>{
+  if(token){
+    try{
+      const me = await api('/api/me');
+      if(me.user.is_admin){
+        showDash(true);
+        loadAll();
+        return;
+      }
+    }catch(e){}
+    logout();
+  }
+})();
+</script>
+</body>
+</html>
