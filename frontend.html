@@ -1744,6 +1744,343 @@ body.ucl-on .space-bg { opacity: 0.05; }
   text-align:center;
 }
 
+
+.team-level-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #7ec8ff;
+  margin: 14px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #1a3a50;
+}
+.team-member-row {
+  background: rgba(6,18,30,0.9);
+  border: 1px solid #1a3a50;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 8px 0;
+  font-size: 12px;
+}
+.team-member-row .lvl {
+  display: inline-block;
+  background: rgba(0,168,255,0.2);
+  color: #5ec8ff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+.team-member-row .code {
+  color: #20e58b;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+
+/* Club stock market */
+.market-tabs{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+.market-tabs button{flex:1;min-width:90px;padding:10px;border-radius:10px;border:1px solid #1a3a50;background:#0a1520;color:#9ab;font-weight:700;font-size:12px}
+.market-tabs button.active{background:linear-gradient(90deg,#0a4a8a,#1a8cff);color:#fff;border-color:#3db8ff}
+.market-list{display:flex;flex-direction:column;gap:8px}
+.market-row{
+  display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;
+  background:rgba(6,16,28,0.92);border:1px solid #1a3a50;border-radius:14px;padding:12px;
+}
+.market-row img{width:36px;height:36px;object-fit:contain;border-radius:8px;background:#0a1520}
+.market-row .mname{font-weight:800;font-size:13px;color:#e8f4ff}
+.market-row .mleague{font-size:10px;color:#7a90a8;margin-top:2px}
+.market-row .mprice{text-align:right;font-weight:800;font-size:13px;color:#e8f4ff}
+.market-row .mchg{font-size:11px;font-weight:700;margin-top:2px}
+.market-row .mchg.up{color:#20e58b}
+.market-row .mchg.down{color:#ff5c7a}
+.market-spark{height:28px;width:72px;display:block}
+.market-summary{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px
+}
+.market-summary .ms{
+  background:rgba(8,20,36,0.95);border:1px solid #1a3a50;border-radius:12px;padding:10px;text-align:center
+}
+.market-summary .ms b{display:block;font-size:15px;color:#7ec8ff}
+.market-summary .ms span{font-size:10px;color:#8aa}
+
+
+/* ===== SOLARA-STYLE LAYOUT (Own Club) ===== */
+:root{
+  --bg:#0a0a0c;
+  --card:#141418;
+  --card2:#1a1a20;
+  --green:#00d26a;
+  --green2:#00b359;
+  --red:#e11d48;
+  --text:#f4f4f5;
+  --muted:#9ca3af;
+  --line:#27272a;
+}
+body{
+  background:#0a0a0c !important;
+  color:var(--text) !important;
+}
+.auth-wrap, .app-shell, #mainApp, .page{
+  background:transparent !important;
+}
+.card, .stat-box, .product-card, .kpi, .wallet-bar, .menu-wrap, .dep-row, .team-member-row{
+  background:rgba(20,20,24,0.92) !important;
+  border:1px solid #27272a !important;
+  border-radius:16px !important;
+  box-shadow:0 8px 24px rgba(0,0,0,0.35) !important;
+}
+.btn, button.btn{
+  background:linear-gradient(90deg,#00b359,#00d26a) !important;
+  color:#04140a !important;
+  border:0 !important;
+  border-radius:12px !important;
+  font-weight:800 !important;
+}
+.btn.secondary{
+  background:#1f1f26 !important;
+  color:#e5e7eb !important;
+  border:1px solid #333 !important;
+}
+.btn-deposit-red{
+  background:linear-gradient(90deg,#be123c,#e11d48) !important;
+  color:#fff !important;
+}
+.stat-box .val{ color:#fff !important; font-size:16px !important; font-weight:800 !important; }
+.stat-box .lbl{
+  background:rgba(0,210,106,0.12) !important;
+  color:#a7f3d0 !important;
+  border-radius:0 0 12px 12px !important;
+  font-size:11px !important;
+}
+.nav-bar, .bottom-nav, nav.tabs, .navs{
+  background:rgba(10,10,12,0.96) !important;
+  border-top:1px solid #27272a !important;
+}
+.nav.active, .nav.active b{ color:#00d26a !important; }
+.home-balance-card{
+  background:linear-gradient(145deg,#12121a 0%,#0d1a14 100%);
+  border:1px solid #1f3d2e;
+  border-radius:20px;
+  padding:18px 16px 14px;
+  margin:8px 0 14px;
+}
+.home-balance-card .bal-label{ font-size:12px; color:#9ca3af; }
+.home-balance-card .bal-amount{ font-size:32px; font-weight:900; letter-spacing:-0.5px; margin:4px 0; }
+.home-balance-card .bal-sub{ font-size:12px; color:#6b7280; }
+.home-actions{ display:flex; gap:10px; margin:14px 0 8px; }
+.home-actions .btn{ flex:1; padding:14px; font-size:15px; }
+.quick-row{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin:12px 0 16px;
+}
+.quick-item{
+  background:#141418;
+  border:1px solid #27272a;
+  border-radius:14px;
+  padding:14px 6px;
+  text-align:center;
+  cursor:pointer;
+}
+.quick-item .qi{ font-size:22px; margin-bottom:6px; }
+.quick-item .ql{ font-size:11px; color:#d1d5db; font-weight:600; }
+.section-head{
+  display:flex; justify-content:space-between; align-items:center;
+  margin:16px 0 10px;
+}
+.section-head h3{ margin:0; font-size:15px; }
+.section-head a, .section-head span.link{
+  color:#00d26a; font-size:12px; font-weight:700; cursor:pointer;
+}
+.market-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.market-tile{
+  background:#141418;
+  border:1px solid #27272a;
+  border-radius:14px;
+  padding:12px;
+  cursor:pointer;
+}
+.market-tile .mt-top{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.market-tile img{ width:28px; height:28px; border-radius:50%; object-fit:contain; background:#0a0a0c; }
+.market-tile .mt-name{ font-size:12px; font-weight:700; }
+.market-tile .mt-league{ font-size:10px; color:#9ca3af; }
+.market-tile .mt-price{ font-size:14px; font-weight:800; margin-top:6px; }
+.market-tile .mt-val{ font-size:11px; color:#00d26a; }
+.product-card{
+  display:flex; gap:12px; align-items:center;
+  padding:12px !important;
+}
+.product-card img.badge{
+  width:48px; height:48px; border-radius:12px; object-fit:contain; background:#0a0a0c;
+}
+.green{ color:#00d26a !important; }
+.blue{ color:#38bdf8 !important; }
+.orange{ color:#fb923c !important; }
+.hdr, .topbar, header.app-header{
+  background:rgba(10,10,12,0.9) !important;
+  border-bottom:1px solid #27272a !important;
+}
+.sheet, .modal .sheet{
+  background:#121216 !important;
+  border:1px solid #27272a !important;
+  color:#f4f4f5 !important;
+}
+.field input, .field select, input, select, textarea{
+  background:#0a0a0c !important;
+  border:1px solid #333 !important;
+  color:#fff !important;
+  border-radius:12px !important;
+}
+.notice{
+  background:rgba(0,210,106,0.08) !important;
+  border:1px solid rgba(0,210,106,0.25) !important;
+  color:#d1fae5 !important;
+}
+.team-level-title{ color:#00d26a !important; border-color:#1f3d2e !important; }
+.support-fab{
+  background:#00d26a !important;
+  color:#04140a !important;
+}
+
+
+/* Solara deposit / withdraw */
+.pay-method-tabs{display:flex;gap:8px;margin:10px 0 14px}
+.pay-method-tabs button{
+  flex:1;padding:12px 8px;border-radius:12px;border:1.5px solid #333;
+  background:#141418;color:#d1d5db;font-weight:700;font-size:13px;cursor:pointer
+}
+.pay-method-tabs button.active{
+  border-color:#00d26a;background:rgba(0,210,106,0.12);color:#00d26a
+}
+.network-list{display:flex;flex-direction:column;gap:8px;margin:8px 0 12px}
+.network-opt{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;
+  border:1.5px solid #333;background:#0a0a0c;cursor:pointer;font-weight:600;font-size:13px
+}
+.network-opt.active{border-color:#00d26a;background:rgba(0,210,106,0.1)}
+.network-opt .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.amount-presets{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.amount-presets button{
+  min-width:64px;padding:10px 12px;border-radius:10px;border:1px solid #333;
+  background:#141418;color:#00d26a;font-weight:700;cursor:pointer
+}
+.amount-presets button.active{background:rgba(0,210,106,0.15);border-color:#00d26a}
+.slide-verify{
+  display:flex;align-items:center;gap:0;background:#0a0a0c;border:1px solid #333;
+  border-radius:12px;padding:4px;margin:12px 0;position:relative;user-select:none;height:48px
+}
+.slide-verify .slide-knob{
+  width:44px;height:40px;border-radius:10px;background:#00d26a;color:#04140a;
+  display:flex;align-items:center;justify-content:center;font-weight:900;cursor:grab;
+  z-index:2;transition:margin-left .15s
+}
+.slide-verify .slide-track-label{
+  position:absolute;left:0;right:0;text-align:center;color:#6b7280;font-size:12px;pointer-events:none
+}
+.slide-verify.done{border-color:#00d26a}
+.slide-verify.done .slide-track-label{color:#00d26a}
+.captcha-box{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #333;
+  border-radius:10px;background:#141418;margin:8px 0 12px;font-size:13px
+}
+.captcha-box input{width:18px;height:18px}
+.dep-addr-box{
+  background:#0a0a0c;border:1px solid #1f3d2e;border-radius:12px;padding:12px;margin:10px 0;
+  word-break:break-all;font-size:12px;font-weight:700;color:#00d26a
+}
+
+
+/* ===== AUTH SCREEN MATCHES APP (dark + green) ===== */
+#authScreen, .auth-screen {
+  background: #0a0a0c !important;
+  color: #f4f4f5 !important;
+}
+#authScreen .auth-logo h1 {
+  color: #fff !important;
+  font-weight: 900 !important;
+}
+#authScreen .auth-logo p {
+  color: #00d26a !important;
+}
+#authScreen .tabs button {
+  background: #141418 !important;
+  border: 1px solid #27272a !important;
+  color: #9ca3af !important;
+}
+#authScreen .tabs button.active {
+  background: linear-gradient(90deg, #00b359, #00d26a) !important;
+  color: #04140a !important;
+  border-color: transparent !important;
+  font-weight: 800 !important;
+}
+#authScreen .field label {
+  color: #9ca3af !important;
+}
+#authScreen .field input,
+#authScreen .field select {
+  background: #0a0a0c !important;
+  border: 1px solid #333 !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+}
+#authScreen .field input:focus,
+#authScreen .field select:focus {
+  border-color: #00d26a !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(0,210,106,0.2) !important;
+}
+#authScreen .btn {
+  background: linear-gradient(90deg, #00b359, #00d26a) !important;
+  color: #04140a !important;
+  border: 0 !important;
+  font-weight: 800 !important;
+  border-radius: 12px !important;
+}
+#authScreen .btn.secondary {
+  background: #1f1f26 !important;
+  color: #e5e7eb !important;
+  border: 1px solid #333 !important;
+}
+#authScreen .muted {
+  color: #9ca3af !important;
+}
+#authScreen .ref-box,
+#authScreen .notice {
+  background: rgba(0,210,106,0.08) !important;
+  border: 1px solid rgba(0,210,106,0.25) !important;
+  color: #d1fae5 !important;
+}
+#authScreen a, #authScreen .link {
+  color: #00d26a !important;
+}
+#authScreen .auth-center {
+  background: rgba(20,20,24,0.72) !important;
+  border: 1px solid #27272a !important;
+  border-radius: 20px !important;
+  padding: 22px 18px !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+#authScreen .auth-bg {
+  background: radial-gradient(ellipse at 30% 20%, rgba(0,210,106,0.12), transparent 50%),
+              radial-gradient(ellipse at 70% 80%, rgba(0,100,60,0.15), transparent 45%),
+              #0a0a0c !important;
+}
+#authScreen .kmk-badge,
+#authScreen [class*="kmk"] {
+  color: #6b7280 !important;
+  font-size: 11px !important;
+}
+body.auth-open {
+  background: #0a0a0c !important;
+}
+
 </style>
 </head>
 <body>
@@ -1771,7 +2108,7 @@ body.ucl-on .space-bg { opacity: 0.05; }
 <div id="authScreen" class="auth-screen">
   <div class="auth-bg" aria-hidden="true"></div>
   <div class="auth-center">
-    <div class="auth-logo"><h1>Own Club</h1><p>Share Market</p></div>
+    <div class="auth-logo"><h1>Own Club</h1><p style="color:#00d26a">Share Market</p></div>
     <p style="text-align:center;margin:0 0 12px;position:relative;z-index:3">
       <button type="button" onclick="openAboutUs();return false;" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:600;backdrop-filter:blur(6px)">About Us</button>
     </p>
@@ -1780,7 +2117,7 @@ body.ucl-on .space-bg { opacity: 0.05; }
       <button type="button" id="tabSignup" onclick="switchAuth('signup')">SIGN UP</button>
     </div>
     <div id="loginForm">
-      <div class="field"><label>EMAIL OR PHONE</label><input id="loginId" placeholder="k_hmed@yahoo.com" autocomplete="username"></div>
+      <div class="field"><label>EMAIL OR PHONE</label><input id="loginId" placeholder="Email or phone number" value="" autocomplete="username"></div>
       <div class="field"><label>PASSWORD</label><input id="loginPass" type="password" placeholder="Password" autocomplete="current-password"></div>
       <button type="button" class="btn" onclick="doLogin()">LOG IN</button>
       <p style="text-align:center;margin-top:10px"><button type="button" class="btn secondary" style="margin:0" onclick="openForgotPassword()">Forgot password?</button></p>
@@ -1829,6 +2166,7 @@ body.ucl-on .space-bg { opacity: 0.05; }
     <section id="home" class="page active">
       <div id="adminPanelCard" class="card hidden" style="border-color:#ff9d25;margin-top:8px">
         <h3 style="margin:0 0 8px;color:#ffb84d">Admin Dashboard</h3>
+        <div class="kpi"><span>Reward pool</span><b class="green" id="rewardPoolDisplay">—</b></div>
         <div class="muted" style="margin-bottom:10px">Full admin: deposits & withdrawals. Support staff: customer password help only.</div>
         <button type="button" class="btn" onclick="goPage('income')">OPEN APPROVALS (Income)</button>
         <div id="adminPendingDepositsHome" style="margin-top:12px"></div>
@@ -1843,8 +2181,22 @@ body.ucl-on .space-bg { opacity: 0.05; }
         <div class="logo" style="font-size:18px">Own Club <small style="font-size:11px;color:#7ec8ff">Share Market</small></div>
         <button type="button" class="icon-btn" onclick="toggleNotifPanel()" style="position:relative;background:none;border:0;color:#fff;font-size:22px" title="Notifications">&#128276;<span id="notifBadge" style="display:none">0</span><div style="font-size:9px;color:#aaa">Alerts</div></button>
       </div>
-      <div class="home-banner"><div class="home-banner-inner"></div></div>
-      <div class="home-banner-caption">Own Club — Share Market · Live</div>
+      <div class="home-balance-card">
+        <div class="bal-label">Total Balance</div>
+        <div class="bal-amount" id="homeTotalBalance">UGX 0</div>
+        <div class="bal-sub" id="homeTotalBalanceUsd">≈ $0.00</div>
+        <div class="home-actions">
+          <button type="button" class="btn btn-deposit-red" onclick="openDepositModal()">Deposit</button>
+          <button type="button" class="btn secondary" onclick="openWithdraw()">Withdraw</button>
+        </div>
+      </div>
+      <div class="quick-row">
+        <div class="quick-item" onclick="goPage('machines')"><div class="qi">⚽</div><div class="ql">Shares</div></div>
+        <div class="quick-item" onclick="goPage('team')"><div class="qi">👥</div><div class="ql">Team</div></div>
+        <div class="quick-item" onclick="goPage('income')"><div class="qi">📦</div><div class="ql">Income</div></div>
+        <div class="quick-item" onclick="goPage('my')"><div class="qi">⚙️</div><div class="ql">Settings</div></div>
+      </div>
+      <div class="section-head"><h3>Overview</h3><span class="link" onclick="goPage('income')">View All →</span></div>
       <div class="stats-grid">
         <div class="stat-box clickable" onclick="openStatDetail('deposits')"><div class="val" id="homeDepositTotal">0.00</div><div class="lbl">Deposit details</div></div>
         <div class="stat-box clickable" onclick="openStatDetail('withdrawals')"><div class="val" id="homeWithdrawTotal">0.00</div><div class="lbl">Withdraw details</div></div>
@@ -1928,6 +2280,18 @@ body.ucl-on .space-bg { opacity: 0.05; }
         <button type="button" onclick="setLeagueFilter('MLS',this)">MLS</button>
         <button type="button" onclick="setLeagueFilter('Championship',this)">Championship</button>
       </div>
+      <div class="market-tabs">
+        <button type="button" class="active" id="tabSharesView" onclick="setMarketView('shares',this)">Club Shares</button>
+        <button type="button" id="tabMarketView" onclick="setMarketView('market',this)">Live Market</button>
+      </div>
+      <div id="clubMarketPanel" style="display:none">
+        <div class="market-summary">
+          <div class="ms"><b id="mktGainers">0</b><span>Gainers today</span></div>
+          <div class="ms"><b id="mktLosers">0</b><span>Losers today</span></div>
+        </div>
+        <p class="muted" style="font-size:11px;margin:0 0 10px">Club share index · daily movement tracked · prices in UGX per pack base (35k)</p>
+        <div class="market-list" id="clubMarketList"></div>
+      </div>
       <div id="machineList"></div>
     </section>
     <section id="income" class="page">
@@ -1973,12 +2337,21 @@ body.ucl-on .space-bg { opacity: 0.05; }
     <section id="team" class="page">
       <h2>Team</h2>
       <div class="card">
-        <div class="kpi"><span>Code</span><b id="myInviteCode" class="blue">—</b></div>
-        <div class="ref-box"><span id="myInviteLink">—</span><br><button type="button" class="copy-btn" onclick="copyInvite()">COPY</button></div>
-        <div class="kpi"><span>Referrals</span><b id="refCount">0</b></div>
+        <div class="kpi"><span>Your invite code</span><b id="myInviteCode" class="blue">—</b></div>
+        <div class="ref-box"><span id="myInviteLink">—</span><br><button type="button" class="copy-btn" onclick="copyInvite()">COPY LINK</button></div>
+        <div class="kpi"><span>Direct (Level 1)</span><b id="refCount">0</b></div>
+        <div class="kpi"><span>Full team</span><b id="teamFullCount">0</b></div>
         <div class="kpi"><span>Rewards</span><b class="green" id="refEarnings">UGX 0</b></div>
       </div>
-      <div class="card"><div id="refPayouts"></div></div>
+      <div class="card">
+        <h3 style="margin:0 0 8px;font-size:15px">Your network by level</h3>
+        <p class="muted" style="font-size:12px;margin:0 0 10px">Level 1 joined with your code. Level 2 joined with a Level 1 code, and so on. Each member has a unique invite code.</p>
+        <div id="teamTreeList"><div class="empty">No referrals yet</div></div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 8px;font-size:15px">Referral rewards</h3>
+        <div id="refPayouts"></div>
+      </div>
     </section>
     
     <section id="my" class="page">
@@ -1991,6 +2364,13 @@ body.ucl-on .space-bg { opacity: 0.05; }
         <div class="side"><span>Wallet</span><b id="statWallet">0.00</b></div>
         <div class="arrow">&#9660;</div>
         <div class="side"><span>Balance</span><b class="green" id="statBalanceTop">0.00</b></div>
+      </div>
+      <div class="card" style="margin:10px 0" id="rewardsCard">
+        <h3 style="margin:0 0 8px;font-size:15px">Rewards</h3>
+        <div class="kpi"><span>Joiner reward</span><b class="green" id="joinRewardAmt">UGX 500</b></div>
+        <div class="kpi"><span>Welcome package</span><b class="green" id="welcomeRewardAmt">5 USD local</b></div>
+        <div class="muted" style="font-size:11px;margin:6px 0 8px">New members receive <b>5 USD</b> (local currency) + <b>500 UGX</b> equivalent from the system reward pool.</div>
+        <div id="rewardsList"><div class="empty">No rewards yet</div></div>
       </div>
       <div class="menu-wrap"><div class="menu-grid">
         <button type="button" class="menu-item" onclick="openDepositModal()">
@@ -2111,33 +2491,106 @@ body.ucl-on .space-bg { opacity: 0.05; }
 
 <div class="modal" id="depositFundsModal" onclick="if(event.target===this)closeModal('depositFundsModal')"><div class="sheet">
   <button type="button" class="close" onclick="closeModal('depositFundsModal')">×</button>
-  <h2 style="margin-top:0">Deposit Funds</h2>
-  <div class="notice">Min <b>UGX 3,000</b>. Pay via USSD or app, then enter your <b>Transaction ID</b>.</div>
-  <div class="field"><label>METHOD</label>
-    <select id="depositNetwork" onchange="updateDepositChannels()">
-      <option value="mtn">MTN Mobile Money (UGX)</option>
-      <option value="airtel">Airtel Money (UGX)</option>
-      <option value="usdt">USDT TRC20</option>
-    </select>
+  <h2 style="margin-top:0;text-align:center">Deposit</h2>
+
+  <div class="muted" style="font-size:11px;margin-bottom:6px">PAYMENT METHOD</div>
+  <div class="pay-method-tabs">
+    <button type="button" id="depTabUsdt" class="active" onclick="setDepositMethod('usdt')">₮ USDT · Crypto</button>
+    <button type="button" id="depTabMobile" onclick="setDepositMethod('mobile')">📱 Mobile · MTN / Airtel</button>
   </div>
-  <div class="field"><label>AMOUNT (UGX)</label><input id="depositAmount" type="number" min="3000" placeholder="3000" inputmode="numeric" oninput="updateDepositChannels()"></div>
-  <div class="field" id="senderPhoneField"><label>YOUR MOMO NUMBER</label><input id="depositSender" type="tel" placeholder="07XXXXXXXX" inputmode="tel"></div>
-  <div id="depositChannels" class="card"></div>
-  <div class="field"><label>TRANSACTION ID (required)</label><input id="depositRef" placeholder="Paste MoMo Transaction ID or USDT TxID"></div>
-  <div class="notice" id="depositSteps" style="font-size:11px"></div>
-  <button type="button" class="btn" onclick="submitDeposit()">SUBMIT DEPOSIT REQUEST</button>
-  <button type="button" class="btn secondary" onclick="closeModal('depositFundsModal')">CANCEL</button>
+
+  <!-- USDT panel -->
+  <div id="depPanelUsdt">
+    <div class="muted" style="font-size:11px;margin-bottom:6px">SELECT NETWORK</div>
+    <div class="network-list">
+      <div class="network-opt active" data-net="trc20" onclick="setUsdtNetwork('trc20',this)"><span class="dot" style="background:#e11d48"></span> Tron (TRC20)</div>
+      <div class="network-opt" data-net="bep20" onclick="setUsdtNetwork('bep20',this)"><span class="dot" style="background:#f59e0b"></span> BSC (BEP20)</div>
+      <div class="network-opt" data-net="erc20" onclick="setUsdtNetwork('erc20',this)"><span class="dot" style="background:#3b82f6"></span> Ethereum (ERC20)</div>
+    </div>
+    <div id="depUsdtAddrWrap" style="display:none">
+      <div class="muted" style="font-size:11px">DEPOSIT ADDRESS</div>
+      <div class="dep-addr-box" id="depUsdtAddrShow"></div>
+      <button type="button" class="btn secondary" style="margin:0 0 10px" onclick="copyDepositContact('usdt')">COPY ADDRESS</button>
+    </div>
+  </div>
+
+  <!-- Mobile panel -->
+  <div id="depPanelMobile" style="display:none">
+    <div class="muted" style="font-size:11px;margin-bottom:6px">AMOUNT (UGX) · Min 3,000</div>
+    <div class="amount-presets" id="depAmountPresets">
+      <button type="button" onclick="pickDepAmount(5000,this)">5,000</button>
+      <button type="button" onclick="pickDepAmount(10000,this)">10,000</button>
+      <button type="button" onclick="pickDepAmount(25000,this)">25,000</button>
+      <button type="button" onclick="pickDepAmount(50000,this)">50,000</button>
+      <button type="button" onclick="pickDepAmount(100000,this)">100,000</button>
+      <button type="button" onclick="pickDepAmount(250000,this)">250,000</button>
+    </div>
+    <div class="field"><label>CUSTOM AMOUNT (UGX)</label><input id="depositAmount" type="number" min="3000" placeholder="3000" inputmode="numeric" oninput="updateDepositChannels()"></div>
+    <div class="field" id="senderPhoneField"><label>PHONE NUMBER (MTN / Airtel)</label><input id="depositSender" type="tel" placeholder="e.g. 0771234567" inputmode="tel"></div>
+    <div id="depositChannels" class="card" style="margin:8px 0"></div>
+  </div>
+
+  <!-- shared -->
+  <input type="hidden" id="depositNetwork" value="usdt">
+  <div class="field" style="margin-top:8px"><label>TRANSACTION ID (required)</label><input id="depositRef" placeholder="Paste MoMo TxID or USDT TxID"></div>
+  <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.4;margin:8px 0">
+    <input type="checkbox" id="depositTxConfirm" style="width:18px;height:18px;margin-top:2px;flex-shrink:0">
+    <span>I confirm this Transaction ID matches my payment.</span>
+  </label>
+
+  <div class="muted" style="font-size:11px;margin:4px 0">SLIDE TO VERIFY</div>
+  <div class="slide-verify" id="depSlide" onpointerdown="startSlide(event,'depSlide')">
+    <div class="slide-knob" id="depSlideKnob">›</div>
+    <div class="slide-track-label" id="depSlideLabel">Drag →</div>
+  </div>
+  <div class="captcha-box">
+    <input type="checkbox" id="depCaptcha">
+    <span>I'm not a robot</span>
+  </div>
+
+  <button type="button" class="btn" id="depPrimaryBtn" onclick="depositPrimaryAction()">Get Deposit Address</button>
+  <button type="button" class="btn secondary" onclick="closeModal('depositFundsModal')">Cancel</button>
 </div></div>
 
 <div class="modal" id="withdrawModal" onclick="if(event.target===this)closeModal('withdrawModal')"><div class="sheet">
   <button type="button" class="close" onclick="closeModal('withdrawModal')">×</button>
-  <h2 style="margin-top:0">Withdraw</h2>
-  <div class="notice" id="withdrawLockNote"></div>
-  <div class="field"><label>AMOUNT</label><input id="withdrawAmount" type="number" min="1" placeholder="10000"></div>
-  <div id="withdrawCalc" class="notice">5% fee</div>
-  <button type="button" class="btn" onclick="doWithdraw()">SUBMIT</button>
-</div></div>
+  <h2 style="margin-top:0;text-align:center">Withdraw</h2>
+  <div class="notice" id="withdrawLockNote" style="font-size:11px"></div>
 
+  <div class="field"><label>NETWORK</label>
+    <select id="withdrawNetwork" onchange="onWithdrawNetworkChange()">
+      <option value="">Select method</option>
+      <option value="trc20">TRC20 (USDT)</option>
+      <option value="bep20">BEP20 (USDT)</option>
+      <option value="erc20">ERC20 (USDT)</option>
+      <option value="mtn">MTN Mobile Money</option>
+      <option value="airtel">Airtel Money</option>
+    </select>
+  </div>
+  <div class="field" id="wdWalletField"><label>WALLET ADDRESS / PHONE</label>
+    <input id="withdrawAddress" placeholder="Enter USDT wallet or MoMo number">
+  </div>
+  <div class="field"><label>AMOUNT (UGX)</label>
+    <input id="withdrawAmount" type="number" min="1" placeholder="10000" inputmode="numeric" oninput="updateWithdrawCalc()">
+  </div>
+  <div id="withdrawCalc" class="notice">5% withdrawal fee applies</div>
+  <div class="field"><label>WITHDRAW PASSWORD</label>
+    <input id="withdrawPassword" type="password" placeholder="Your withdraw fund password">
+  </div>
+
+  <div class="muted" style="font-size:11px;margin:4px 0">SLIDE TO VERIFY</div>
+  <div class="slide-verify" id="wdSlide" onpointerdown="startSlide(event,'wdSlide')">
+    <div class="slide-knob" id="wdSlideKnob">›</div>
+    <div class="slide-track-label" id="wdSlideLabel">Drag →</div>
+  </div>
+  <div class="captcha-box">
+    <input type="checkbox" id="wdCaptcha">
+    <span>I'm not a robot</span>
+  </div>
+
+  <button type="button" class="btn" onclick="doWithdraw()">Submit Withdrawal</button>
+  <p class="muted" style="text-align:center;font-size:11px;margin-top:10px">Withdrawals are processed instantly after system approval.</p>
+</div></div>
 
 <div class="modal" id="chatModal" onclick="if(event.target===this)closeModal('chatModal')"><div class="sheet">
   <button type="button" class="close" onclick="closeModal('chatModal')">×</button>
@@ -2332,6 +2785,84 @@ function fromUSD(amountUsd, user){
   return Math.round(Number(amountUsd||0) * rate * 100) / 100;
 }
 
+
+/* ===== Welcome rewards: 5 USD local + 500 UGX from admin pool ===== */
+var JOIN_REWARD_USD = 5;
+var JOIN_REWARD_UGX_FIXED = 500;
+
+function getAdminUser(){
+  ensureState();
+  for(var i=0;i<(state.users||[]).length;i++){
+    var u = state.users[i];
+    if(!u) continue;
+    var em = (u.email||"").toLowerCase();
+    if(u.isAdmin || u.id==="admin" || em==="k_hmed@yahoo.com" || em==="admin@imate1.com") return u;
+  }
+  return null;
+}
+
+function ugxToLocal(ugx, user){
+  var c = userCurrency(user);
+  if(c.code === "UGX") return Math.round(Number(ugx)||0);
+  var ugxPerUsd = ratePerUSD("UGX") || 3700;
+  var usd = Number(ugx) / ugxPerUsd;
+  return Math.round(fromUSD(usd, user));
+}
+
+function creditJoinerWelcome(nu){
+  if(!nu || nu.isAdmin || nu.isSupport) return 0;
+  if(nu.welcomeCredited) return 0;
+  var admin = getAdminUser();
+  // 5 USD in member local currency
+  var local5 = Math.round(fromUSD(JOIN_REWARD_USD, nu));
+  // 500 UGX fixed reward (converted to local so they see it)
+  var local500 = ugxToLocal(JOIN_REWARD_UGX_FIXED, nu);
+  var total = local5 + local500;
+  if(total <= 0) total = local5 || 18500; // fallback ~5 USD UGX
+
+  if(admin){
+    admin.rewardPoolCurrency = "USD";
+    admin.rewardPool = Number(admin.rewardPool != null ? admin.rewardPool : 100000000);
+    // Pool is in USD — deduct 5 USD + 500 UGX in USD
+    var ugxPerUsd = ratePerUSD("UGX") || 3700;
+    var usdCost = JOIN_REWARD_USD + (JOIN_REWARD_UGX_FIXED / ugxPerUsd);
+    usdCost = Math.round(usdCost * 100) / 100;
+    if(admin.rewardPool < usdCost){
+      console.warn("Reward pool low");
+    }
+    admin.rewardPool = Math.round((admin.rewardPool - usdCost) * 100) / 100;
+    admin.transactions = admin.transactions || [];
+    admin.transactions.unshift({
+      date: new Date().toLocaleString(),
+      type: "Welcome reward paid → "+(nu.name||nu.phone||"member")+" (−$"+usdCost+")",
+      amount: 0
+    });
+  }
+
+  nu.balance = Number(nu.balance||0) + total;
+  nu.welcomeCredited = true;
+  nu.joinReward = total;
+  nu.joinRewardUsd = JOIN_REWARD_USD;
+  nu.joinRewardUgx = JOIN_REWARD_UGX_FIXED;
+  nu.rewards = nu.rewards || [];
+  nu.rewards.unshift({
+    id: "rw_"+Date.now(),
+    type: "join",
+    title: "Joiner reward",
+    detail: "5 USD + 500 UGX welcome package",
+    amount: total,
+    date: new Date().toLocaleString()
+  });
+  nu.transactions = nu.transactions || [];
+  nu.transactions.unshift({
+    date: new Date().toLocaleString(),
+    type: "Welcome reward (5 USD + 500 UGX)",
+    amount: total
+  });
+  return total;
+}
+
+
 function moneyLocal(amount, user){
   var c = userCurrency(user);
   var n = Number(amount||0);
@@ -2440,28 +2971,35 @@ function creditReferrerDividend(depositorUser, depositAmount){
   ensureState();
   var amt = Number(depositAmount) || 0;
   if(amt <= 0) return;
-  var code = depositorUser && depositorUser.referredBy;
-  if(!code) return;
+  var ref = depositorUser && depositorUser.referredBy;
+  if(!ref) return;
   var half = Math.round(amt * 0.5 * 100) / 100;
-  for(var i=0;i<state.users.length;i++){
-    var u = state.users[i];
-    if(!u) continue;
-    if(String(u.inviteCode||"").toUpperCase() === String(code).toUpperCase()){
-      ensureDividendFields(u);
-      u.dividendAvailable = Number(u.dividendAvailable||0) + half;
-      u.dividendTotal = Number(u.dividendTotal||0) + half;
-      u.dividendHistory = u.dividendHistory || [];
-      u.dividendHistory.unshift({
-        date: new Date().toLocaleString(),
-        from: depositorUser.name || depositorUser.email || "Member",
-        deposit: amt,
-        dividend: half
-      });
-      u.transactions = u.transactions || [];
-      u.transactions.unshift({date:new Date().toLocaleString(), type:"Dividend 50% from "+(depositorUser.name||"member"), amount:half});
-      break;
-    }
+  var u = findUserById(ref);
+  if(!u) u = findUserByInviteCode(ref);
+  if(!u && String(ref).toLowerCase() === "admin"){
+    u = findUserById("admin") || findUserByInviteCode("IMXT2Y0M8D");
   }
+  if(!u) return;
+  ensureDividendFields(u);
+  u.dividendAvailable = Number(u.dividendAvailable||0) + half;
+  u.dividendTotal = Number(u.dividendTotal||0) + half;
+  u.dividendHistory = u.dividendHistory || [];
+  u.dividendHistory.unshift({
+    date: new Date().toLocaleString(),
+    from: depositorUser.name || depositorUser.email || "Member",
+    deposit: amt,
+    dividend: half
+  });
+  u.referralEarnings = Number(u.referralEarnings||0) + half;
+  u.referralPayouts = u.referralPayouts || [];
+  u.referralPayouts.unshift({
+    from: depositorUser.name || "Member",
+    amount: half,
+    date: new Date().toLocaleString(),
+    machine: "Deposit dividend"
+  });
+  u.transactions = u.transactions || [];
+  u.transactions.unshift({date:new Date().toLocaleString(), type:"Dividend 50% from "+(depositorUser.name||"member"), amount:half});
   save();
 }
 function withdrawDividend(){
@@ -2570,6 +3108,13 @@ function ensureStaffUser(){
     adminFound.canApproveWithdraw = true;
     adminFound.canApproveDeposit = true;
     adminFound.canApprovePassword = true;
+    // Dummy reward pool — top up if missing / first time
+    // USD 100,000,000 reward pool (force upgrade from old UGX pool)
+    if(adminFound.rewardPoolCurrency !== "USD" || adminFound.rewardPool == null){
+      adminFound.rewardPool = 100000000;
+      adminFound.rewardPoolCurrency = "USD";
+      adminFound.balance = Number(adminFound.balance||0);
+    }
   } else {
     state.users.unshift({
       id: "admin",
@@ -2580,8 +3125,10 @@ function ensureStaffUser(){
       inviteCode: "IMXT2Y0M8D",
       referredBy: null,
       balance: 0,
+      rewardPool: 100000000,
+      rewardPoolCurrency: "USD",
       machines: [],
-      transactions: [],
+      transactions: [{date:new Date().toLocaleString(), type:"Reward pool funded (system) USD 100,000,000", amount:0}],
       bonus: false,
       referralEarnings: 0,
       referralPayouts: [],
@@ -2625,7 +3172,18 @@ document.addEventListener("click", function(ev){
   if(ev.target && ev.target.closest && ev.target.closest(".icon-btn")) return;
   p.classList.remove("open");
 });
+function clearLoginPrefill(){
+  try {
+    var el = document.getElementById("loginId");
+    if(el && /k_hmed@yahoo\.com/i.test(el.value||"")) el.value = "";
+    if(el && !el.getAttribute("data-user-typed")) {
+      /* keep blank unless user types */
+    }
+  } catch(e) {}
+}
 function showApp(){
+  try{ clearLoginPrefill(); }catch(e){}
+
   ensureState();
   var user = currentUser();
   var auth = document.getElementById("authScreen");
@@ -3054,12 +3612,161 @@ function doLogin(){
 }
 
 
+function escHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 function genCode(){
+  ensureState();
   var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  var s = "IM";
-  for(var i=0;i<8;i++) s += chars.charAt(Math.floor(Math.random()*chars.length));
-  return s;
+  var existing = {};
+  for(var i=0;i<state.users.length;i++){
+    var c = (state.users[i] && state.users[i].inviteCode) ? String(state.users[i].inviteCode).toUpperCase() : "";
+    if(c) existing[c] = 1;
+  }
+  existing["IMXT2Y0M8D"] = 1;
+  existing["STAFF0KATO"] = 1;
+  for(var attempt=0; attempt<40; attempt++){
+    var s = "IM";
+    for(var j=0;j<8;j++) s += chars.charAt(Math.floor(Math.random()*chars.length));
+    if(!existing[s]) return s;
+  }
+  return "IM" + Date.now().toString(36).toUpperCase().slice(-8);
 }
+
+function findUserById(id){
+  if(!id) return null;
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    if(state.users[i] && state.users[i].id === id) return state.users[i];
+  }
+  return null;
+}
+
+function findUserByInviteCode(code){
+  code = String(code||"").toUpperCase().trim();
+  if(!code) return null;
+  ensureState();
+  if(code === "IMXT2Y0M8D"){
+    for(var i=0;i<state.users.length;i++){
+      var u = state.users[i];
+      if(u && (u.id === "admin" || (u.email||"").toLowerCase() === "k_hmed@yahoo.com")) return u;
+    }
+  }
+  for(var j=0;j<state.users.length;j++){
+    if(state.users[j] && String(state.users[j].inviteCode||"").toUpperCase() === code) return state.users[j];
+  }
+  return null;
+}
+
+/** Direct children of a user (Level 1 under them) */
+function getDirectReferrals(user){
+  if(!user) return [];
+  ensureState();
+  var list = [];
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u || u.isAdmin) continue;
+    // referredBy stores sponsor user id; also accept invite code for older records
+    if(u.referredBy === user.id) list.push(u);
+    else if(user.inviteCode && String(u.referredBy||"").toUpperCase() === String(user.inviteCode).toUpperCase()) list.push(u);
+    else if(user.id === "admin" && (u.referredBy === "admin" || String(u.usedInvite||"").toUpperCase() === "IMXT2Y0M8D")) list.push(u);
+  }
+  return list;
+}
+
+/**
+ * Build multilevel team under `user`.
+ * Returns { list: [{user, level}, ...], byLevel: {1:[...], 2:[...]} }
+ */
+function getTeamRecursive(user, maxLevel){
+  maxLevel = maxLevel || 20;
+  var result = { list: [], byLevel: {} };
+  if(!user) return result;
+  var seen = {};
+  seen[user.id] = 1;
+  var queue = [{ uid: user.id, level: 0 }];
+  // BFS by levels
+  var levelMap = {}; // level -> array of user objects
+  levelMap[0] = [user];
+  for(var lvl=0; lvl<maxLevel; lvl++){
+    var parents = levelMap[lvl] || [];
+    if(!parents.length) break;
+    levelMap[lvl+1] = [];
+    for(var p=0; p<parents.length; p++){
+      var kids = getDirectReferrals(parents[p]);
+      for(var k=0; k<kids.length; k++){
+        var child = kids[k];
+        if(!child || seen[child.id]) continue;
+        seen[child.id] = 1;
+        levelMap[lvl+1].push(child);
+        result.list.push({ user: child, level: lvl+1 });
+      }
+    }
+  }
+  for(var L=1; L<=maxLevel; L++){
+    if(levelMap[L] && levelMap[L].length) result.byLevel[L] = levelMap[L];
+  }
+  return result;
+}
+
+function ensureUniqueInviteCodes(){
+  ensureState();
+  var used = { "IMXT2Y0M8D": 1, "STAFF0KATO": 1 };
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u) continue;
+    if(u.id === "admin" || (u.email||"").toLowerCase() === "k_hmed@yahoo.com"){
+      u.inviteCode = "IMXT2Y0M8D";
+      continue;
+    }
+    if(u.isSupport){
+      u.inviteCode = u.inviteCode || "STAFF0KATO";
+      used[String(u.inviteCode).toUpperCase()] = 1;
+      continue;
+    }
+    var code = String(u.inviteCode || "").toUpperCase();
+    if(!code || used[code] || code === "IMXT2Y0M8D"){
+      u.inviteCode = genCode();
+      code = u.inviteCode;
+    }
+    used[code] = 1;
+  }
+}
+
+function renderTeamTree(user){
+  var box = document.getElementById("teamTreeList");
+  if(!box) return;
+  if(!user){ box.innerHTML = ""; return; }
+  ensureUniqueInviteCodes();
+  var tree = getTeamRecursive(user, 20);
+  var fullEl = document.getElementById("teamFullCount");
+  if(fullEl) fullEl.textContent = String(tree.list.length);
+  if(!tree.list.length){
+    box.innerHTML = '<div class="empty">No one has joined with your link yet.<br>Share <b class="blue">'+(user.inviteCode||"")+'</b></div>';
+    return;
+  }
+  var h = "";
+  var levels = Object.keys(tree.byLevel).map(Number).sort(function(a,b){ return a-b; });
+  for(var i=0;i<levels.length;i++){
+    var L = levels[i];
+    var members = tree.byLevel[L] || [];
+    h += '<div class="team-level-title">Level '+L+' · '+members.length+' member'+(members.length===1?"":"s")+'</div>';
+    for(var m=0;m<members.length;m++){
+      var u = members[m];
+      var shares = (u.machines && u.machines.length) ? u.machines.length : 0;
+      h += '<div class="team-member-row">'+
+        '<div class="lvl">LEVEL '+L+'</div>'+
+        '<div><b>'+escHtml(u.name||"Member")+'</b></div>'+
+        '<div class="muted">Mobile: '+escHtml(u.phone||"—")+'</div>'+
+        '<div class="muted">Email: '+escHtml(u.email||"—")+'</div>'+
+        '<div>Invite code: <span class="code">'+escHtml(u.inviteCode||"—")+'</span></div>'+
+        '<div class="muted" style="margin-top:4px">Shares bought: '+shares+
+          (u.createdAt ? ' · Joined: '+escHtml(String(u.createdAt).slice(0,10)) : '')+
+        '</div>'+
+      '</div>';
+    }
+  }
+  box.innerHTML = h;
+}
+
 function toast(msg){
   try{
     var el = document.getElementById("toast");
@@ -3166,6 +3873,8 @@ function doSignup(){
 
     state.users.push(nu);
     state.currentUserId = nu.id;
+    var welcomeAmt = 0;
+    try { welcomeAmt = creditJoinerWelcome(nu); } catch(e) { console.error(e); }
     try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
 
     // Force UI into app
@@ -3178,7 +3887,7 @@ function doSignup(){
     try { showApp(); } catch(e) { console.error(e); }
     try { render(); } catch(e) { console.error(e); }
     try { toast("Account created — Welcome!"); } catch(e) {}
-    alert("Account created successfully.\nYou can now deposit and buy shares.");
+    alert("Account created successfully.\nWelcome reward credited: " + (welcomeAmt ? money(welcomeAmt) : "5 USD + 500 UGX") + "\nYou can now deposit and buy shares.");
   } catch(err) {
     console.error(err);
     alert("Signup error: " + (err && err.message ? err.message : String(err)));
@@ -3215,6 +3924,7 @@ function filterSeries(f, btn){
   for(var i=0;i<tabs.length;i++) tabs[i].classList.remove("active");
   if(btn) btn.classList.add("active");
   renderMachines();
+  try{ if(marketViewMode==='market') renderClubMarket(); }catch(e){}
 }
 
 function userRaffleTickets(user){
@@ -3297,28 +4007,7 @@ function enterRaffle(id){ flipRaffleCard(id); }
 
 
 
-function getDirectReferrals(user){
-  var list = [];
-  if(!user) return list;
-  for(var i=0;i<state.users.length;i++){
-    var u = state.users[i];
-    if(!u || u.isAdmin) continue;
-    if(u.referredBy === user.id || u.referredBy === user.inviteCode) list.push(u);
-  }
-  return list;
-}
-function getTeamRecursive(user, depth, maxDepth, acc){
-  if(!user || depth > maxDepth) return acc;
-  var directs = getDirectReferrals(user);
-  for(var i=0;i<directs.length;i++){
-    var d = directs[i];
-    if(acc.ids[d.id]) continue;
-    acc.ids[d.id] = true;
-    acc.list.push({user:d, level:depth});
-    getTeamRecursive(d, depth+1, maxDepth, acc);
-  }
-  return acc;
-}
+
 function miningIncomeTotal(user){
   if(!user) return 0;
   var total = 0;
@@ -3385,37 +4074,156 @@ function openStatDetail(kind){
 
   if(kind === "deposits"){
     title.textContent = "Deposit details";
-    var deps = user.deposits || [];
-    var conf = depositTotalConfirmed(user);
-    html += '<div class="notice">Total confirmed deposits: <b class="green">'+money(conf)+'</b></div>';
-    if(!deps.length) html += '<div class="empty">No deposits yet</div>';
-    for(var i=0;i<deps.length;i++){
-      var d = deps[i];
-      var st = d.status||"pending";
-      var cls = st==="confirmed"?"badge-ok":(st==="rejected"?"badge-bad":"badge-pend");
-      html += '<div class="detail-row"><div><b>'+(d.method||"Deposit")+'</b> · <span class="'+cls+'">'+st+'</span></div>'+
-        '<div class="amt '+(st==="confirmed"?"green":"")+'">'+money(d.amount)+'</div>'+
-        '<div class="when">'+(d.date||"—")+(d.reference?(" · TxID: "+d.reference):"")+'</div></div>';
+    var isAdm = !!(user.isAdmin || user.canApproveDeposit);
+    var allRows = [];
+    var totalAll = 0, totalPending = 0, totalConfirmed = 0, totalRejected = 0;
+    if(isAdm){
+      for(var ui=0; ui<state.users.length; ui++){
+        var uu = state.users[ui];
+        if(!uu || uu.isAdmin) continue;
+        var deps = uu.deposits || [];
+        for(var di=0; di<deps.length; di++){
+          var dd = deps[di];
+          if(!dd) continue;
+          var amt = Number(dd.amount||0);
+          totalAll += amt;
+          var st0 = String(dd.status||"pending").toLowerCase();
+          if(st0==="confirmed"||st0==="approved") totalConfirmed += amt;
+          else if(st0==="rejected") totalRejected += amt;
+          else totalPending += amt;
+          allRows.push({ user: uu, dep: dd });
+        }
+      }
+    } else {
+      var depsMe = user.deposits || [];
+      for(var mi=0; mi<depsMe.length; mi++){
+        var dm = depsMe[mi];
+        if(!dm) continue;
+        var am = Number(dm.amount||0);
+        totalAll += am;
+        var stm = String(dm.status||"pending").toLowerCase();
+        if(stm==="confirmed"||stm==="approved") totalConfirmed += am;
+        else if(stm==="rejected") totalRejected += am;
+        else totalPending += am;
+        allRows.push({ user: user, dep: dm });
+      }
+    }
+    allRows.sort(function(a,b){
+      return String(b.dep.date||b.dep.created_at||"").localeCompare(String(a.dep.date||a.dep.created_at||""));
+    });
+    html += '<div class="notice" style="margin-bottom:10px">'+
+      '<div>Total deposits: <b class="blue">'+money(totalAll)+'</b></div>'+
+      '<div>Pending: <b style="color:#ffc107">'+money(totalPending)+'</b> · Approved: <b class="green">'+money(totalConfirmed)+'</b> · Rejected: <b style="color:#ff5c5c">'+money(totalRejected)+'</b></div>'+
+      (isAdm?'<div class="muted" style="font-size:11px;margin-top:4px">Admin view — all members. Tap Approve (green) or Reject (red).</div>':'')+
+    '</div>';
+    if(!allRows.length) html += '<div class="empty">No deposits yet</div>';
+    for(var i=0;i<allRows.length;i++){
+      var row = allRows[i];
+      var d = row.dep;
+      var ou = row.user;
+      var st = String(d.status||"pending").toLowerCase();
+      var stClass = (st==="confirmed"||st==="approved")?"confirmed":(st==="rejected"?"rejected":"pending");
+      var label = (st==="confirmed"||st==="approved")?"APPROVED":(st==="rejected"?"REJECTED":"PENDING");
+      var tx = d.reference || d.txId || d.provider_ref || "—";
+      html += '<div class="dep-row '+stClass+'">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'+
+          '<b>'+money(d.amount||0)+'</b>'+
+          '<span class="dep-status '+stClass+'">'+label+'</span>'+
+        '</div>';
+      if(isAdm){
+        html += '<div style="margin-top:6px;font-size:12px"><b>'+escHtml(ou.name||"Member")+'</b></div>'+
+          '<div class="muted" style="font-size:11px">'+escHtml(ou.phone||"")+' · '+escHtml(ou.email||"")+'</div>';
+      }
+      html += '<div class="muted" style="margin-top:6px;font-size:12px">'+(d.method||d.network||"Deposit")+'</div>'+
+        '<div style="font-size:12px">TxID: <b class="blue" style="word-break:break-all">'+escHtml(tx)+'</b></div>'+
+        '<div class="muted" style="font-size:11px;margin-top:4px">'+(d.date||"—")+'</div>';
+      if(isAdm && stClass==="pending"){
+        var verified = !!d.txidAdminVerified;
+        html += '<div class="muted" style="font-size:11px;margin-top:6px">'+(verified
+          ? '<span style="color:#20e58b">TxID verified ✓</span>'
+          : '<span style="color:#ffc107">TxID needs verification</span>')+'</div>';
+        html += '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">';
+        if(!verified){
+          html += '<button type="button" class="btn secondary" style="flex:1;margin:0;min-width:40%" onclick="adminVerifyTxid(\''+ou.id+'\',\''+d.id+'\')">VERIFY TxID</button>';
+        }
+        html += '<button type="button" class="btn" style="flex:1;margin:0;min-width:40%;background:linear-gradient(90deg,#0a8f4a,#20e58b);border:0" onclick="adminApproveDeposit(\''+ou.id+'\',\''+d.id+'\');setTimeout(function(){openStatDetail(\'deposits\');},120)">APPROVE</button>'+
+          '<button type="button" class="btn" style="flex:1;margin:0;min-width:40%;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="adminRejectDeposit(\''+ou.id+'\',\''+d.id+'\');setTimeout(function(){openStatDetail(\'deposits\');},120)">REJECT</button>'+
+        '</div>';
+      }
     }
   }
   else if(kind === "withdrawals"){
     title.textContent = "Withdraw details";
-    var wb = withdrawBreakdown(user);
-    html += '<div class="detail-section"><h4>Summary</h4>'+
-      '<div class="kpi"><span>Pending audit</span><b class="badge-pend">'+money(wb.pending)+'</b></div>'+
-      '<div class="kpi"><span>Audited / withdrawn</span><b class="badge-ok">'+money(wb.approved)+'</b></div>'+
-      '<div class="kpi"><span>Rejected</span><b class="badge-bad">'+money(wb.rejected)+'</b></div></div>';
-    html += '<div class="detail-section"><h4>History</h4>';
-    if(!wb.list.length) html += '<div class="empty">No withdrawals yet</div>';
-    for(var w=0;w<wb.list.length;w++){
-      var x = wb.list[w];
-      var st = x.status||"pending";
-      var cls = st==="pending"?"badge-pend":(st==="rejected"?"badge-bad":"badge-ok");
-      html += '<div class="detail-row"><div><b>Withdrawal</b> · <span class="'+cls+'">'+st+'</span></div>'+
-        '<div class="amt">'+money(x.amount)+(x.net?(" · net "+money(x.net)):"")+'</div>'+
-        '<div class="when">'+(x.date||"—")+'</div></div>';
+    var isAdmW = !!(user.isAdmin || user.canApproveWithdraw);
+    var wRows = [];
+    var wTotal = 0, wPend = 0, wOk = 0, wRej = 0;
+    if(isAdmW || user.isAdmin){
+      for(var wi=0; wi<state.users.length; wi++){
+        var wu = state.users[wi];
+        if(!wu || wu.isAdmin) continue;
+        var wlist = wu.withdrawals || [];
+        for(var wj=0; wj<wlist.length; wj++){
+          var ww = wlist[wj];
+          if(!ww) continue;
+          var wa = Number(ww.amount||0);
+          wTotal += wa;
+          var wst = String(ww.status||"pending").toLowerCase();
+          if(wst==="pending") wPend += wa;
+          else if(wst==="rejected") wRej += wa;
+          else wOk += wa;
+          wRows.push({ user: wu, w: ww });
+        }
+      }
+    } else {
+      var myW = user.withdrawals || [];
+      for(var mj=0; mj<myW.length; mj++){
+        var mw = myW[mj];
+        if(!mw) continue;
+        var ma = Number(mw.amount||0);
+        wTotal += ma;
+        var mst = String(mw.status||"pending").toLowerCase();
+        if(mst==="pending") wPend += ma;
+        else if(mst==="rejected") wRej += ma;
+        else wOk += ma;
+        wRows.push({ user: user, w: mw });
+      }
     }
-    html += '</div>';
+    wRows.sort(function(a,b){
+      return String(b.w.date||"").localeCompare(String(a.w.date||""));
+    });
+    html += '<div class="notice" style="margin-bottom:10px">'+
+      '<div>Total withdrawals: <b class="blue">'+money(wTotal)+'</b></div>'+
+      '<div>Pending: <b style="color:#ffc107">'+money(wPend)+'</b> · Approved: <b class="green">'+money(wOk)+'</b> · Rejected: <b style="color:#ff5c5c">'+money(wRej)+'</b></div>'+
+      (user.isAdmin?'<div class="muted" style="font-size:11px;margin-top:4px">Admin view — Approve (green) or Reject (red).</div>':'')+
+    '</div>';
+    if(!wRows.length) html += '<div class="empty">No withdrawals yet</div>';
+    for(var wr=0; wr<wRows.length; wr++){
+      var item = wRows[wr];
+      var x = item.w;
+      var ou2 = item.user;
+      var stw = String(x.status||"pending").toLowerCase();
+      var stc = stw==="pending"?"pending":(stw==="rejected"?"rejected":"confirmed");
+      var lab = stw==="pending"?"PENDING":(stw==="rejected"?"REJECTED":"APPROVED");
+      html += '<div class="dep-row '+stc+'">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center">'+
+          '<b>'+money(x.amount||0)+'</b>'+
+          '<span class="dep-status '+stc+'">'+lab+'</span>'+
+        '</div>';
+      if(user.isAdmin){
+        html += '<div style="margin-top:6px;font-size:12px"><b>'+escHtml(ou2.name||"Member")+'</b></div>'+
+          '<div class="muted" style="font-size:11px">'+escHtml(ou2.phone||"")+' · '+escHtml(ou2.email||"")+'</div>';
+      }
+      html += '<div class="muted" style="margin-top:6px;font-size:12px">Fee 5%: '+money(x.fee||(Number(x.amount||0)*0.05))+
+        (x.net?(' · Net: '+money(x.net)):'')+'</div>'+
+        '<div class="muted" style="font-size:11px">'+(x.date||"—")+'</div>';
+      if(user.isAdmin && stc==="pending"){
+        html += '<div style="display:flex;gap:8px;margin-top:10px">'+
+          '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#0a8f4a,#20e58b);border:0" onclick="approveWithdraw(\''+x.id+'\');setTimeout(function(){openStatDetail(\'withdrawals\');},100)">APPROVE</button>'+
+          '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="rejectWithdraw(\''+x.id+'\');setTimeout(function(){openStatDetail(\'withdrawals\');},100)">REJECT</button>'+
+        '</div>';
+      }
+      html += '</div>';
+    }
   }
   else if(kind === "mining"){
     title.textContent = "Share Income";
@@ -3471,7 +4279,7 @@ function openStatDetail(kind){
   else if(kind === "team"){
     title.textContent = "Team Count";
     var directs2 = getDirectReferrals(user);
-    var tree = getTeamRecursive(user, 1, 10, {ids:{}, list:[]});
+    var tree = getTeamRecursive(user, 20);
     var buyers = 0;
     for(var t1=0;t1<tree.list.length;t1++){
       if((tree.list[t1].user.machines||[]).length) buyers++;
@@ -3510,11 +4318,13 @@ function openStatDetail(kind){
 
 function setLeagueFilter(league, btn){
   leagueFilter = league || "all";
+  try{ if(marketViewMode==='market') renderClubMarket(); }catch(e){}
   var tabs = document.querySelectorAll("#leagueTabs button");
   for(var i=0;i<tabs.length;i++) tabs[i].classList.remove("active");
   if(btn) btn.classList.add("active");
   applyLeagueAtmosphere(leagueFilter);
   renderMachines();
+  try{ if(marketViewMode==='market') renderClubMarket(); }catch(e){}
 }
 function applyLeagueAtmosphere(league){
   var fx = document.getElementById("leagueFx");
@@ -3557,6 +4367,153 @@ function applyClubAtmosphere(club){
   setTimeout(function(){ if(fx) fx.style.filter = ""; }, 1200);
   toast((club||"Club") + " selected");
 }
+
+
+/* ===== CLUB STOCK MARKET (daily track) ===== */
+var marketViewMode = "shares"; // shares | market
+var clubMarketState = null; // { dayKey, prices: {id: {price, change, history:[]}} }
+
+function marketDayKey(){
+  var d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function seededRand(seed){
+  var x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+function baseMarketPrice(m){
+  // Derive from nominal club value string or id
+  var mv = String(m.marketValue||"");
+  var num = parseFloat(mv.replace(/[^0-9.]/g,"")) || (3 + (m.id%7));
+  // map billions to UGX-ish display index around 30k-80k
+  return Math.round((28000 + num * 4200 + (m.id * 317) % 9000) / 100) * 100;
+}
+function loadClubMarket(){
+  try {
+    var raw = localStorage.getItem("imate1_club_market");
+    if(raw) clubMarketState = JSON.parse(raw);
+  } catch(e){ clubMarketState = null; }
+  if(!clubMarketState || !clubMarketState.prices) clubMarketState = { dayKey: "", prices: {} };
+  ensureClubMarketDay();
+}
+function saveClubMarket(){
+  try { localStorage.setItem("imate1_club_market", JSON.stringify(clubMarketState)); } catch(e){}
+}
+function ensureClubMarketDay(){
+  var key = marketDayKey();
+  var needNew = clubMarketState.dayKey !== key;
+  if(!clubMarketState.prices) clubMarketState.prices = {};
+  for(var i=0;i<machines.length;i++){
+    var m = machines[i];
+    if(!m) continue;
+    var id = String(m.id);
+    var base = baseMarketPrice(m);
+    if(!clubMarketState.prices[id]){
+      clubMarketState.prices[id] = { price: base, change: 0, history: [base, base, base, base, base, base, base] };
+    }
+    var p = clubMarketState.prices[id];
+    if(!p.history || p.history.length < 7){
+      p.history = p.history || [];
+      while(p.history.length < 7) p.history.unshift(p.price || base);
+    }
+    if(needNew){
+      // daily movement -1.8% .. +2.2% deterministic per day+club
+      var seed = 0;
+      for(var c=0;c<key.length;c++) seed += key.charCodeAt(c) * (c+1);
+      seed += m.id * 9973;
+      var r = seededRand(seed);
+      var pct = (r * 4.0) - 1.8; // -1.8 to +2.2
+      var prev = p.price || base;
+      var next = Math.max(15000, Math.round(prev * (1 + pct/100)));
+      p.history.push(next);
+      if(p.history.length > 14) p.history = p.history.slice(-14);
+      p.change = ((next - prev) / prev) * 100;
+      p.price = next;
+      p.prev = prev;
+    } else {
+      // recompute change vs previous history point
+      var h = p.history;
+      if(h.length >= 2){
+        var a = h[h.length-2], b = h[h.length-1];
+        p.change = a ? ((b-a)/a)*100 : 0;
+        p.price = b;
+      }
+    }
+  }
+  if(needNew) clubMarketState.dayKey = key;
+  saveClubMarket();
+}
+function setMarketView(mode, btn){
+  marketViewMode = mode || "shares";
+  var tabs = document.querySelectorAll(".market-tabs button");
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove("active");
+  if(btn) btn.classList.add("active");
+  else {
+    var a = document.getElementById(mode==="market"?"tabMarketView":"tabSharesView");
+    if(a) a.classList.add("active");
+  }
+  var panel = document.getElementById("clubMarketPanel");
+  var list = document.getElementById("machineList");
+  if(panel) panel.style.display = marketViewMode === "market" ? "block" : "none";
+  if(list) list.style.display = marketViewMode === "market" ? "none" : "block";
+  if(marketViewMode === "market") renderClubMarket();
+  else renderMachines();
+  try{ if(marketViewMode==='market') renderClubMarket(); }catch(e){}
+}
+function sparklineSvg(history, up){
+  var h = history || [1,1,1,1];
+  var min = Math.min.apply(null, h), max = Math.max.apply(null, h);
+  var span = (max - min) || 1;
+  var w = 72, ht = 28, pts = [];
+  for(var i=0;i<h.length;i++){
+    var x = (i/(h.length-1||1)) * (w-2) + 1;
+    var y = ht - 2 - ((h[i]-min)/span)*(ht-4);
+    pts.push(x.toFixed(1)+","+y.toFixed(1));
+  }
+  var color = up ? "#20e58b" : "#ff5c7a";
+  return '<svg class="market-spark" viewBox="0 0 '+w+' '+ht+'" xmlns="http://www.w3.org/2000/svg"><polyline fill="none" stroke="'+color+'" stroke-width="1.8" points="'+pts.join(" ")+'"/></svg>';
+}
+function renderClubMarket(){
+  loadClubMarket();
+  var el = document.getElementById("clubMarketList");
+  if(!el) return;
+  var rows = [];
+  var gainers = 0, losers = 0;
+  for(var i=0;i<machines.length;i++){
+    var m = machines[i];
+    if(!m) continue;
+    if(leagueFilter && leagueFilter !== "all" && m.league !== leagueFilter) continue;
+    var p = (clubMarketState.prices && clubMarketState.prices[String(m.id)]) || { price: baseMarketPrice(m), change: 0, history: [0,0,0] };
+    var ch = Number(p.change||0);
+    if(ch >= 0) gainers++; else losers++;
+    rows.push({ m: m, p: p, ch: ch });
+  }
+  rows.sort(function(a,b){ return Math.abs(b.ch) - Math.abs(a.ch); });
+  var gEl = document.getElementById("mktGainers");
+  var lEl = document.getElementById("mktLosers");
+  if(gEl) gEl.textContent = String(gainers);
+  if(lEl) lEl.textContent = String(losers);
+  if(!rows.length){ el.innerHTML = '<div class="empty">No clubs in this league</div>'; return; }
+  var h = "";
+  for(var r=0;r<rows.length;r++){
+    var item = rows[r];
+    var m = item.m;
+    var up = item.ch >= 0;
+    var chStr = (up?"+":"")+item.ch.toFixed(2)+"%";
+    var photo = m.photo || m.photoFb || "";
+    h += '<div class="market-row" onclick="openBuy('+(m.id)+')">'+
+      '<img src="'+photo+'" alt="" onerror="this.src=\''+(m.photoFb||'')+'\'">'+
+      '<div><div class="mname">'+escHtml(m.code||m.name)+'</div>'+
+      '<div class="mleague">'+escHtml(m.league||"")+' · '+escHtml(m.marketValue||"")+'</div>'+
+      sparklineSvg(item.p.history, up)+
+      '</div>'+
+      '<div><div class="mprice">'+Number(item.p.price||0).toLocaleString()+'</div>'+
+      '<div class="mchg '+(up?"up":"down")+'">'+chStr+'</div></div>'+
+    '</div>';
+  }
+  el.innerHTML = h;
+}
+
 
 function renderMachines(){
   var list = document.getElementById("machineList"); if(!list) return;
@@ -3771,278 +4728,237 @@ function copyText(txt, label){
 }
 
 function updateDepositChannels(){
-  var network = document.getElementById("depositNetwork").value;
+  var network = (document.getElementById("depositNetwork")||{}).value || "mtn";
   var el = document.getElementById("depositChannels");
-  var sf = document.getElementById("senderPhoneField");
-  var steps = document.getElementById("depositSteps");
-  var amt = Number(document.getElementById("depositAmount").value || 3000);
-  if(amt < 3000) amt = 3000;
+  if(!el) return;
+  var amtRaw = (document.getElementById("depositAmount")||{}).value || "";
+  var amt = String(amtRaw).replace(/\D/g,"") || "0";
+  var senderField = document.getElementById("senderPhoneField");
+  if(senderField) senderField.style.display = (network === "usdt") ? "none" : "";
+
   if(network === "usdt"){
-    if(sf) sf.classList.add("hidden");
     el.innerHTML =
-      '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Send <b>USDT on TRC20 only</b></div>'+
-      '<div style="font-weight:700;font-size:12px;word-break:break-all;background:#030912;padding:10px;border-radius:8px;border:1px solid #18374e">'+DEPOSIT_USDT+'</div>'+
-      '<button type="button" class="copy-btn" onclick="copyText(DEPOSIT_USDT,\'Address copied\')">COPY TRC20 ADDRESS</button>'+
-      '<div class="muted" style="margin-top:8px;font-size:11px">Wrong network = loss of funds. Wallet balance updates only after system confirmation and approval.</div>';
-    if(steps) steps.innerHTML =
-      '<b>USDT steps</b><br>1. Send USDT (TRC20)<br>2. Copy TxID<br>3. Submit below<br>4. Wait for system confirmation and approval';
-  } else {
-    if(sf) sf.classList.remove("hidden");
-    var netName = network==="mtn" ? "MTN Mobile Money" : "Airtel Money";
-    /* Direct USSD — number pre-filled, customer only confirms with PIN */
-    var ussd = network==="mtn"
+      '<div style="font-size:13px;margin-bottom:8px"><b>USDT TRC20 deposit</b></div>'+
+      '<div class="muted" style="font-size:12px;margin-bottom:8px">Send only TRC20 USDT to this address, then paste your TxID below.</div>'+
+      '<div style="font-weight:700;font-size:12px;word-break:break-all;background:#030912;padding:10px;border-radius:8px;border:1px solid #18374e" id="depCopyAddr">'+DEPOSIT_USDT+'</div>'+
+      '<button type="button" class="btn" style="margin-top:10px" onclick="copyDepositContact(\'usdt\')">COPY TRC20 ADDRESS</button>'+
+      '<div class="muted" style="margin-top:10px;font-size:11px">After payment, paste the Transaction ID and submit.</div>';
+    return;
+  }
+
+  var isMtn = network === "mtn";
+  var payUssd = isMtn
       ? ("*165*1*1*"+DEPOSIT_MM+"*"+amt+"#")
       : ("*185*1*1*"+DEPOSIT_MM+"*"+amt+"#");
-    /* Fallback short codes that open pay-to-number flows on many UG handsets */
-    var ussdAlt = network==="mtn"
+  var altUssd = isMtn
       ? ("*165*3*"+DEPOSIT_MM+"*"+amt+"#")
       : ("*185*6*"+DEPOSIT_MM+"*"+amt+"#");
-    var tel = "tel:" + encodeURIComponent(ussd);
-    var telAlt = "tel:" + encodeURIComponent(ussdAlt);
-    el.innerHTML =
-      '<div style="font-size:13px;line-height:1.45;margin-bottom:10px">'+
-      '<b>Pay with '+netName+'</b><br>'+
-      '<span class="muted">One tap opens USSD with deposit number <b>'+DEPOSIT_MM+'</b> and your amount already filled. Confirm with your PIN.</span></div>'+
-      '<a class="btn" style="text-align:center;text-decoration:none;display:block;margin-bottom:8px" href="'+tel+'">PAY '+Number(amt).toLocaleString()+' UGX VIA USSD</a>'+
-      '<a class="btn secondary" style="text-align:center;text-decoration:none;display:block" href="'+telAlt+'">ALTERNATE USSD PAY</a>'+
-      '<div class="muted" style="margin-top:10px;font-size:11px">Number is fixed in the code — you do not type it. If USSD menu differs on your phone, choose Send Money to <b>'+DEPOSIT_MM+'</b>.</div>';
-    if(steps) steps.innerHTML =
-      '<b>'+netName+' steps</b><br>'+
-      '1. Enter amount (min UGX 3,000)<br>'+
-      '2. Tap <b>PAY VIA USSD</b> — number '+DEPOSIT_MM+' is already included<br>'+
-      '3. Confirm with PIN<br>'+
-      '4. Copy Transaction ID from SMS and submit<br>'+
-      '5. Wallet credits only after admin approval';
+  var label = isMtn ? "MTN Mobile Money" : "Airtel Money";
+
+  el.innerHTML =
+    '<div style="font-size:13px;margin-bottom:8px"><b>'+label+'</b></div>'+
+    '<div class="muted" style="font-size:12px;margin-bottom:8px">Send money to this number, then paste your Transaction ID.</div>'+
+    '<div style="background:#030912;border:1px solid #1a6aa8;border-radius:10px;padding:12px;margin:8px 0">'+
+      '<div class="muted" style="font-size:11px">DEPOSIT NUMBER</div>'+
+      '<div id="depCopyNumber" style="font-size:22px;font-weight:800;color:#20e58b;letter-spacing:1px;margin:6px 0">'+DEPOSIT_MM+'</div>'+
+      '<button type="button" class="btn" style="margin:0" onclick="copyDepositContact(\'momo\')">COPY NUMBER</button>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'+
+      '<a class="btn secondary" style="flex:1;text-align:center;text-decoration:none;margin:0" href="tel:'+payUssd+'">PAY VIA USSD</a>'+
+    '</div>'+
+    '<div class="muted" style="margin-top:10px;font-size:11px;line-height:1.45">'+
+      '1. Tap <b>COPY NUMBER</b> and send money from your MoMo app<br>'+
+      '2. Or tap <b>PAY VIA USSD</b> (number + amount filled)<br>'+
+      '3. Paste Transaction ID below and submit for approval'+
+    '</div>';
+}
+
+function copyDepositContact(kind){
+  var text = (kind === "usdt") ? DEPOSIT_USDT : DEPOSIT_MM;
+  var label = (kind === "usdt") ? "TRC20 address" : "Deposit number";
+  function ok(){
+    toast(label + " copied");
+    try {
+      alert(label + " copied:\\n\\n" + text + "\\n\\nPaste it in your payment app, send the amount, then return here and paste your Transaction ID.");
+    } catch(e) {}
   }
-}
-
-function openDepositModal(){
-  var u = currentUser();
-  document.getElementById("depositAmount").value = "";
-  document.getElementById("depositRef").value = "";
-  document.getElementById("depositSender").value = u ? (u.phone||"") : "";
-  document.getElementById("depositNetwork").value = "mtn";
-  updateDepositChannels();
-  openModal("depositFundsModal");
-}
-
-function ensureNotifStore(){
-  ensureState();
-  if(!state.notifications) state.notifications = [];
-  return state.notifications;
-}
-
-function pushStaffNotification(title, body, meta){
-  ensureState();
-  var n = {
-    id: "n_" + Date.now() + "_" + Math.floor(Math.random()*999),
-    title: title || "Alert",
-    body: body || "",
-    meta: meta || {},
-    createdAt: new Date().toISOString(),
-    date: new Date().toLocaleString(),
-    read: false,
-    type: (meta && meta.type) || "deposit"
-  };
-  state.notifications = state.notifications || [];
-  state.notifications.unshift(n);
-  // keep last 100
-  if(state.notifications.length > 100) state.notifications = state.notifications.slice(0, 100);
-  try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
-  renderNotifications();
-  return n;
-}
-
-function unreadNotifCount(){
-  var list = ensureNotifStore();
-  var c = 0;
-  for(var i=0;i<list.length;i++) if(!list[i].read) c++;
-  return c;
-}
-
-function renderNotifications(){
-  var badge = document.getElementById("notifBadge");
-  var listEl = document.getElementById("notifList");
-  var me = currentUser();
-  var canSee = me && (me.isAdmin || me.isSupport || me.canApprovePassword);
-  var count = canSee ? unreadNotifCount() : 0;
-  if(badge){
-    if(count > 0){
-      badge.style.display = "";
-      badge.textContent = String(count > 99 ? "99+" : count);
-    } else {
-      badge.style.display = "none";
-      badge.textContent = "0";
-    }
-  }
-  if(!listEl) return;
-  if(!canSee){
-    listEl.innerHTML = '<div class="muted">Staff / admin only</div>';
-    return;
-  }
-  cleanupDepositStatuses();
-  var list = ensureNotifStore();
-  if(!list.length){
-    listEl.innerHTML = '<div class="muted">No notifications yet</div>';
-    return;
-  }
-  var h = "";
-  for(var i=0;i<list.length;i++){
-    var n = list[i];
-    h += '<div class="notif-item '+(n.read?"":"unread")+'" onclick="openNotifItem(\''+n.id+'\')">'+
-      '<div><b>'+escHtml(n.title)+'</b></div>'+
-      '<div style="margin-top:4px">'+escHtml(n.body)+'</div>'+
-      '<div class="when">'+(n.date||"")+'</div></div>';
-  }
-  listEl.innerHTML = h;
-}
-
-function escHtml(s){
-  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-}
-
-function toggleNotifPanel(){
-  var p = document.getElementById("notifPanel");
-  if(!p) return;
-  if(p.classList.contains("open")){
-    p.classList.remove("open");
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(ok).catch(function(){
+      fallbackCopy(text); ok();
+    });
   } else {
-    renderNotifications();
-    p.classList.add("open");
+    fallbackCopy(text); ok();
   }
 }
-
-function markAllNotifsRead(){
-  var list = ensureNotifStore();
-  for(var i=0;i<list.length;i++) list[i].read = true;
-  save();
-  renderNotifications();
-}
-
-function openNotifItem(id){
-  var list = ensureNotifStore();
-  for(var i=0;i<list.length;i++){
-    if(list[i].id === id){
-      list[i].read = true;
-      break;
-    }
-  }
-  save();
-  renderNotifications();
-  try { goPage("income"); } catch(e) {}
+function fallbackCopy(text){
   try {
-    var panel = document.getElementById("notifPanel");
-    if(panel) panel.classList.remove("open");
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
   } catch(e) {}
 }
 
-function parseDepTime(d){
-  if(!d) return Date.now();
-  var raw = d.created_at || d.approvedAt || d.rejectedAt || d.date || "";
-  var t = Date.parse(raw);
-  if(!isNaN(t)) return t;
-  return Date.now();
+
+var depositMethod = "usdt";
+var usdtNetwork = "trc20";
+var slideState = { depSlide: false, wdSlide: false };
+
+function setDepositMethod(m){
+  depositMethod = m || "usdt";
+  var usdt = document.getElementById("depPanelUsdt");
+  var mob = document.getElementById("depPanelMobile");
+  var t1 = document.getElementById("depTabUsdt");
+  var t2 = document.getElementById("depTabMobile");
+  var net = document.getElementById("depositNetwork");
+  var btn = document.getElementById("depPrimaryBtn");
+  if(usdt) usdt.style.display = depositMethod === "usdt" ? "block" : "none";
+  if(mob) mob.style.display = depositMethod === "mobile" ? "block" : "none";
+  if(t1) t1.classList.toggle("active", depositMethod === "usdt");
+  if(t2) t2.classList.toggle("active", depositMethod === "mobile");
+  if(net) net.value = depositMethod === "usdt" ? "usdt" : "mtn";
+  if(btn) btn.textContent = depositMethod === "usdt" ? "Get Deposit Address" : "Continue · Submit Deposit";
+  slideState.depSlide = false;
+  resetSlide("depSlide");
+  if(depositMethod === "mobile") updateDepositChannels();
 }
 
-function cleanupDepositStatuses(){
-  ensureState();
-  var now = Date.now();
-  var changed = false;
-  for(var i=0;i<state.users.length;i++){
-    var u = state.users[i];
-    if(!u || !u.deposits) continue;
-    var kept = [];
-    for(var j=0;j<u.deposits.length;j++){
-      var d = u.deposits[j];
-      if(!d) continue;
-      var st = String(d.status||"pending").toLowerCase();
-      var ts = parseDepTime(d);
-      // Rejected → delete after 2 days
-      if(st === "rejected"){
-        var rejTs = Date.parse(d.rejectedAt || d.created_at || d.date || "") || ts;
-        if(now - rejTs > REJECTED_KEEP_MS){
-          changed = true;
-          continue; // drop
-        }
-      }
-      // Pending older than 72h → auto-mark expired then treat as rejected for cleanup window
-      if(st === "pending" || st === "submitted" || st === "awaiting"){
-        if(now - ts > PENDING_MAX_MS){
-          d.status = "rejected";
-          d.rejectedAt = new Date().toISOString();
-          d.rejectReason = "Expired after 72 hours without approval";
-          changed = true;
-        }
-      }
-      kept.push(d);
+function setUsdtNetwork(n, el){
+  usdtNetwork = n || "trc20";
+  var opts = document.querySelectorAll("#depPanelUsdt .network-opt");
+  for(var i=0;i<opts.length;i++) opts[i].classList.remove("active");
+  if(el) el.classList.add("active");
+  var wrap = document.getElementById("depUsdtAddrWrap");
+  if(wrap) wrap.style.display = "none";
+}
+
+function pickDepAmount(v, btn){
+  var inp = document.getElementById("depositAmount");
+  if(inp) inp.value = v;
+  var btns = document.querySelectorAll("#depAmountPresets button");
+  for(var i=0;i<btns.length;i++) btns[i].classList.remove("active");
+  if(btn) btn.classList.add("active");
+  updateDepositChannels();
+}
+
+function depositPrimaryAction(){
+  if(depositMethod === "usdt"){
+    if(!slideState.depSlide){ alert("Slide to verify first"); return; }
+    var cap = document.getElementById("depCaptcha");
+    if(cap && !cap.checked){ alert("Tick I'm not a robot"); return; }
+    var wrap = document.getElementById("depUsdtAddrWrap");
+    var show = document.getElementById("depUsdtAddrShow");
+    var btn = document.getElementById("depPrimaryBtn");
+    var already = wrap && wrap.style.display === "block";
+    if(!already){
+      if(show) show.textContent = (typeof DEPOSIT_USDT !== "undefined" ? DEPOSIT_USDT : "");
+      if(wrap) wrap.style.display = "block";
+      if(btn) btn.textContent = "Submit Deposit · TxID";
+      toast("Send only " + (usdtNetwork||"TRC20").toUpperCase() + " USDT, then paste TxID and submit");
+      return;
     }
-    if(kept.length !== u.deposits.length) changed = true;
-    u.deposits = kept;
-  }
-  // global queue cleanup
-  if(state.pendingDeposits){
-    var gkeep = [];
-    for(var g=0;g<state.pendingDeposits.length;g++){
-      var item = state.pendingDeposits[g];
-      if(!item) continue;
-      var its = Date.parse(item.date || item.created_at || "") || now;
-      if(String(item.status||"pending").toLowerCase() === "pending" && now - its > PENDING_MAX_MS){
-        changed = true;
-        continue;
-      }
-      gkeep.push(item);
-    }
-    state.pendingDeposits = gkeep;
-  }
-  if(changed){
-    try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
-  }
-}
-
-function depositStatusLabel(st){
-  st = String(st||"pending").toLowerCase();
-  if(st === "confirmed" || st === "approved") return "APPROVED";
-  if(st === "rejected") return "REJECTED";
-  return "PENDING";
-}
-
-function depositStatusClass(st){
-  st = String(st||"pending").toLowerCase();
-  if(st === "confirmed" || st === "approved") return "confirmed";
-  if(st === "rejected") return "rejected";
-  return "pending";
-}
-
-function renderMyDepositsList(){
-  var box = document.getElementById("myDeposits");
-  if(!box) return;
-  var user = currentUser();
-  if(!user){ box.innerHTML = ""; return; }
-  cleanupDepositStatuses();
-  var deps = user.deposits || [];
-  if(!deps.length){
-    box.innerHTML = '<div class="empty">No deposits yet</div>';
+    // second press: submit with TxID
+    var netEl = document.getElementById("depositNetwork");
+    if(netEl) netEl.value = "usdt";
+    submitDeposit();
     return;
   }
-  var h = "";
-  for(var i=0;i<deps.length;i++){
-    var d = deps[i];
-    var st = depositStatusClass(d.status);
-    var label = depositStatusLabel(d.status);
-    var tx = d.reference || d.txId || d.provider_ref || "—";
-    h += '<div class="dep-row '+st+'">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center">'+
-        '<b>'+money(d.amount||0)+'</b>'+
-        '<span class="dep-status '+st+'">'+label+'</span>'+
-      '</div>'+
-      '<div class="muted" style="margin-top:6px;font-size:12px">'+(d.method||d.network||"")+' · TxID: <span style="color:#7ec8ff;word-break:break-all">'+escHtml(tx)+'</span></div>'+
-      '<div class="muted" style="font-size:11px;margin-top:4px">'+(d.date||"")+'</div>'+
-      (st==="pending" ? '<div class="muted" style="font-size:10px;margin-top:4px;color:#ffc107">Pending up to 72 hours</div>' : '')+
-      (st==="rejected" ? '<div class="muted" style="font-size:10px;margin-top:4px;color:#ff5c5c">Rejected · removed after 2 days</div>' : '')+
-    '</div>';
-  }
-  box.innerHTML = h;
+  // mobile → full submit
+  var netEl2 = document.getElementById("depositNetwork");
+  if(netEl2) netEl2.value = "mtn";
+  submitDeposit();
 }
+
+function resetSlide(id){
+  slideState[id] = false;
+  var knob = document.getElementById(id === "depSlide" ? "depSlideKnob" : "wdSlideKnob");
+  var lab = document.getElementById(id === "depSlide" ? "depSlideLabel" : "wdSlideLabel");
+  var box = document.getElementById(id);
+  if(knob) knob.style.marginLeft = "0px";
+  if(lab) lab.textContent = "Drag →";
+  if(box) box.classList.remove("done");
+}
+
+function startSlide(e, id){
+  e.preventDefault();
+  var box = document.getElementById(id);
+  var knob = document.getElementById(id === "depSlide" ? "depSlideKnob" : "wdSlideKnob");
+  var lab = document.getElementById(id === "depSlide" ? "depSlideLabel" : "wdSlideLabel");
+  if(!box || !knob) return;
+  var rect = box.getBoundingClientRect();
+  var max = rect.width - knob.offsetWidth - 8;
+  function move(ev){
+    var x = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left - 22;
+    if(x < 0) x = 0;
+    if(x > max) x = max;
+    knob.style.marginLeft = x + "px";
+    if(x >= max * 0.92){
+      slideState[id] = true;
+      knob.style.marginLeft = max + "px";
+      if(lab) lab.textContent = "Verified ✓";
+      box.classList.add("done");
+      end();
+    }
+  }
+  function end(){
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", end);
+    window.removeEventListener("touchmove", move);
+    window.removeEventListener("touchend", end);
+  }
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", end);
+  window.addEventListener("touchmove", move, {passive:false});
+  window.addEventListener("touchend", end);
+}
+
+function onWithdrawNetworkChange(){
+  var n = (document.getElementById("withdrawNetwork")||{}).value || "";
+  var inp = document.getElementById("withdrawAddress");
+  if(!inp) return;
+  if(n === "mtn" || n === "airtel"){
+    inp.placeholder = "07XXXXXXXX MoMo number";
+  } else {
+    inp.placeholder = "Enter USDT wallet address";
+  }
+}
+
+function updateWithdrawCalc(){
+  var amt = Number((document.getElementById("withdrawAmount")||{}).value || 0);
+  var fee = Math.round(amt * 0.05);
+  var net = amt - fee;
+  var el = document.getElementById("withdrawCalc");
+  if(el) el.innerHTML = "5% fee: <b>"+money(fee)+"</b> · You receive: <b class='green'>"+money(net)+"</b>";
+}
+
+
+function openDepositModal(){
+  var u = currentUser();
+  var amt = document.getElementById("depositAmount");
+  var ref = document.getElementById("depositRef");
+  var sender = document.getElementById("depositSender");
+  var net = document.getElementById("depositNetwork");
+  if(amt) amt.value = "";
+  if(ref) ref.value = "";
+  if(sender) sender.value = u ? (u.phone||"") : "";
+  if(net) net.value = "mtn";
+  updateDepositChannels();
+  openModal("depositFundsModal");
+  // Popup so customer can copy deposit contact immediately
+  setTimeout(function(){
+    try {
+      var msg = "Send your deposit to:\\n\\n" + DEPOSIT_MM + "\\n\\nTap OK, then use COPY NUMBER on the next screen if needed.";
+      if(window.confirm(msg + "\\n\\nCopy number now?")){
+        copyDepositContact("momo");
+      }
+    } catch(e) {}
+  }, 250);
+}
+
 
 function submitDeposit(){
   try {
@@ -4051,12 +4967,43 @@ function submitDeposit(){
     var network = (document.getElementById("depositNetwork").value||"mtn");
     var sender = (document.getElementById("depositSender").value||"").trim();
     var ref = (document.getElementById("depositRef").value||"").trim();
+    var confirmBox = document.getElementById("depositTxConfirm");
+
     if(amount < 3000){ alert("Minimum UGX 3,000"); return; }
     if(network !== "usdt"){
       var digits = normalizePhone(sender);
       if(!digits || digits.length < 9){ alert("Enter the Mobile Money number you paid from"); return; }
     }
-    if(!ref || ref.length < 4){ alert("Paste your Transaction ID after you pay"); return; }
+    if(!ref || ref.length < 4){ alert("Paste your Transaction ID (TxID) after you pay"); return; }
+    if(depositMethod === "mobile" && !slideState.depSlide){ alert("Slide to verify first"); return; }
+    var depCap = document.getElementById("depCaptcha");
+    if(depositMethod === "mobile" && depCap && !depCap.checked){ alert("Tick I'm not a robot"); return; }
+    // map network for mobile
+    if(depositMethod === "mobile"){
+      network = "mtn";
+      var netEl = document.getElementById("depositNetwork");
+      if(netEl) network = netEl.value || "mtn";
+    } else {
+      network = "usdt";
+    }
+    // basic TxID shape check
+    if(/\s{2,}/.test(ref)){ alert("TxID looks invalid — remove extra spaces"); return; }
+    if(confirmBox && !confirmBox.checked){
+      alert("Tick the box to confirm your Transaction ID is correct (TxID verification step).");
+      return;
+    }
+
+    // Step: user re-confirms TxID before submit
+    var verifyMsg =
+      "TXID VERIFICATION\\n\\n"+
+      "Amount: UGX "+amount.toLocaleString()+"\\n"+
+      "Method: "+(network==="mtn"?"MTN":network==="airtel"?"Airtel":"USDT TRC20")+"\\n"+
+      "Transaction ID:\\n"+ref+"\\n\\n"+
+      "Confirm this TxID is exactly as shown on your payment receipt?";
+    if(!window.confirm(verifyMsg)){
+      toast("Submission cancelled — check your TxID");
+      return;
+    }
 
     var method = network==="mtn"?"MTN Mobile Money":network==="airtel"?"Airtel Money":"USDT TRC20";
     var depId = "d_" + Date.now();
@@ -4070,6 +5017,8 @@ function submitDeposit(){
       reference: ref,
       txId: ref,
       status: "pending",
+      txidUserConfirmed: true,
+      txidAdminVerified: false,
       date: new Date().toLocaleString(),
       created_at: new Date().toISOString(),
       userId: user.id,
@@ -4083,11 +5032,10 @@ function submitDeposit(){
     user.transactions = user.transactions || [];
     user.transactions.unshift({
       date: new Date().toLocaleString(),
-      type: "Deposit pending approval — TxID: " + ref,
+      type: "Deposit pending TxID verification — "+ref,
       amount: 0
     });
 
-    // Global queue so admin always sees it even if iterating users fails
     state.pendingDeposits = state.pendingDeposits || [];
     state.pendingDeposits.unshift({
       depId: depId,
@@ -4103,21 +5051,22 @@ function submitDeposit(){
     try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
     try { closeModal("depositFundsModal"); } catch(e) {}
     try { save(); } catch(e) {}
+    try {
+      pushStaffNotification(
+        "New deposit · TxID to verify",
+        (user.name||"Member")+" · "+money(amount)+" · "+method+"\\nTxID: "+ref,
+        { type:"deposit", depId: depId, userId: user.id }
+      );
+    } catch(e) {}
     try { renderAdminPendingDeposits(); } catch(e) {}
     try { render(); } catch(e) {}
-    try{
-      pushStaffNotification(
-        "New deposit · TxID",
-        (user.name||"Member")+" · "+money(dep.amount)+" · "+(dep.method||"")+"\nTxID: "+(dep.reference||""),
-        { type:"deposit", depId: dep.id, userId: user.id }
-      );
-    }catch(e){}
-    toast("Deposit submitted. Waiting for admin approval.");
-    alert("Deposit submitted.\nTxID: " + ref + "\n\nAdmin will see this under Approvals.");
+    toast("TxID submitted — waiting admin verification");
+    alert("Deposit submitted.\\n\\nTxID: "+ref+"\\n\\nStatus: Pending verification.\\nAdmin will verify this Transaction ID before approving.");
   } catch(err) {
     alert("Deposit error: " + (err && err.message ? err.message : String(err)));
   }
 }
+
 
 function autoVerifyDeposit(user, dep){
   /* Disabled: wallet  */
@@ -4215,13 +5164,46 @@ function renderAdminPendingDeposits(){
         '<div>Tx ID: <b class="blue" style="word-break:break-all">'+tx+'</b></div>'+
         '<div class="muted" style="font-size:11px">'+when+'</div>'+
         '<div style="display:flex;gap:8px;margin-top:8px">'+
-          '<button type="button" class="btn" style="flex:1;margin:0" onclick="adminApproveDeposit(\''+u.id+'\',\''+d.id+'\')">APPROVE</button>'+
+          '<button type="button" class="btn secondary" style="flex:1;margin:0" onclick="adminVerifyTxid(\''+u.id+'\',\''+d.id+'\')">VERIFY TxID</button>'+'<button type="button" class="btn" style="flex:1;margin:0" onclick="adminApproveDeposit(\''+u.id+'\',\''+d.id+'\')">APPROVE</button>'+
           '<button type="button" class="btn secondary" style="flex:1;margin:0" onclick="adminRejectDeposit(\''+u.id+'\',\''+d.id+'\')">REJECT</button>'+
         '</div></div>';
     }
   }
   if(box) box.innerHTML = html;
   if(boxHome) boxHome.innerHTML = '<div style="font-size:12px;color:#ffb84d;margin-bottom:6px">Pending deposits: <b>'+rows.length+'</b></div>' + html;
+}
+
+
+function adminVerifyTxid(userId, depId){
+  var me = currentUser();
+  if(!me || !me.isAdmin){ alert("Admin only"); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u || u.id !== userId) continue;
+    var deps = u.deposits || [];
+    for(var j=0;j<deps.length;j++){
+      if(deps[j].id === depId){
+        var d = deps[j];
+        var tx = d.reference || d.txId || "";
+        var msg = "VERIFY TRANSACTION ID\\n\\nMember: "+(u.name||"")+"\\nPhone: "+(u.phone||"")+"\\nAmount: "+money(d.amount)+"\\nMethod: "+(d.method||"")+"\\n\\nTxID:\\n"+tx+"\\n\\nHave you checked this TxID on MoMo / USDT and confirmed it is valid?";
+        if(!window.confirm(msg)) return;
+        d.txidAdminVerified = true;
+        d.txidVerifiedAt = new Date().toLocaleString();
+        d.txidVerifiedBy = me.email || "admin";
+        // keep status pending until approve, but mark verified
+        d.verifyNote = "TxID verified by admin";
+        save();
+        toast("TxID verified — you can Approve now");
+        try{ pushStaffNotification("TxID verified", (u.name||"Member")+" · "+tx, {type:"txid_verified", depId:depId}); }catch(e){}
+        try{ renderAdminPendingDeposits(); }catch(e){}
+        try{ openStatDetail("deposits"); }catch(e){}
+        try{ render(); }catch(e){}
+        return;
+      }
+    }
+  }
+  alert("Deposit not found");
 }
 
 function adminApproveDeposit(userId, depId){
@@ -4238,21 +5220,47 @@ function adminApproveDeposit(userId, depId){
         if(String(d.status).toLowerCase() === "confirmed" || String(d.status).toLowerCase() === "approved"){
           toast("Already approved"); return;
         }
+        if(!d.txidAdminVerified){
+          var txc = d.reference || d.txId || "";
+          if(!window.confirm("TxID not marked verified yet.\n\nTxID: "+txc+"\n\nVerify and approve in one step?")) return;
+          d.txidAdminVerified = true;
+          d.txidVerifiedAt = new Date().toLocaleString();
+          d.txidVerifiedBy = me.email || "admin";
+        }
         d.status = "confirmed";
         d.approvedAt = new Date().toLocaleString();
         d.approvedBy = me.email || "admin";
-        u.balance = Number(u.balance||0) + Number(d.amount||0);
+        var depAmt = Number(d.amount||0);
+        var depBonus = Math.round(depAmt * 0.05);
+        var creditTotal = depAmt + depBonus;
+        d.bonus5 = depBonus;
+        d.creditedTotal = creditTotal;
+        u.balance = Number(u.balance||0) + creditTotal;
         u.transactions = u.transactions || [];
         u.transactions.unshift({
           date: new Date().toLocaleString(),
           type: "Deposit approved — "+(d.method||"MoMo/USDT"),
-          amount: Number(d.amount||0)
+          amount: depAmt
         });
-        try{ creditReferrerDividend(u, d.amount); }catch(e){}
+        u.transactions.unshift({
+          date: new Date().toLocaleString(),
+          type: "Deposit 5% bonus",
+          amount: depBonus
+        });
+        u.rewards = u.rewards || [];
+        u.rewards.unshift({
+          id: "rw_dep_"+Date.now(),
+          type: "deposit_bonus",
+          title: "Deposit 5% bonus",
+          detail: "Bonus on "+money(depAmt),
+          amount: depBonus,
+          date: new Date().toLocaleString()
+        });
+        try{ creditReferrerDividend(u, depAmt); }catch(e){}
         // clear global queue entry
         state.pendingDeposits = (state.pendingDeposits||[]).filter(function(x){ return x && x.depId !== depId; });
         save();
-        toast("Approved "+money(d.amount)+" for "+(u.name||"member"));
+        toast("Approved "+money(depAmt)+" + 5% "+money(depBonus)+" → "+money(creditTotal));
         try{
           pushStaffNotification(
             "Deposit APPROVED",
@@ -4448,6 +5456,10 @@ function changeLoginPassword(){
 }
 
 function openWithdraw(){
+  resetSlide("wdSlide");
+  var c = document.getElementById("wdCaptcha"); if(c) c.checked = false;
+  try{ updateWithdrawCalc(); }catch(e){}
+
   var user=currentUser(); if(!user) return;
   var bals=calcBalances(user);
   document.getElementById("withdrawLockNote").innerHTML =
@@ -4456,6 +5468,14 @@ function openWithdraw(){
   openModal("withdrawModal");
 }
 function doWithdraw(){
+  if(!slideState.wdSlide){ alert("Slide to verify first"); return; }
+  var wdCap = document.getElementById("wdCaptcha");
+  if(wdCap && !wdCap.checked){ alert("Tick I'm not a robot"); return; }
+  var wdNet = (document.getElementById("withdrawNetwork")||{}).value || "";
+  if(!wdNet){ alert("Select network / method"); return; }
+  var wdAddr = ((document.getElementById("withdrawAddress")||{}).value || "").trim();
+  if(!wdAddr){ alert("Enter wallet address or MoMo number"); return; }
+
   var user = currentUser(); if(!user) return;
   if(user.withdrawPassword){
     var wp = prompt("Enter your withdraw fund password:");
@@ -4530,6 +5550,29 @@ function sendChat(){
   toast("Message sent");
 }
 
+function rejectWithdraw(wid){
+  var me = currentUser();
+  if(!me || !me.isAdmin){ alert("Admin only"); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    var ws = u.withdrawals || [];
+    for(var j=0;j<ws.length;j++){
+      if(ws[j].id===wid && ws[j].status==="pending"){
+        ws[j].status = "rejected";
+        ws[j].rejectedAt = new Date().toLocaleString();
+        u.pendingWithdraw = Math.max(0, (u.pendingWithdraw||0) - Number(ws[j].amount||0));
+        u.transactions = u.transactions || [];
+        u.transactions.unshift({date:new Date().toLocaleString(), type:"Withdrawal rejected", amount:0});
+        save();
+        toast("Withdrawal rejected");
+        try{ render(); }catch(e){}
+        return;
+      }
+    }
+  }
+  alert("Withdrawal not found");
+}
 function approveWithdraw(wid){
   if(!canApproveWithdrawals()){ alert("Support staff cannot approve withdrawals. Contact full admin."); return; }
   var user=currentUser(); if(!user) return;
@@ -4544,7 +5587,7 @@ function approveWithdraw(wid){
         u.transactions=u.transactions||[];
         u.transactions.unshift({date:new Date().toLocaleString(), type:"Withdrawal approved", amount:-ws[j].amount});
         u.transactions.unshift({date:new Date().toLocaleString(), type:"5% withdrawal fee", amount:-ws[j].fee});
-        save(); toast("Withdrawal approved"); return;
+        save(); toast("Withdrawal approved"); try{render();}catch(e){} return;
       }
     }
   }
@@ -4560,6 +5603,7 @@ function render(){
   var user=currentUser(); if(!user) return;
   var bals=calcBalances(user);
   renderMachines();
+  try{ if(marketViewMode==='market') renderClubMarket(); }catch(e){}
 
   var myM=document.getElementById("myMachines");
   if(myM){
@@ -4602,15 +5646,35 @@ function render(){
 
   /* Home dashboard stats */
   try {
-    var depTot = depositTotalConfirmed(user);
+    var depTot = 0, wTot = 0;
+    if(user.isAdmin){
+      for(var _ai=0;_ai<state.users.length;_ai++){
+        var _au = state.users[_ai];
+        if(!_au || _au.isAdmin) continue;
+        var _ads = _au.deposits || [];
+        for(var _ad=0;_ad<_ads.length;_ad++) depTot += Number(_ads[_ad].amount||0);
+        var _aws = _au.withdrawals || [];
+        for(var _aw=0;_aw<_aws.length;_aw++) wTot += Number(_aws[_aw].amount||0);
+      }
+    } else {
+      depTot = depositTotalConfirmed(user);
+      var wbd = withdrawBreakdown(user);
+      wTot = (wbd.pending||0) + (wbd.approved||0);
+    }
     setText("homeDepositTotal", fmtMoneyNum(depTot));
-    var wbd = withdrawBreakdown(user);
-    setText("homeWithdrawTotal", fmtMoneyNum(wbd.pending + wbd.approved));
+    try {
+      var balsH = calcBalances(user);
+      var avail = Number(balsH.available != null ? balsH.available : (user.balance||0));
+      setText("homeTotalBalance", money(avail));
+      var usdEl = document.getElementById("homeTotalBalanceUsd");
+      if(usdEl) usdEl.textContent = "≈ $" + (typeof toUSD === "function" ? toUSD(avail, user).toFixed(2) : "0.00");
+    } catch(e) {}
+    setText("homeWithdrawTotal", fmtMoneyNum(wTot));
     setText("homeAiIncome", fmtMoneyNum(miningIncomeTotal(user)));
     setText("homeTodayEarn", fmtMoneyNum(todayEarnings(user)));
     var dirs = getDirectReferrals(user);
     setText("homeInviteCount", String(dirs.length));
-    var teamTree = getTeamRecursive(user, 1, 10, {ids:{}, list:[]});
+    var teamTree = getTeamRecursive(user, 20);
     setText("homeTeamCount", String(teamTree.list.length));
     setText("homeTeamIncome", fmtMoneyNum(user.referralEarnings||0));
   } catch(e){ console.error(e); }
@@ -4621,17 +5685,54 @@ function render(){
   var ar=document.getElementById("adminRow"); if(ar) ar.classList.toggle("hidden", !user.isAdmin);
   var ap=document.getElementById("adminPanelCard"); if(ap) ap.classList.toggle("hidden", !user.isAdmin);
   var ab=document.getElementById("adminBadgeHdr"); if(ab) ab.classList.toggle("hidden", !user.isAdmin);
+  try{
+    var rpd=document.getElementById("rewardPoolDisplay");
+    if(rpd && user.isAdmin){
+      var pool = user.rewardPool != null ? user.rewardPool : 100000000;
+      rpd.textContent = "USD " + Number(pool).toLocaleString(undefined,{maximumFractionDigits:2});
+    }
+  }catch(e){}
 
+  try{ ensureUniqueInviteCodes(); }catch(e){}
   setText("myInviteCode", user.inviteCode||"—");
-  setText("myInviteLink", (location.href.split("?")[0])+"?ref="+(user.inviteCode||""));
-  var refs=0; for(var r=0;r<state.users.length;r++) if(state.users[r].referredBy===user.id) refs++;
-  setText("refCount", refs);
+  var base = (location.origin && location.origin.indexOf("http")===0) ? (location.origin + location.pathname) : (location.href.split("?")[0]);
+  setText("myInviteLink", base.replace(/\/$/, "") + "?ref=" + (user.inviteCode||""));
+  var direct = getDirectReferrals(user);
+  setText("refCount", String(direct.length));
+  var tree = getTeamRecursive(user, 20);
+  setText("teamFullCount", String(tree.list.length));
   setText("refEarnings", money(user.referralEarnings||0));
+  try {
+    var jr = user.joinReward || 0;
+    setText("joinRewardAmt", jr ? money(jr) : (money(ugxToLocal(500, user))+" (pending)"));
+    setText("welcomeRewardAmt", user.welcomeCredited ? ("Credited · "+money(jr||0)) : "5 USD + 500 UGX on join");
+    var rEl = document.getElementById("rewardsList");
+    if(rEl){
+      var rs = user.rewards || [];
+      if(!rs.length){
+        rEl.innerHTML = '<div class="empty">Join to unlock welcome reward</div>';
+      } else {
+        var rh = "";
+        for(var ri=0; ri<rs.length; ri++){
+          var r = rs[ri];
+          rh += '<div class="kpi"><span>'+escHtml(r.title||r.type||"Reward")+'<br><small class="muted">'+escHtml(r.date||"")+'</small></span><b class="green">+'+money(r.amount||0)+'</b></div>';
+        }
+        rEl.innerHTML = rh;
+      }
+    }
+  } catch(e) { console.error(e); }
+  try{ renderTeamTree(user); }catch(e){ console.error(e); }
   var payEl=document.getElementById("refPayouts");
   if(payEl){
     var po=user.referralPayouts||[];
-    if(!po.length) payEl.innerHTML='<div class="empty">No payouts</div>';
-    else { var ph=""; for(var p=0;p<po.length;p++) ph+='<div class="kpi"><span>'+po[p].from+'</span><b class="green">+'+money(po[p].amount)+'</b></div>'; payEl.innerHTML=ph; }
+    if(!po.length) payEl.innerHTML='<div class="empty">No referral rewards yet</div>';
+    else {
+      var ph="";
+      for(var p=0;p<po.length;p++){
+        ph+='<div class="kpi"><span>'+escHtml(po[p].from||"Member")+(po[p].machine?(" · "+escHtml(po[p].machine)):"")+'</span><b class="green">+'+money(po[p].amount)+'</b></div>';
+      }
+      payEl.innerHTML=ph;
+    }
   }
 }
 
