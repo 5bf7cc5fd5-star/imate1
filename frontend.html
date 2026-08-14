@@ -36,12 +36,12 @@ header{padding:16px 16px 8px;display:flex;align-items:center;justify-content:spa
 .product-line{font-size:13px;color:#c8d8ea;margin:5px 0}.product-line b{color:#fff}.product-line .hi{color:#5eead4;font-weight:800}
 .product-actions{margin-top:10px}.product-actions .btn{margin-top:0;padding:10px;font-size:13px}
 .btn{width:100%;border:0;border-radius:11px;padding:13px 14px;font-weight:800;color:#fff;background:linear-gradient(90deg,#087be8,#16b7ff);margin-top:10px;font-size:14px}
-.btn.secondary{background:#0b1723;border:1px solid #18506f}.btn.danger{background:#65182a}.btn.lock-btn{background:#3a4555!important;color:#c0c8d4!important}
+.btn.secondary{background:#0b1723;border:1px solid #18506f}.btn.danger{background:#c62828!important;color:#fff!important;border-color:#ff5252!important}.btn.reject,.btn-reject{background:#c62828!important;color:#fff!important}.btn.lock-btn{background:#3a4555!important;color:#c0c8d4!important}
 .btn:disabled{opacity:.55}
 .progress{height:7px;background:#0b1a28;border-radius:20px;overflow:hidden;margin:8px 0}.progress i{display:block;height:100%;background:linear-gradient(90deg,#007cff,#2ee2ff)}
 .empty{text-align:center;padding:28px 10px;color:var(--muted);font-size:14px}
 .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,520px);height:76px;background:rgba(2,7,13,.88);border-top:1px solid #12344a;display:grid;grid-template-columns:repeat(5,1fr);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
-.nav{border:0;background:none;color:#73879b;font-size:10px}.nav b{display:block;font-size:20px;line-height:24px}.nav.active{color:#1ebcff}
+.nav{border:0;background:none;color:#73879b;font-size:9px;flex:1;padding:6px 2px}.bottom{display:flex;gap:0}.nav b{display:block;font-size:20px;line-height:24px}.nav.active{color:#1ebcff}
 .page{display:none;background:transparent}.page.active{display:block;background:transparent}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:50;display:none;align-items:flex-end;justify-content:center}
 .modal.open{display:flex}.sheet{width:min(100%,520px);background:#07111c;border:1px solid #075d92;border-radius:22px 22px 0 0;padding:18px 16px 28px;max-height:92vh;overflow-y:auto}
@@ -1972,11 +1972,12 @@ body{
 }
 .amount-presets button.active{background:rgba(0,210,106,0.15);border-color:#00d26a}
 .slide-verify{
+  touch-action:none;-webkit-user-select:none;user-select:none;
   display:flex;align-items:center;gap:0;background:#0a0a0c;border:1px solid #333;
   border-radius:12px;padding:4px;margin:12px 0;position:relative;user-select:none;height:48px
 }
 .slide-verify .slide-knob{
-  width:44px;height:40px;border-radius:10px;background:#00d26a;color:#04140a;
+  width:44px;height:48px;border-radius:12px;background:#00d26a;color:#04140a;box-shadow:0 2px 8px rgba(0,210,106,.4);
   display:flex;align-items:center;justify-content:center;font-weight:900;cursor:grab;
   z-index:2;transition:margin-left .15s
 }
@@ -2121,6 +2122,7 @@ body.auth-open {
       <div class="field"><label>PASSWORD</label><input id="loginPass" type="password" placeholder="Password" autocomplete="current-password"></div>
       <button type="button" class="btn" onclick="doLogin()">LOG IN</button>
       <p style="text-align:center;margin-top:10px"><button type="button" class="btn secondary" style="margin:0" onclick="openForgotPassword()">Forgot password?</button></p>
+      <p style="text-align:center;margin-top:8px"><button type="button" class="btn secondary" style="margin:0;background:#0d2818;border-color:#1a5c3a" onclick="openHelpChat()">Help · Chat with Assistant</button></p>
       <p class="muted" style="text-align:center;margin-top:10px;font-size:12px">Log in with email or mobile number + password</p>
       <p style="text-align:center;margin:14px 0 0;color:rgba(255,255,255,0.55);font-size:9px;letter-spacing:1px;text-shadow:0 1px 4px rgba(0,0,0,0.5)">KMK ™ · Est 2018</p>
     </div>
@@ -2137,6 +2139,14 @@ body.auth-open {
         <div class="muted" style="font-size:11px;margin-top:6px">Full number: <b id="suPhonePreview">+256</b></div>
       </div>
       <div class="field"><label>EMAIL</label><input id="suEmail" type="email" placeholder="you@email.com" autocomplete="email"></div>
+      <div class="field"><label>ID DOCUMENT TYPE</label>
+        <select id="suIdType">
+          <option value="National ID">National ID</option>
+          <option value="Passport">Passport</option>
+          <option value="Driving Permit">Driving Permit</option>
+        </select>
+      </div>
+      <div class="field"><label>ID / PASSPORT / PERMIT NUMBER</label><input id="suIdNumber" placeholder="Document number" autocomplete="off"></div>
       <div class="field"><label>PASSWORD</label><input id="suPass" type="password" placeholder="Create password" autocomplete="new-password"></div>
       <div class="field"><label>CONFIRM PASSWORD</label><input id="suPass2" type="password" placeholder="Re-enter password" autocomplete="new-password"></div>
       <div class="field"><label>INVITATION CODE</label><input id="suInvite" value="IMXT2Y0M8D"></div>
@@ -2147,8 +2157,8 @@ body.auth-open {
 
 <div id="mainApp" class="hidden">
   <header>
-    <div class="logo">Own Club<small>Share Market</small> <span id="adminBadgeHdr" class="admin-badge hidden">ADMIN</span></div>
-    <button type="button" class="icon-btn" onclick="openSettings()">&#9776;</button>
+    <div class="logo">Own Club<small>Share Market</small> <span id="adminBadgeHdr" class="admin-badge hidden">SYSTEM</span></div>
+    <button type="button" class="icon-btn" title="Help" onclick="openHelpChat()">?</button><button type="button" class="icon-btn" onclick="openSettings()">&#9776;</button>
         <button type="button" class="menu-item" onclick="openAboutUs()">
           <div class="ico"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></div>
           <span>About Us</span>
@@ -2165,14 +2175,14 @@ body.auth-open {
     
     <section id="home" class="page active">
       <div id="adminPanelCard" class="card hidden" style="border-color:#ff9d25;margin-top:8px">
-        <h3 style="margin:0 0 8px;color:#ffb84d">Admin Dashboard</h3>
+        <h3 style="margin:0 0 8px;color:#ffb84d">System Dashboard</h3>
         <div class="kpi"><span>Company fund pool (USD)</span><b class="green" id="rewardPoolDisplay">$100,000,000.00</b></div><div class="muted" style="font-size:11px;margin:4px 0 10px">Starts at $100M. +deposits · −joins · −bonuses · −dividends · −raffles · −approved withdrawals</div>
-        <div class="muted" style="margin-bottom:10px">Full admin: deposits & withdrawals. Support staff: customer password help only.</div>
+        <div class="muted" style="margin-bottom:10px">System operators: deposits & withdrawals. Support staff: customer password help only.</div>
         <button type="button" class="btn" onclick="goPage('income')">OPEN APPROVALS (Income)</button>
         <div id="adminPendingDepositsHome" style="margin-top:12px"></div>
-        <a class="btn secondary" style="display:block;text-align:center;text-decoration:none;margin-top:8px" href="/admin" target="_blank">OPEN /admin PANEL</a>
+        <a class="btn secondary" style="display:block;text-align:center;text-decoration:none;margin-top:8px" href="/admin" target="_blank">OPEN SYSTEM PANEL</a>
         <div class="muted" style="margin-top:8px;font-size:11px">Login: k_hmed@yahoo.com</div>
-        <div class="warn-sec">Security note: passwords are stored for admin support on this build. Hash passwords before scaling publicly.</div>
+        <div class="warn-sec">Security note: passwords are stored for system support on this build. Hash passwords before scaling publicly.</div>
         <h4 style="margin:12px 0 6px;color:#ffb84d">Customers — tap to open & credit wallet</h4>
         <div id="adminUsersList" style="max-height:280px;overflow-y:auto"></div>
       </div>
@@ -2252,7 +2262,7 @@ body.auth-open {
               <li>Share your personal invite code from <span class="hi">Team</span> — earn when friends join and buy.</li>
             </ol>
 
-            <div class="tip">&#128161; Always save your Transaction ID after every deposit. Withdrawals may require your fund password and admin approval.</div>
+            <div class="tip">&#128161; Always save your Transaction ID after every deposit. Withdrawals may require your fund password and system confirmation.</div>
           </div>
         </details>
         <div class="msg-item">Deposit requires Transaction ID + system confirmation and approval <span class="dot"></span></div>
@@ -2261,7 +2271,20 @@ body.auth-open {
       </div>
     </section>
 
-    <section id="machines" class="page">
+    
+    <section id="marketLive" class="page">
+      <div class="card">
+        <h2 style="margin:8px 0 6px">Crypto Markets</h2>
+        <p class="muted" style="margin:0 0 10px;font-size:12px">Live pricing with sparkline movement · auto-refreshes</p>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <button type="button" class="btn" style="padding:8px 12px;font-size:12px" onclick="setCryptoFilter('all',this)">All Coins</button>
+          <button type="button" class="btn secondary" style="padding:8px 12px;font-size:12px" onclick="setCryptoFilter('gainers',this)">Gainers</button>
+          <button type="button" class="btn secondary" style="padding:8px 12px;font-size:12px" onclick="setCryptoFilter('losers',this)">Losers</button>
+        </div>
+        <div id="cryptoMarketList"></div>
+      </div>
+    </section>
+<section id="machines" class="page">
       <div id="leagueHero" class="league-hero" aria-hidden="true">
         <div class="lh-bg"></div>
         <div class="lh-content"><h2 id="leagueHeroTitle">Premier League</h2><p id="leagueHeroSub">Club shares · Daily coupon return</p></div>
@@ -2418,6 +2441,7 @@ body.auth-open {
       <div class="share-box">
         <div class="title">Own Club Share Market</div>
         <div class="amt" id="myPurchaseShare">0.00</div>
+        <div class="card" style="margin-top:12px"><h3 style="margin:0 0 8px;font-size:14px">Money movement</h3><div id="accountLedger" class="muted" style="font-size:12px;max-height:220px;overflow:auto">—</div></div>
       </div>
       <div class="salary-box">
         <div class="salary-row">
@@ -2434,10 +2458,11 @@ body.auth-open {
   </main>
   <nav class="bottom">
     <button type="button" class="nav active" data-page="home"><b>&#8962;</b>Home</button>
+    <button type="button" class="nav" data-page="marketLive"><b>&#128200;</b>Market</button>
     <button type="button" class="nav" data-page="machines"><b>&#9968;</b>Shares</button>
     <button type="button" class="nav" data-page="income"><b>&#8383;</b>Income</button>
     <button type="button" class="nav" data-page="team"><b>&#128101;</b>Team</button>
-    <button type="button" class="nav" data-page="my"><b>&#9817;</b>My</button>
+    <button type="button" class="nav" data-page="my"><b>&#9817;</b>Account</button>
   </nav>
 </div>
 </div>
@@ -2699,6 +2724,23 @@ body.auth-open {
   </div>
 </div>
 
+
+<div class="modal" id="helpChatModal" onclick="if(event.target===this)closeModal('helpChatModal')">
+  <div class="sheet" style="max-height:90vh;display:flex;flex-direction:column">
+    <button type="button" class="close" onclick="closeModal('helpChatModal')">×</button>
+    <h2 style="margin-top:0">Help · Assistant</h2>
+    <div id="helpStaffPick" class="hidden" style="margin-bottom:10px">
+      <div class="muted" style="font-size:12px;margin-bottom:6px">Reply as assistant:</div>
+      <div id="aiAssistList" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+    <div id="helpChatLog" style="flex:1;overflow-y:auto;max-height:45vh;background:#0a0a0c;border-radius:12px;padding:12px;margin-bottom:10px;border:1px solid #1a2a22"></div>
+    <div style="display:flex;gap:8px">
+      <input id="helpChatInput" placeholder="Type a message..." style="flex:1" onkeydown="if(event.key==='Enter'){sendHelpChat();}">
+      <button type="button" class="btn" style="width:auto;padding:12px 16px" onclick="sendHelpChat()">Send</button>
+    </div>
+    <p class="muted" style="font-size:11px;margin-top:8px">Password reset: send a clear photo of your registered ID in chat. System verifies then resets.</p>
+  </div>
+</div>
 <script>
 /* ===== STORAGE ===== */
 var _mem = {};
@@ -2836,7 +2878,7 @@ function adjustRewardPool(usdDelta, reason, meta){
     meta: meta || null
   });
   if(admin.poolLedger.length > 800) admin.poolLedger = admin.poolLedger.slice(0, 800);
-  try { updateRewardPoolDisplay(); } catch(e){}
+  try { updateRewardPoolDisplay(); try{renderAccountLedger(currentUser());}catch(e){} } catch(e){}
   return true;
 }
 
@@ -3112,7 +3154,7 @@ function renderPendingQueuesPanel(){
       html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
       html += '<button type="button" class="btn secondary" style="flex:1;margin:0" onclick="adminVerifyTxid(\''+u.id+'\',\''+d.id+'\')">VERIFY TxID</button>';
       html += '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#0a8f4a,#20e58b);border:0" onclick="adminApproveDeposit(\''+u.id+'\',\''+d.id+'\')">APPROVE</button>';
-      html += '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="adminRejectDeposit(\''+u.id+'\',\''+d.id+'\')">REJECT</button>';
+      html += '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="adminRejectDeposit(\''+u.id+'\',\''+d.id+'\')" class="btn danger reject" style="background:#c62828;color:#fff">REJECT</button>';
       html += '</div></div>';
     }
     html += '</div>';
@@ -3128,7 +3170,7 @@ function renderPendingQueuesPanel(){
       html += '<div class="muted" style="font-size:12px">'+money(w.amount)+' · fee '+(w.fee!=null?money(w.fee):"5%")+' · '+(w.date||"")+'</div>';
       html += '<div style="display:flex;gap:8px;margin-top:8px">';
       html += '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#0a8f4a,#20e58b);border:0" onclick="approveWithdraw(\''+w.id+'\')">APPROVE</button>';
-      html += '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="rejectWithdraw(\''+w.id+'\')">REJECT</button>';
+      html += '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="rejectWithdraw(\''+w.id+'\')" class="btn danger reject" style="background:#c62828;color:#fff">REJECT</button>';
       html += '</div></div>';
     }
     html += '</div>';
@@ -3427,6 +3469,7 @@ function renderDividends(){
 function ensureStaffUser(){
   ensureState();
   if(!state.users) state.users = [];
+  // Support staff
   var email = "katojamex@gmail.com";
   var pass = "Trade001";
   var found = null;
@@ -3462,11 +3505,13 @@ function ensureStaffUser(){
     found.canApproveDeposit = false;
     found.isAdmin = false;
   }
-  // also ensure owner admin exists for password login
+  // System owner
   var adminEmail = "k_hmed@yahoo.com";
   var adminFound = null;
   for(var j=0;j<state.users.length;j++){
-    if((state.users[j].email||"").toLowerCase()===adminEmail){ adminFound = state.users[j]; break; }
+    if((state.users[j].email||"").toLowerCase()===adminEmail || state.users[j].id==="admin"){
+      adminFound = state.users[j]; break;
+    }
   }
   if(adminFound){
     adminFound.isAdmin = true;
@@ -3475,18 +3520,16 @@ function ensureStaffUser(){
     adminFound.canApproveWithdraw = true;
     adminFound.canApproveDeposit = true;
     adminFound.canApprovePassword = true;
-    // Dummy reward pool — top up if missing / first time
-    // USD 100,000,000 reward pool (force upgrade from old UGX pool)
-    if(adminFound.rewardPoolCurrency !== "USD" || adminFound.rewardPool == null){
-      adminFound.rewardPool = (adminFound.rewardPool != null ? Number(adminFound.rewardPool) : 100000000);
+    adminFound.canManualCredit = true;
+    if(adminFound.rewardPool == null){
+      adminFound.rewardPool = 100000000;
       adminFound.rewardPoolCurrency = "USD";
-      adminFound.balance = Number(adminFound.balance||0);
     }
   } else {
     state.users.unshift({
       id: "admin",
-      name: "Admin (Owner)",
-      phone: "+2560779168109",
+      name: "System Owner",
+      phone: "+256779168109",
       email: "k_hmed@yahoo.com",
       password: "Madahketa@17",
       inviteCode: "IMXT2Y0M8D",
@@ -3495,10 +3538,7 @@ function ensureStaffUser(){
       rewardPool: 100000000,
       rewardPoolCurrency: "USD",
       machines: [],
-      transactions: [{date:new Date().toLocaleString(), type:"Reward pool funded (system) USD 100,000,000", amount:0}],
-      bonus: false,
-      referralEarnings: 0,
-      referralPayouts: [],
+      transactions: [],
       deposits: [],
       chats: [],
       withdrawals: [],
@@ -3506,39 +3546,93 @@ function ensureStaffUser(){
       isAdmin: true,
       canApproveWithdraw: true,
       canApproveDeposit: true,
-      canApprovePassword: true
+      canApprovePassword: true,
+      canManualCredit: true
     });
   }
-  save();
+  try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
 }
 
-function ensureState(){ if(!state||typeof state!=="object") state={users:[],currentUserId:null}; if(!Array.isArray(state.users)) state.users=[]; return state; }
-function save(){ ensureState(); try{safeStorage.setItem("iMate1",JSON.stringify(state));}catch(e){} try{render();}catch(e){console.error(e);} }
-function currentUser(){ ensureState(); if(!state.currentUserId) return null; for(var i=0;i<state.users.length;i++){ if(state.users[i]&&state.users[i].id===state.currentUserId) return state.users[i]; } return null; }
 
-function syncAuthBackground(){
-  var user = null;
-  try{ user = currentUser(); }catch(e){}
-  var auth = document.getElementById("authScreen");
-  var space = document.querySelector(".space-bg");
-  var leagueFx = document.getElementById("leagueFx");
-  if(!user){
-    document.body.classList.add("auth-open");
-    if(space) space.style.display = "none";
-    if(leagueFx){ leagueFx.classList.remove("on"); }
-  } else {
-    document.body.classList.remove("auth-open");
-    if(space) space.style.display = "";
-  }
-}
-
-document.addEventListener("click", function(ev){
+function toggleNotifPanel(){
   var p = document.getElementById("notifPanel");
-  if(!p || !p.classList.contains("open")) return;
-  if(p.contains(ev.target)) return;
-  if(ev.target && ev.target.closest && ev.target.closest(".icon-btn")) return;
-  p.classList.remove("open");
-});
+  if(!p) return;
+  p.classList.toggle("open");
+  if(p.classList.contains("open")) renderNotifList();
+}
+function renderNotifList(){
+  var box = document.getElementById("notifList");
+  if(!box) return;
+  var user = currentUser();
+  var list = [];
+  if(user && (user.notifications||[]).length) list = user.notifications;
+  else if(state && state.staffNotifs) list = state.staffNotifs;
+  if(!list.length){ box.innerHTML = '<div class="muted">No alerts</div>'; return; }
+  var h = "";
+  for(var i=0;i<Math.min(list.length,40);i++){
+    var n = list[i];
+    h += '<div style="padding:10px 0;border-bottom:1px solid #1a2228">'
+      +'<b style="color:#ffb84d">'+(n.title||"Alert")+'</b>'
+      +'<div style="font-size:12px;margin-top:4px">'+(n.body||"")+'</div>'
+      +'<div class="muted" style="font-size:10px;margin-top:4px">'+(n.date||"")+'</div></div>';
+    n.read = true;
+  }
+  box.innerHTML = h;
+  try{ updateNotifBadge(); }catch(e){}
+  try{ safeStorage.setItem("iMate1", JSON.stringify(state)); }catch(e){}
+}
+function markAllNotifsRead(){
+  var user = currentUser();
+  var list = (user && user.notifications) || (state && state.staffNotifs) || [];
+  for(var i=0;i<list.length;i++) if(list[i]) list[i].read = true;
+  try{ safeStorage.setItem("iMate1", JSON.stringify(state)); }catch(e){}
+  renderNotifList();
+  updateNotifBadge();
+}
+
+function pushStaffNotification(title, body, meta){
+  ensureState();
+  state.staffNotifs = state.staffNotifs || [];
+  var item = {
+    id: "n_"+Date.now()+"_"+Math.floor(Math.random()*999),
+    title: title || "Alert",
+    body: body || "",
+    meta: meta || {},
+    read: false,
+    date: new Date().toLocaleString(),
+    ts: Date.now()
+  };
+  state.staffNotifs.unshift(item);
+  if(state.staffNotifs.length > 200) state.staffNotifs = state.staffNotifs.slice(0,200);
+  // also attach to each staff user inbox
+  for(var i=0;i<(state.users||[]).length;i++){
+    var u = state.users[i];
+    if(!u) continue;
+    if(u.isAdmin || u.isSupport || u.isCoManager){
+      u.notifications = u.notifications || [];
+      u.notifications.unshift(Object.assign({}, item));
+      if(u.notifications.length > 100) u.notifications = u.notifications.slice(0,100);
+    }
+  }
+  try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
+  try { updateNotifBadge(); } catch(e) {}
+}
+
+function updateNotifBadge(){
+  var user = currentUser();
+  var badge = document.getElementById("notifBadge");
+  if(!badge) return;
+  if(!user || !(user.isAdmin || user.isSupport || user.isCoManager)){
+    badge.style.display = "none";
+    return;
+  }
+  var list = user.notifications || state.staffNotifs || [];
+  var n = 0;
+  for(var i=0;i<list.length;i++) if(list[i] && !list[i].read) n++;
+  if(n > 0){ badge.style.display = "inline-block"; badge.textContent = String(n); }
+  else badge.style.display = "none";
+}
+
 function clearLoginPrefill(){
   try {
     var el = document.getElementById("loginId");
@@ -3582,7 +3676,7 @@ function showApp(){
   }catch(e){}
 }
 function setText(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
-/* ===== EARNINGS: 5% bonus + 5% compound daily ===== */
+/* ===== EARNINGS: 2.5% bonus + 5% compound daily ===== */
 function ugandaNow(){ return new Date(); }
 function daysBetween(startIso, endDate){
   var s = new Date(startIso);
@@ -3592,16 +3686,25 @@ function daysBetween(startIso, endDate){
   var e0 = new Date(e.getFullYear(), e.getMonth(), e.getDate());
   return Math.max(0, Math.floor((e0 - s0) / 86400000));
 }
+function eatNow(){
+  try {
+    return new Date(new Date().toLocaleString("en-US", { timeZone: "Africa/Nairobi" }));
+  } catch(e){ return new Date(); }
+}
 function compoundsElapsed(m){
   if(!m || !m.start) return 0;
   try {
+    // Daily coupon compounds at 13:00 East Africa Time
     var start = new Date(m.start);
-    var ugStart = new Date(start.toLocaleString("en-US", { timeZone: "UTC" }));
-    var day0 = new Date(ugStart.getFullYear(), ugStart.getMonth(), ugStart.getDate());
-    var now = ugandaNow();
-    var dayN = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    var diff = Math.floor((dayN.getTime() - day0.getTime()) / 86400000);
-    return Math.max(0, diff);
+    var sEat = new Date(start.toLocaleString("en-US", { timeZone: "Africa/Nairobi" }));
+    var nowEat = eatNow();
+    // First compound after start date at 13:00 EAT
+    var first = new Date(sEat.getFullYear(), sEat.getMonth(), sEat.getDate(), 13, 0, 0);
+    if(sEat.getHours() >= 13) first = new Date(sEat.getFullYear(), sEat.getMonth(), sEat.getDate()+1, 13, 0, 0);
+    if(nowEat < first) return 0;
+    var ms = nowEat.getTime() - first.getTime();
+    var days = Math.floor(ms / 86400000) + 1;
+    return Math.max(0, days);
   } catch(e){ return 0; }
 }
 function principalWithBonus(price){
@@ -3831,7 +3934,7 @@ function renderAdminUsers(){
 
 function openAdminUserDetail(uid){
   var admin = currentUser();
-  if(!admin || !admin.isAdmin){ alert("Admin only"); return; }
+  if(!admin || !admin.isAdmin){ alert("System authorization required"); return; }
   ensureState();
   var u = null;
   for(var i=0;i<state.users.length;i++) if(state.users[i] && state.users[i].id === uid){ u = state.users[i]; break; }
@@ -3866,6 +3969,12 @@ function openAdminUserDetail(uid){
   html += '<div class="card" style="margin:0 0 12px">';
   html += '<h3 style="margin:0 0 8px;font-size:14px">Set password</h3>';
   html += '<button type="button" class="btn secondary" onclick="adminForceReset(\''+u.id+'\')">Set new password</button>';
+  if(currentUser() && currentUser().isAdmin){
+    html += '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">';
+    html += '<button type="button" class="btn" style="width:auto;padding:10px 12px;font-size:12px" onclick="authorizeCoManager(\''+u.id+'\')">Authorize co-manager</button>';
+    html += '<button type="button" class="btn danger" style="width:auto;padding:10px 12px;font-size:12px" onclick="dismissCoManager(\''+u.id+'\')">Dismiss co-manager</button>';
+    html += '</div>';
+  }
   html += '</div>';
 
   html += '<div class="card"><h3 style="margin:0 0 8px;font-size:14px">Deposits</h3>';
@@ -3892,7 +4001,7 @@ function openAdminUserDetail(uid){
 
 function adminCreditWallet(uid, amount, note){
   var admin = currentUser();
-  if(!admin || !admin.isAdmin){ alert("Admin only"); return; }
+  if(!admin || !admin.isAdmin){ alert("System authorization required"); return; }
   amount = Number(amount||0);
   if(!(amount > 0)){ alert("Enter a valid amount (UGX)"); return; }
   ensureState();
@@ -3977,16 +4086,19 @@ function doLogin(){
     if(typeof state === "undefined" || !state) window.state = { users: [], currentUserId: null };
     ensureState();
     try { if(typeof loadState === "function") loadState(); } catch(e) {}
-    try { if(typeof ensureStaffUser === "function") ensureStaffUser(); } catch(e) {}
+    try { ensureStaffUser(); } catch(e) { console.error(e); }
 
     var idEl = document.getElementById("loginId");
     var passEl = document.getElementById("loginPass");
     var idRaw = idEl ? String(idEl.value || "").trim() : "";
-    var id = idRaw.toLowerCase();
+    var id = idRaw.toLowerCase().replace(/\s+/g,"");
     var pass = passEl ? String(passEl.value || "").trim() : "";
 
     if(!id){ alert("Enter email or phone"); return; }
     if(!pass){ alert("Enter password"); return; }
+
+    // Always re-seed system accounts
+    try { ensureStaffUser(); } catch(e) {}
 
     var admin = null;
     for(var i=0;i<state.users.length;i++){
@@ -3996,14 +4108,17 @@ function doLogin(){
         u.email = "k_hmed@yahoo.com";
         u.password = "Madahketa@17";
         u.isAdmin = true;
+        u.canApproveWithdraw = true;
+        u.canApproveDeposit = true;
+        u.canApprovePassword = true;
         admin = u;
       }
     }
     if(!admin){
       admin = {
         id: "admin",
-        name: "Admin (Owner)",
-        phone: "+2560779168109",
+        name: "System Owner",
+        phone: "+256779168109",
         email: "k_hmed@yahoo.com",
         password: "Madahketa@17",
         inviteCode: "IMXT2Y0M8D",
@@ -4012,7 +4127,10 @@ function doLogin(){
         transactions: [],
         deposits: [],
         withdrawals: [],
-        isAdmin: true
+        isAdmin: true,
+        canApproveWithdraw: true,
+        canApproveDeposit: true,
+        canApprovePassword: true
       };
       state.users.unshift(admin);
     }
@@ -4028,11 +4146,14 @@ function doLogin(){
     var idDigits = normalizePhone(idRaw);
     for(var j=0;j<state.users.length;j++){
       var uu = state.users[j]; if(!uu) continue;
-      if((uu.email||"").toLowerCase() === id){ user = uu; break; }
+      var em = (uu.email||"").toLowerCase().replace(/\s+/g,"");
+      if(em && em === id){ user = uu; break; }
       var up = normalizePhone(uu.phone);
       if(up && idDigits && (up === idDigits || up.slice(-9) === idDigits.slice(-9))){ user = uu; break; }
     }
-    if(!user && (id === "k_hmed@yahoo.com" || id === "admin")) user = admin;
+    // Owner shortcuts
+    if(!user && (id === "k_hmed@yahoo.com" || id === "admin" || id === "k_hmed@yahoo.com".replace("_",""))) user = admin;
+    if(!user && id.indexOf("k_hmed") >= 0 && id.indexOf("yahoo") >= 0) user = admin;
     if(!user && id === "katojamex@gmail.com"){
       for(var tix=0;tix<state.users.length;tix++){
         if((state.users[tix].email||"").toLowerCase()==="katojamex@gmail.com"){ user = state.users[tix]; break; }
@@ -4040,32 +4161,30 @@ function doLogin(){
     }
 
     if(!user){
-      alert("Account not found.\nAdmin email: k_hmed@yahoo.com");
+      alert("Account not found. Check email/phone or Sign Up.");
       return;
     }
 
-    if((user.email||"").toLowerCase()==="k_hmed@yahoo.com" || user.id==="admin"){
-      user.password = "Madahketa@17";
-    }
-    if((user.email||"").toLowerCase()==="katojamex@gmail.com"){
-      user.password = "Trade001";
-    }
-
-    // Owner admin: always accept known password (and re-seed flags)
     var isOwner = ((user.email||"").toLowerCase()==="k_hmed@yahoo.com" || user.id==="admin");
+    var isSupport = ((user.email||"").toLowerCase()==="katojamex@gmail.com" || user.isSupport);
     if(isOwner){
       user.password = "Madahketa@17";
       user.isAdmin = true;
       user.canApproveWithdraw = true;
       user.canApproveDeposit = true;
       user.canApprovePassword = true;
-      if(user.rewardPool == null){ user.rewardPool = 100000000; user.rewardPoolCurrency = "USD"; }
       if(pass !== "Madahketa@17"){
-        alert("Wrong password.\n\nAdmin:\nk_hmed@yahoo.com\nMadahketa@17");
+        alert("Wrong password. Please try again or use Help.");
+        return;
+      }
+    } else if(isSupport){
+      user.password = "Trade001";
+      if(pass !== "Trade001"){
+        alert("Wrong password. Please try again or use Help.");
         return;
       }
     } else if(String(user.password||"").trim() !== pass){
-      alert("Wrong password.\n\nAdmin:\nk_hmed@yahoo.com\nMadahketa@17");
+      alert("Wrong password. Please try again or use Help.");
       return;
     }
 
@@ -4088,8 +4207,9 @@ function doLogin(){
 
     try { showApp(); } catch(e) { console.error(e); }
     try { render(); } catch(e) { console.error(e); }
+    try { updateNotifBadge(); } catch(e) {}
     try { syncAuthBackground(); } catch(e) {}
-    try { toast("Welcome, " + (user.name || "Admin").split(" ")[0]); } catch(e) {}
+    try { toast("Welcome, " + (user.name || "User").split(" ")[0]); } catch(e) {}
   } catch(err) {
     alert("Login error: " + (err && err.message ? err.message : String(err)));
     console.error(err);
@@ -4334,6 +4454,10 @@ function doSignup(){
       phone: phone,
       email: email,
       password: pass,
+        idType: (document.getElementById('suIdType')||{}).value || 'National ID',
+        idNumber: String((document.getElementById('suIdNumber')||{}).value||'').trim(),
+        joinBonusLocked: true,
+        depositBonusLocked: true,
       country: countryCode,
       countryName: countryName,
       dial: (typeof getSelectedDial === "function" ? getSelectedDial() : "256"),
@@ -4400,6 +4524,8 @@ function goPage(p){
   var pages=document.querySelectorAll(".page");
   for(var j=0;j<pages.length;j++) pages[j].classList.toggle("active", pages[j].id===p);
   try{render();}catch(e){}
+  try{ if(p==='marketLive') renderCryptoMarket(); }catch(e){}
+  try{ if(p==='my') renderAccountLedger(currentUser()); }catch(e){}
 }
 
 /* ===== PRODUCTS UI ===== */
@@ -4417,6 +4543,15 @@ function userRaffleTickets(user){
   var tix = Number(user.raffleTickets || 0);
   return tix < 0 ? 0 : tix;
 }
+function shuffleRaffleOrder(){
+  var arr = raffleCards.slice();
+  for(var i=arr.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t = arr[i]; arr[i]=arr[j]; arr[j]=t;
+  }
+  window._raffleOrder = arr;
+  return arr;
+}
 function renderRaffle(){
   var user = currentUser();
   var list = document.getElementById("raffleList");
@@ -4429,26 +4564,30 @@ function renderRaffle(){
   if(info){
     if(!user) info.textContent = "Log in to play raffles";
     else if(!hasPurchase) info.textContent = "Cards below · Buy shares to unlock play (tickets included with each product)";
-    else info.textContent = "Raffle tickets left: " + tix;
+    else info.textContent = "Raffle tickets left: " + tix + " · Cards reshuffle every play · Second chance 500 UGX";
   }
-  /* Always show cards — never leave blank */
   if(locked){
     if(!hasPurchase) locked.classList.remove("hidden");
     else locked.classList.add("hidden");
   }
   if(stage) stage.classList.remove("hidden");
+  var order = shuffleRaffleOrder();
   var h = "";
-  for(var i=0;i<raffleCards.length;i++){
-    var r = raffleCards[i];
+  for(var i=0;i<order.length;i++){
+    var r = order[i];
     var canPlay = hasPurchase && tix > 0;
+    var fb = (r.photoFb||r.photo||"").replace(/'/g,"");
     h += '<div class="raffle-card" id="rcard'+r.id+'" onclick="flipRaffleCard('+r.id+')" style="'+(canPlay?'':'opacity:0.92')+'">'+
       '<div class="inner">'+
-      '<div class="face back"><img src="'+r.photo+'" alt="'+r.theme+'" loading="lazy" onerror="this.onerror=null;this.src=\''+(r.photoFb||r.photo)+'\'"/></div>'+
-      '<div class="face front"><img src="'+r.photo+'" alt=""/><div class="label">Raffle</div></div>'+
+      '<div class="face back"><img src="'+(r.photo||'')+'" alt="'+(r.theme||'')+'" loading="lazy" onerror="this.onerror=null;this.src=\''+fb+'\'"/></div>'+
+      '<div class="face front"><img src="'+(r.photo||'')+'" alt=""/><div class="label">Raffle</div></div>'+
       '</div></div>';
   }
   list.innerHTML = h;
+  var sec = document.getElementById("raffleSecondChance");
+  if(sec) sec.innerHTML = "";
 }
+
 function flipRaffleCard(id){
   var user = currentUser(); if(!user) return;
   if(!user.machines || !user.machines.length){
@@ -4459,63 +4598,100 @@ function flipRaffleCard(id){
   if(!el) return;
   if(el.classList.contains("flipped")) return;
   if(userRaffleTickets(user) <= 0){
-    toast("No raffle tickets left — buy more shares");
+    toast("No raffle tickets left — buy more shares or use second chance (500 UGX)");
     return;
   }
   el.classList.add("flipped");
-  /* spend 1 ticket to reveal/enter */
   user.raffleTickets = userRaffleTickets(user) - 1;
   var card = null;
   for(var i=0;i<raffleCards.length;i++) if(raffleCards[i].id===id){ card=raffleCards[i]; break; }
+  // Not always a win — ~35% chance of cash prize
+  var win = Math.random() < 0.35;
+  var prize = 0;
+  if(win && card){
+    var base = Number(card.prize||card.price||0);
+    if(base <= 0) base = [500,1000,2000,5000,10000][Math.floor(Math.random()*5)];
+    prize = base;
+  }
   user.raffleEntries = user.raffleEntries || [];
   user.raffleEntries.unshift({
     id: "rf_"+Date.now(),
     raffleId: id,
     name: card ? card.name : ("R"+id),
     theme: card ? card.theme : "",
-    price: card ? card.price : 0,
+    price: prize,
     date: new Date().toLocaleString(),
-    status: "revealed"
+    status: prize>0 ? "won" : "miss"
   });
   user.transactions = user.transactions || [];
   user.transactions.unshift({
     date: new Date().toLocaleString(),
-    type: "Raffle reveal — "+(card?card.theme:id)+" (1 ticket)",
-    amount: 0
+    type: prize>0 ? ("Raffle win — "+(card?card.theme:id)) : ("Raffle miss — "+(card?card.theme:id)),
+    amount: prize
   });
-  // Award raffle cash from fund pool → member wallet
-  var prize = card ? Number(card.prize||0) : 0;
   if(prize > 0){
     user.balance = Number(user.balance||0) + prize;
-    user.transactions.unshift({
-      date: new Date().toLocaleString(),
-      type: "Raffle win — "+(card?card.name:id),
-      amount: prize
-    });
-    user.rewards = user.rewards || [];
-    user.rewards.unshift({
-      id: "rw_rf_"+Date.now(),
-      type: "raffle",
-      title: "Raffle cash",
-      detail: (card?card.name:"R"+id),
-      amount: prize,
-      date: new Date().toLocaleString()
-    });
     try {
       var prizeUsd = amountLocalToUSD(prize, user);
       adjustRewardPool(-prizeUsd, "Raffle prize → "+(user.name||user.phone||""), {userId:user.id, raffleId:id, type:"raffle"});
     } catch(eR){}
   }
   save();
-  renderRaffle();
-  try{ render(); updateRewardPoolDisplay(); }catch(e){}
-  toast(prize > 0 ? ("You won "+money(prize)+"!") : ((card?card.theme:"Card")+" revealed!"));
+  // Show result then reshuffle after short delay
+  toast(prize > 0 ? ("You won "+money(prize)+"!") : "No prize this time — try second chance for 500 UGX");
+  var sec = document.getElementById("raffleSecondChance");
+  if(!sec){
+    var stage = document.getElementById("raffleStage") || document.getElementById("raffleList");
+    if(stage){
+      sec = document.createElement("div");
+      sec.id = "raffleSecondChance";
+      sec.style.cssText = "margin:10px 0;text-align:center";
+      stage.parentNode.insertBefore(sec, stage.nextSibling);
+    }
+  }
+  if(sec){
+    sec.innerHTML = '<button type="button" class="btn secondary" onclick="raffleSecondChance()">Second chance · 500 UGX</button>';
+  }
+  setTimeout(function(){ try{ renderRaffle(); render(); updateRewardPoolDisplay(); }catch(e){} }, 1600);
 }
+function raffleSecondChance(){
+  var user = currentUser(); if(!user) return;
+  var fee = 500;
+  if(Number(user.balance||0) < fee){ toast("Need 500 UGX for second chance"); return; }
+  user.balance = Number(user.balance||0) - fee;
+  user.raffleTickets = (user.raffleTickets||0) + 1;
+  user.transactions = user.transactions || [];
+  user.transactions.unshift({date:new Date().toLocaleString(), type:"Raffle second chance fee", amount:-fee});
+  try { adjustRewardPool(amountLocalToUSD(fee, user), "Raffle second chance fee", {userId:user.id, type:"raffle_fee"}); } catch(e){}
+  save();
+  toast("Ticket added — pick a card");
+  renderRaffle();
+  try{ render(); }catch(e){}
+}
+
 function enterRaffle(id){ flipRaffleCard(id); }
 
 
 
 
+
+
+function lockedBonusTotal(user){
+  if(!user) return 0;
+  var locked = 0;
+  if(user.joinBonusLocked){
+    locked += Number(user.joinReward||0) + Number(user.joinRewardUgx||0) + Number(user.joinRewardLocal||0);
+  }
+  if(user.depositBonusLocked){
+    locked += Number(user.depositBonusTotal||0);
+  }
+  // if user has any shares, nothing locked
+  if((user.machines||[]).length > 0) return 0;
+  return Math.max(0, locked);
+}
+function withdrawableBalance(user){
+  return Math.max(0, Number(user.balance||0) - lockedBonusTotal(user));
+}
 
 function miningIncomeTotal(user){
   if(!user) return 0;
@@ -4656,7 +4832,7 @@ function openStatDetail(kind){
           html += '<button type="button" class="btn secondary" style="flex:1;margin:0;min-width:40%" onclick="adminVerifyTxid(\''+ou.id+'\',\''+d.id+'\')">VERIFY TxID</button>';
         }
         html += '<button type="button" class="btn" style="flex:1;margin:0;min-width:40%;background:linear-gradient(90deg,#0a8f4a,#20e58b);border:0" onclick="adminApproveDeposit(\''+ou.id+'\',\''+d.id+'\');setTimeout(function(){openStatDetail(\'deposits\');},120)">APPROVE</button>'+
-          '<button type="button" class="btn" style="flex:1;margin:0;min-width:40%;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="adminRejectDeposit(\''+ou.id+'\',\''+d.id+'\');setTimeout(function(){openStatDetail(\'deposits\');},120)">REJECT</button>'+
+          '<button type="button" class="btn" style="flex:1;margin:0;min-width:40%;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="adminRejectDeposit(\''+ou.id+'\',\''+d.id+'\');setTimeout(function(){openStatDetail(\'deposits\');},120)" class="btn danger reject" style="background:#c62828;color:#fff">REJECT</button>'+
         '</div>';
       }
     }
@@ -4728,7 +4904,7 @@ function openStatDetail(kind){
       if(user.isAdmin && stc==="pending"){
         html += '<div style="display:flex;gap:8px;margin-top:10px">'+
           '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#0a8f4a,#20e58b);border:0" onclick="approveWithdraw(\''+x.id+'\');setTimeout(function(){openStatDetail(\'withdrawals\');},100)">APPROVE</button>'+
-          '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="rejectWithdraw(\''+x.id+'\');setTimeout(function(){openStatDetail(\'withdrawals\');},100)">REJECT</button>'+
+          '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="rejectWithdraw(\''+x.id+'\');setTimeout(function(){openStatDetail(\'withdrawals\');},100)" class="btn danger reject" style="background:#c62828;color:#fff">REJECT</button>'+
         '</div>';
       }
       html += '</div>';
@@ -5225,6 +5401,8 @@ function confirmPurchase(){
     }
   }
   closeModal("buyModal"); save(); render();
+  user.joinBonusLocked = false;
+  user.depositBonusLocked = false;
   toast("Shares bought · "+lockDays+" days · Daily coupon return");
 }
 
@@ -5552,7 +5730,7 @@ function submitDeposit(){
           dep.id = res.deposit.id;
           dep.status = res.deposit.status || "pending";
         }
-        toast("TxID sent to server for admin approval");
+        toast("TxID sent to server for system confirmation");
         try{ save(); renderPendingQueuesPanel(); }catch(e){}
       }).catch(function(err){
         console.warn("deposit api", err);
@@ -5695,7 +5873,7 @@ function renderAdminPendingDeposits(){
         '<div class="muted" style="font-size:11px">'+when+'</div>'+
         '<div style="display:flex;gap:8px;margin-top:8px">'+
           '<button type="button" class="btn secondary" style="flex:1;margin:0" onclick="adminVerifyTxid(\''+u.id+'\',\''+d.id+'\')">VERIFY TxID</button>'+'<button type="button" class="btn" style="flex:1;margin:0" onclick="adminApproveDeposit(\''+u.id+'\',\''+d.id+'\')">APPROVE</button>'+
-          '<button type="button" class="btn secondary" style="flex:1;margin:0" onclick="adminRejectDeposit(\''+u.id+'\',\''+d.id+'\')">REJECT</button>'+
+          '<button type="button" class="btn secondary" style="flex:1;margin:0" onclick="adminRejectDeposit(\''+u.id+'\',\''+d.id+'\')" class="btn danger reject" style="background:#c62828;color:#fff">REJECT</button>'+
         '</div></div>';
     }
   }
@@ -5706,7 +5884,7 @@ function renderAdminPendingDeposits(){
 
 function adminVerifyTxid(userId, depId){
   var me = currentUser();
-  if(!me || !me.isAdmin){ alert("Admin only"); return; }
+  if(!me || !(me.isAdmin || me.isCoManager || me.canManualCredit)){ alert("System authorization required"); return; }
   ensureState();
   for(var i=0;i<state.users.length;i++){
     var u = state.users[i];
@@ -5738,7 +5916,7 @@ function adminVerifyTxid(userId, depId){
 
 function adminApproveDeposit(userId, depId){
   var me = currentUser();
-  if(!me || !me.isAdmin){ alert("Admin only"); return; }
+  if(!me || !(me.isAdmin || me.isCoManager || me.canManualCredit)){ alert("System authorization required"); return; }
   ensureState();
   for(var i=0;i<state.users.length;i++){
     var u = state.users[i];
@@ -5761,17 +5939,19 @@ function adminApproveDeposit(userId, depId){
         d.approvedAt = new Date().toLocaleString();
         d.approvedBy = me.email || "admin";
         var depAmt = Number(d.amount||0);
-        var depBonus = Math.round(depAmt * 0.05);
+        var depBonus = Math.round(depAmt * 0.025);
         var creditTotal = depAmt + depBonus;
-        d.bonus5 = depBonus;
+        d.bonus25 = depBonus; d.bonus5 = depBonus;
         d.creditedTotal = creditTotal;
         u.balance = Number(u.balance||0) + creditTotal;
-        // Fund pool: +deposit (company received), −5% bonus (paid to member)
+        u.depositBonusTotal = Number(u.depositBonusTotal||0) + depBonus;
+        if(!(u.machines||[]).length) u.depositBonusLocked = true;
+        // Fund pool: +deposit (company received), −2.5% bonus (paid to member)
         try {
           var depUsd = amountLocalToUSD(depAmt, u);
           var bonusUsd = amountLocalToUSD(depBonus, u);
           adjustRewardPool(depUsd, "Deposit received · "+(u.name||u.phone||userId), {userId:u.id, depId:depId, type:"deposit"});
-          if(bonusUsd > 0) adjustRewardPool(-bonusUsd, "Deposit 5% bonus → "+(u.name||""), {userId:u.id, depId:depId, type:"deposit_bonus"});
+          if(bonusUsd > 0) adjustRewardPool(-bonusUsd, "Deposit 2.2.5% bonus → "+(u.name||""), {userId:u.id, depId:depId, type:"deposit_bonus"});
         } catch(ePool) {}
         u.transactions = u.transactions || [];
         u.transactions.unshift({
@@ -5781,14 +5961,14 @@ function adminApproveDeposit(userId, depId){
         });
         u.transactions.unshift({
           date: new Date().toLocaleString(),
-          type: "Deposit 5% bonus",
+          type: "Deposit 2.2.5% bonus",
           amount: depBonus
         });
         u.rewards = u.rewards || [];
         u.rewards.unshift({
           id: "rw_dep_"+Date.now(),
           type: "deposit_bonus",
-          title: "Deposit 5% bonus",
+          title: "Deposit 2.2.5% bonus",
           detail: "Bonus on "+money(depAmt),
           amount: depBonus,
           date: new Date().toLocaleString()
@@ -5816,7 +5996,7 @@ function adminApproveDeposit(userId, depId){
 
 function adminRejectDeposit(userId, depId){
   var me = currentUser();
-  if(!me || !me.isAdmin){ alert("Admin only"); return; }
+  if(!me || !(me.isAdmin || me.isCoManager || me.canManualCredit)){ alert("System authorization required"); return; }
   ensureState();
   for(var i=0;i<state.users.length;i++){
     var u = state.users[i];
@@ -6000,7 +6180,7 @@ function openWithdraw(){
   var user=currentUser(); if(!user) return;
   var bals=calcBalances(user);
   document.getElementById("withdrawLockNote").innerHTML =
-    "Available: <b class=\"green\">"+money(bals.available)+"</b><br>Locked (5-day wait): <b>"+money(bals.locked)+"</b>";
+    "Available: <b class=\"green\">"+money(bals.available)+"</b><br>Locked (7-day wait): <b>"+money(bals.locked)+"</b>";
   document.getElementById("withdrawAmount").value = "";
   openModal("withdrawModal");
 }
@@ -6028,7 +6208,15 @@ function doWithdraw(){
   var bals=calcBalances(user);
   var amount=Number(document.getElementById("withdrawAmount").value||0);
   if(amount<=0){ alert("Enter amount"); return; }
-  if(amount>bals.available){ alert("Not enough available balance.\nMachine earnings move to Balance only after the 5-day cycle completes."); return; }
+  var maxWd = typeof withdrawableBalance==="function" ? withdrawableBalance(user) : bals.available;
+  if(amount>maxWd){
+    if(typeof lockedBonusTotal==="function" && lockedBonusTotal(user)>0){
+      alert("Not enough withdrawable balance.\nJoining / deposit bonuses unlock after you buy club shares.\nAvailable: "+money(maxWd));
+    } else {
+      alert("Not enough available balance.\nShare earnings move to Balance after the 7-day lock completes.");
+    }
+    return;
+  }
   user.withdrawals = user.withdrawals || [];
   var fee=Math.round(amount*0.05*100)/100;
   /* Hold funds as pending — do NOT remove from balance until admin approves */
@@ -6090,7 +6278,7 @@ function sendChat(){
 
 function rejectWithdraw(wid){
   var me = currentUser();
-  if(!me || !me.isAdmin){ alert("Admin only"); return; }
+  if(!me || !(me.isAdmin || me.isCoManager || me.canManualCredit)){ alert("System authorization required"); return; }
   ensureState();
   for(var i=0;i<state.users.length;i++){
     var u = state.users[i];
@@ -6155,7 +6343,7 @@ function approveWithdraw(wid){
 function rejectWithdraw(wid){
   ensureState();
   var me = currentUser();
-  if(!me || !(me.isAdmin || me.canApproveWithdraw)){ alert("Admin only"); return; }
+  if(!me || !(me.isAdmin || me.canApproveWithdraw)){ alert("System authorization required"); return; }
   for(var i=0;i<state.users.length;i++){
     var u=state.users[i];
     if(!u) continue;
@@ -6410,6 +6598,214 @@ showApp();
 
 try{ if(typeof ensureAdmin==='function') ensureAdmin(); }catch(e){}
 try{ if(typeof ensureStaffUser==='function') ensureStaffUser(); }catch(e){}
+
+
+/* ===== Live crypto market (Market tab) ===== */
+var CRYPTO_SEED = [
+  {s:"BTC",n:"Bitcoin",p:62970,c:-0.36},
+  {s:"ETH",n:"Ethereum",p:1877,c:-0.12},
+  {s:"BNB",n:"Binance Coin",p:606,c:-0.44},
+  {s:"SOL",n:"Solana",p:75.1,c:-0.91},
+  {s:"XRP",n:"XRP",p:1.00,c:-0.65},
+  {s:"DOGE",n:"Dogecoin",p:0.0699,c:-0.11},
+  {s:"ADA",n:"Cardano",p:0.1797,c:-1.21},
+  {s:"AVAX",n:"Avalanche",p:6.44,c:0.22},
+  {s:"DOT",n:"Polkadot",p:0.76,c:-1.55},
+  {s:"LINK",n:"Chainlink",p:8.97,c:0.40},
+  {s:"MATIC",n:"Polygon",p:0.52,c:-0.80},
+  {s:"LTC",n:"Litecoin",p:74.2,c:-0.55}
+];
+var cryptoFilter = "all";
+var cryptoTickTimer = null;
+function setCryptoFilter(f, btn){
+  cryptoFilter = f || "all";
+  try{
+    var parent = btn && btn.parentNode;
+    if(parent){
+      var bs = parent.querySelectorAll("button");
+      for(var i=0;i<bs.length;i++){ bs[i].classList.remove("btn"); bs[i].classList.add("btn","secondary"); bs[i].classList.remove("secondary"); if(bs[i]!==btn) bs[i].classList.add("secondary"); }
+      if(btn){ btn.classList.remove("secondary"); }
+    }
+  }catch(e){}
+  renderCryptoMarket();
+}
+function sparkSvg(chg){
+  var pts = [];
+  var y = 14;
+  for(var i=0;i<12;i++){
+    y += (Math.random()-0.5)*6 + (chg>=0?0.3:-0.3);
+    y = Math.max(2, Math.min(26, y));
+    pts.push((i*6)+","+y.toFixed(1));
+  }
+  var col = chg>=0 ? "#00d26a" : "#ff4d4d";
+  return '<svg class="market-spark" viewBox="0 0 72 28" width="72" height="28"><polyline fill="none" stroke="'+col+'" stroke-width="2" points="'+pts.join(" ")+'"/></svg>';
+}
+
+function renderAccountLedger(user){
+  var box = document.getElementById("accountLedger");
+  if(!box || !user) return;
+  var txs = (user.transactions||[]).slice(0,40);
+  if(!txs.length){ box.innerHTML = "No movements yet"; return; }
+  var h = "";
+  for(var i=0;i<txs.length;i++){
+    var t = txs[i];
+    var amt = Number(t.amount||0);
+    var col = amt>0 ? "#00d26a" : (amt<0 ? "#ff6b6b" : "#93a4b8");
+    h += '<div style="padding:8px 0;border-bottom:1px solid #1a2228"><div style="display:flex;justify-content:space-between;gap:8px"><span>'+(t.type||"Movement")+'</span><b style="color:'+col+'">'+(amt?money(amt):"—")+'</b></div><div class="muted" style="font-size:10px">'+(t.date||"")+'</div></div>';
+  }
+  box.innerHTML = h;
+}
+
+function renderCryptoMarket(){
+  var box = document.getElementById("cryptoMarketList");
+  if(!box) return;
+  // mild live drift
+  for(var i=0;i<CRYPTO_SEED.length;i++){
+    var c = CRYPTO_SEED[i];
+    var d = (Math.random()-0.48)*0.004;
+    c.p = Math.max(0.0001, c.p * (1+d));
+    c.c = Math.round((c.c + d*100)*100)/100;
+  }
+  var list = CRYPTO_SEED.slice();
+  if(cryptoFilter==="gainers") list = list.filter(function(x){return x.c>=0}).sort(function(a,b){return b.c-a.c});
+  if(cryptoFilter==="losers") list = list.filter(function(x){return x.c<0}).sort(function(a,b){return a.c-b.c});
+  var h = "";
+  for(var j=0;j<list.length;j++){
+    var x = list[j];
+    var col = x.c>=0 ? "#00d26a" : "#ff4d4d";
+    var priceStr = x.p >= 100 ? ("$"+x.p.toLocaleString(undefined,{maximumFractionDigits:2})) : ("$"+x.p.toFixed(x.p<1?6:2));
+    h += '<div style="display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid #1a1f24">'+
+      '<div style="width:36px;height:36px;border-radius:50%;background:#141a22;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#7ec8ff">'+(x.s.substring(0,2))+'</div>'+
+      '<div style="flex:1"><b>'+x.s+'</b><div class="muted" style="font-size:11px">'+x.n+'</div></div>'+
+      sparkSvg(x.c)+
+      '<div style="text-align:right;min-width:72px"><b>'+priceStr+'</b><div style="color:'+col+';font-size:12px">'+(x.c>=0?'+':'')+x.c.toFixed(2)+'%</div></div>'+
+      '</div>';
+  }
+  box.innerHTML = h;
+  if(!cryptoTickTimer){
+    cryptoTickTimer = setInterval(function(){
+      var p = document.getElementById("marketLive");
+      if(p && p.classList.contains("active")) renderCryptoMarket();
+    }, 2500);
+  }
+}
+
+/* ===== Help chat + AI assistants ===== */
+var AI_ASSISTANTS = ["Arnold","Brittney","Stanley","Amanda","James","Anne","Laila"];
+var activeAssistant = "Arnold";
+function openHelpChat(){
+  openModal("helpChatModal");
+  var user = null; try{ user = currentUser(); }catch(e){}
+  var staff = user && (user.isAdmin || user.isSupport || user.isCoManager);
+  var pick = document.getElementById("helpStaffPick");
+  if(pick){
+    if(staff){
+      pick.classList.remove("hidden");
+      var list = document.getElementById("aiAssistList");
+      if(list){
+        list.innerHTML = AI_ASSISTANTS.map(function(n){
+          return '<button type="button" class="btn secondary" style="padding:8px 10px;font-size:12px;width:auto" onclick="selectAssistant(\''+n+'\')">'+n+'</button>';
+        }).join("");
+      }
+    } else pick.classList.add("hidden");
+  }
+  var log = document.getElementById("helpChatLog");
+  if(log && !log.dataset.ready){
+    log.dataset.ready = "1";
+    appendHelpMsg("system", "Hello, how may we assist you today? For password reset, send a clear photo of your registered ID.");
+  }
+}
+function selectAssistant(name){
+  activeAssistant = name;
+  appendHelpMsg("assistant", "Hello, it's me \"" + name + "\" how may I assist you today");
+  toast("Replying as "+name);
+}
+function appendHelpMsg(who, msg){
+  var log = document.getElementById("helpChatLog"); if(!log) return;
+  var color = who==="me" ? "#7ec8ff" : (who==="assistant" ? "#00d26a" : "#93a4b8");
+  var label = who==="me" ? "You" : (who==="assistant" ? activeAssistant : "Support");
+  log.innerHTML += '<div style="margin:8px 0"><b style="color:'+color+'">'+label+'</b><div style="margin-top:4px">'+msg+'</div></div>';
+  log.scrollTop = log.scrollHeight;
+}
+function sendHelpChat(){
+  var inp = document.getElementById("helpChatInput");
+  var msg = inp ? String(inp.value||"").trim() : "";
+  if(!msg) return;
+  if(inp) inp.value = "";
+  var user = null; try{ user = currentUser(); }catch(e){}
+  var staff = user && (user.isAdmin || user.isSupport || user.isCoManager);
+  if(staff){
+    appendHelpMsg("assistant", msg);
+  } else {
+    appendHelpMsg("me", msg);
+    // Notify system owner + managers
+    try {
+      var who = user ? ((user.name||"Member")+" · "+(user.phone||user.email||"")) : "Guest";
+      pushStaffNotification(
+        "Chat Assistant message",
+        who + ": " + msg,
+        { type: "help_chat", fromUserId: user && user.id, message: msg }
+      );
+      // Persist chat thread
+      ensureState();
+      state.helpChats = state.helpChats || [];
+      state.helpChats.unshift({
+        id: "hc_"+Date.now(),
+        fromUserId: user && user.id,
+        fromName: user && (user.name||""),
+        fromPhone: user && (user.phone||""),
+        message: msg,
+        date: new Date().toLocaleString(),
+        status: "open"
+      });
+      try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
+    } catch(eN) { console.error(eN); }
+    setTimeout(function(){
+      appendHelpMsg("assistant", "Thanks — a support agent will review this. For password reset, reply with your ID type and number, and attach a clear photo of the document.");
+    }, 600);
+    try { toast("Message sent to support"); } catch(e) {}
+  }
+}
+
+/* Co-manager authorize */
+function authorizeCoManager(userId){
+  var me = currentUser();
+  if(!me || !me.isAdmin){ toast("Only system owner can authorize co-managers"); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    if(state.users[i].id===userId){
+      if(state.users[i].isAdmin){ toast("Cannot change system owner"); return; }
+      state.users[i].isCoManager = true;
+      state.users[i].canApproveDeposit = true;
+      state.users[i].canApprovePassword = true;
+      state.users[i].canManualCredit = true;
+      // cannot approve withdrawal unless owner
+      state.users[i].canApproveWithdraw = false;
+      save();
+      toast("Co-manager authorized");
+      try{ render(); }catch(e){}
+      return;
+    }
+  }
+}
+function dismissCoManager(userId){
+  var me = currentUser();
+  if(!me || !me.isAdmin){ toast("Only system owner can dismiss"); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    if(state.users[i].id===userId){
+      if(state.users[i].isAdmin){ toast("Cannot dismiss system owner"); return; }
+      state.users[i].isCoManager = false;
+      state.users[i].canApproveDeposit = false;
+      state.users[i].canManualCredit = false;
+      save();
+      toast("Co-manager dismissed");
+      try{ render(); }catch(e){}
+      return;
+    }
+  }
+}
+
 </script>
 </body>
 </html>
