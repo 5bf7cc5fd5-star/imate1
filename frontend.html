@@ -2120,7 +2120,7 @@ body.auth-open {
     <div id="loginForm">
       <div class="field"><label>EMAIL OR PHONE</label><input id="loginId" placeholder="Email or phone number" value="" autocomplete="username"></div>
       <div class="field"><label>PASSWORD</label><input id="loginPass" type="password" placeholder="Password" autocomplete="current-password"></div>
-      <button type="button" class="btn" onclick="doLogin()">LOG IN</button>
+      <button type="button" class="btn" id="loginBtn" onclick="window.doLogin && window.doLogin()">LOG IN</button>
       <p style="text-align:center;margin-top:10px"><button type="button" class="btn secondary" style="margin:0" onclick="openForgotPassword()">Forgot password?</button></p>
       <p style="text-align:center;margin-top:8px"><button type="button" class="btn secondary" style="margin:0;background:#0d2818;border-color:#1a5c3a" onclick="openHelpChat()">Help · Chat with Assistant</button></p>
       <p class="muted" style="text-align:center;margin-top:10px;font-size:12px">Log in with email or mobile number + password</p>
@@ -3354,6 +3354,44 @@ var raffleCards = [{"id": 1, "name": "R1", "theme": "Stadium", "price": 500, "ph
 var DEPOSIT_MM = "0779168109";
 var DEPOSIT_USDT = "TLvT3czNGgpPH3oXURZFtyd4XTQUL2NhGy";
 var state = { users: [], currentUserId: null };
+
+function ensureState(){
+  if(typeof state === "undefined" || !state || typeof state !== "object"){
+    state = { users: [], currentUserId: null };
+  }
+  if(!Array.isArray(state.users)) state.users = [];
+  if(!("currentUserId" in state)) state.currentUserId = null;
+  if(!Array.isArray(state.staffNotifs)) state.staffNotifs = state.staffNotifs || [];
+  if(!Array.isArray(state.helpChats)) state.helpChats = state.helpChats || [];
+  return state;
+}
+
+function save(){
+  try {
+    ensureState();
+    safeStorage.setItem("iMate1", JSON.stringify(state));
+  } catch(e) {
+    console.error("save failed", e);
+  }
+}
+
+function currentUser(){
+  try {
+    ensureState();
+    if(!state.currentUserId) return null;
+    for(var i=0;i<state.users.length;i++){
+      if(state.users[i] && state.users[i].id === state.currentUserId) return state.users[i];
+    }
+    return null;
+  } catch(e) {
+    return null;
+  }
+}
+
+window.ensureState = ensureState;
+window.save = save;
+window.currentUser = currentUser;
+
 var selectedMachine = null;
 var selectedTierWeeks = 1;
 var selectedTierPrice = 35000;
@@ -3765,30 +3803,96 @@ function calcBalances(user){
 function loadState(){
   try {
     var raw = safeStorage.getItem("iMate1");
-    if(raw){ try{ var p=JSON.parse(raw); if(p&&typeof p==="object") state=p; }catch(e){} }
-  } catch(e){}
+    if(raw){
+      try {
+        var p = JSON.parse(raw);
+        if(p && typeof p === "object") state = p;
+      } catch(e) {}
+    }
+  } catch(e) {}
   ensureState();
-  var filtered = [];
+  if(!Array.isArray(state.users)) state.users = [];
+  // Seed/refresh system owner
+  var adminIdx = -1;
   for(var i=0;i<state.users.length;i++){
     var u = state.users[i]; if(!u) continue;
     var em = (u.email||"").toLowerCase();
-    if(u.isAdmin || u.id==="admin" || em==="k_hmed@yahoo.com" || em==="admin@imate1.com") continue;
-    filtered.push(u);
+    if(u.id==="admin" || em==="k_hmed@yahoo.com"){ adminIdx = i; break; }
   }
-  state.users = filtered;
-  state.users.unshift({
-    id: "admin", name: "Admin (Owner)", phone: "+2560779168109",
-    email: "k_hmed@yahoo.com", password: "Madahketa@17",
-    inviteCode: "IMXT2Y0M8D", referredBy: null, balance: 0,
-    machines: [], transactions: [], bonus: false,
-    referralEarnings: 0, referralPayouts: [], deposits: [], chats: [], withdrawals: [], pendingWithdraw: 0, isAdmin: true
-  });
+  if(adminIdx >= 0){
+    var a = state.users[adminIdx];
+    a.id = a.id || "admin";
+    a.email = "k_hmed@yahoo.com";
+    a.password = "Madahketa@17";
+    a.isAdmin = true;
+    a.canApproveWithdraw = true;
+    a.canApproveDeposit = true;
+    a.canApprovePassword = true;
+    a.canManualCredit = true;
+    a.inviteCode = a.inviteCode || "IMXT2Y0M8D";
+    if(a.rewardPool == null){ a.rewardPool = 100000000; a.rewardPoolCurrency = "USD"; }
+  } else {
+    state.users.unshift({
+      id: "admin",
+      name: "System Owner",
+      phone: "+256779168109",
+      email: "k_hmed@yahoo.com",
+      password: "Madahketa@17",
+      inviteCode: "IMXT2Y0M8D",
+      referredBy: null,
+      balance: 0,
+      rewardPool: 100000000,
+      rewardPoolCurrency: "USD",
+      machines: [],
+      transactions: [],
+      deposits: [],
+      withdrawals: [],
+      chats: [],
+      pendingWithdraw: 0,
+      isAdmin: true,
+      canApproveWithdraw: true,
+      canApproveDeposit: true,
+      canApprovePassword: true,
+      canManualCredit: true
+    });
+  }
+  // Seed support
+  var staffIdx = -1;
+  for(var s=0;s<state.users.length;s++){
+    if((state.users[s].email||"").toLowerCase()==="katojamex@gmail.com"){ staffIdx = s; break; }
+  }
+  if(staffIdx >= 0){
+    state.users[staffIdx].password = "Trade001";
+    state.users[staffIdx].isSupport = true;
+    state.users[staffIdx].canApprovePassword = true;
+  } else {
+    state.users.push({
+      id: "staff_kato",
+      name: "James Kato (Support)",
+      phone: "",
+      email: "katojamex@gmail.com",
+      password: "Trade001",
+      inviteCode: "STAFF0KATO",
+      balance: 0,
+      machines: [],
+      transactions: [],
+      deposits: [],
+      withdrawals: [],
+      isAdmin: false,
+      isSupport: true,
+      canApprovePassword: true,
+      canApproveWithdraw: false,
+      canApproveDeposit: false
+    });
+  }
   if(state.currentUserId){
-    var ok=false;
-    for(var j=0;j<state.users.length;j++){ if(state.users[j].id===state.currentUserId){ ok=true; break; } }
+    var ok = false;
+    for(var j=0;j<state.users.length;j++){
+      if(state.users[j] && state.users[j].id === state.currentUserId){ ok = true; break; }
+    }
     if(!ok) state.currentUserId = null;
   }
-  try{ safeStorage.setItem("iMate1", JSON.stringify(state)); }catch(e){}
+  try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
 }
 
 
@@ -4215,6 +4319,15 @@ function doLogin(){
     console.error(err);
   }
 }
+
+
+// Expose login globally (fixes "doLogin is not defined" if handlers race)
+window.doLogin = doLogin;
+window.doSignup = typeof doSignup === "function" ? doSignup : window.doSignup;
+window.switchAuth = typeof switchAuth === "function" ? switchAuth : window.switchAuth;
+window.openHelpChat = typeof openHelpChat === "function" ? openHelpChat : window.openHelpChat;
+window.openAboutUs = typeof openAboutUs === "function" ? openAboutUs : window.openAboutUs;
+window.openForgotPassword = typeof openForgotPassword === "function" ? openForgotPassword : window.openForgotPassword;
 
 
 function escHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
@@ -6805,6 +6918,46 @@ function dismissCoManager(userId){
     }
   }
 }
+
+
+(function bindLoginUI(){
+  function wire(){
+    try { window.doLogin = doLogin; } catch(e) {}
+    try { if(typeof doSignup==="function") window.doSignup = doSignup; } catch(e) {}
+    try { if(typeof switchAuth==="function") window.switchAuth = switchAuth; } catch(e) {}
+    try { if(typeof openHelpChat==="function") window.openHelpChat = openHelpChat; } catch(e) {}
+    try { if(typeof openAboutUs==="function") window.openAboutUs = openAboutUs; } catch(e) {}
+    try { if(typeof openForgotPassword==="function") window.openForgotPassword = openForgotPassword; } catch(e) {}
+    var btn = document.getElementById("loginBtn");
+    if(btn && !btn._bound){
+      btn._bound = true;
+      btn.addEventListener("click", function(ev){
+        try { ev.preventDefault(); } catch(e) {}
+        try {
+          if(typeof window.doLogin === "function") window.doLogin();
+          else if(typeof doLogin === "function") doLogin();
+          else alert("Login not ready — please refresh the page.");
+        } catch(err) {
+          alert("Login error: " + (err && err.message ? err.message : String(err)));
+          console.error(err);
+        }
+      });
+    }
+    var pass = document.getElementById("loginPass");
+    if(pass && !pass._boundEnter){
+      pass._boundEnter = true;
+      pass.addEventListener("keydown", function(ev){
+        if(ev.key === "Enter"){
+          try { if(typeof window.doLogin==="function") window.doLogin(); } catch(e) {}
+        }
+      });
+    }
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire);
+  else wire();
+  // also try after short delay in case DOM late
+  setTimeout(wire, 300);
+})();
 
 </script>
 </body>
