@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Own Club — System Dashboard</title>
+<style>
+:root{
+  --bg:#0b1220; --side:#0e1628; --card:#121c2f; --border:#1e2d45;
+  --blue:#3b82f6; --cyan:#22d3ee; --green:#22c55e; --orange:#f59e0b;
+  --red:#ef4444; --text:#e8eefc; --muted:#8b9bb8; --line:#1a2740;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(1200px 600px at 10% -10%,#1a2a4a 0%,var(--bg) 45%);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif}
+.hidden{display:none!important}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{width:100%;max-width:420px;background:rgba(18,28,47,.92);border:1px solid var(--border);border-radius:18px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.login-card h1{margin:0 0 6px;font-size:22px}
+.login-card p{margin:0 0 18px;color:var(--muted);font-size:13px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.4px}
+.field input{width:100%;background:#0a1322;border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:#fff;font-size:14px}
+.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;font-size:13px}
+.btn-primary{background:linear-gradient(135deg,#2563eb,#06b6d4);color:#fff;width:100%}
+.btn-green{background:#16a34a;color:#fff}
+.btn-red{background:#dc2626;color:#fff}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-sm{padding:7px 10px;font-size:12px;border-radius:8px}
+
+/* SHELL */
+.app{display:flex;min-height:100vh}
+.sidebar{width:240px;background:var(--side);border-right:1px solid var(--border);padding:18px 14px;position:sticky;top:0;height:100vh;overflow:auto;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:10px;padding:8px 10px 18px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#22d3ee);display:grid;place-items:center;font-weight:900;color:#041018}
+.brand b{font-size:15px}
+.brand span{display:block;font-size:11px;color:var(--muted)}
+.nav-section{font-size:10px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin:14px 10px 8px}
+.nav a,.nav button.nav-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 12px;border-radius:10px;color:var(--muted);text-decoration:none;background:transparent;border:0;cursor:pointer;font-size:13px;margin-bottom:4px}
+.nav a:hover,.nav button.nav-item:hover{background:#152238;color:#fff}
+.nav a.active,.nav button.nav-item.active{background:linear-gradient(135deg,rgba(37,99,235,.25),rgba(34,211,238,.12));color:#fff;border:1px solid rgba(59,130,246,.35)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;background:rgba(10,16,28,.8);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5;backdrop-filter:blur(10px)}
+.top-metrics{display:flex;flex-wrap:wrap;gap:10px}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;min-width:140px}
+.metric label{display:block;font-size:10px;color:var(--muted);margin-bottom:4px}
+.metric b{font-size:15px}
+.top-actions{display:flex;align-items:center;gap:10px}
+.content{padding:20px 22px 40px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+.stat label{font-size:12px;color:var(--muted)}
+.stat .v{font-size:22px;font-weight:800;margin-top:6px}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
+.panel h2{margin:0 0 12px;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+.panel h2 small{color:var(--muted);font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.badge.pending{background:#3a2a00;color:#fbbf24}
+.badge.approved,.badge.ok{background:#0a2e1a;color:#4ade80}
+.badge.rejected{background:#3a0a12;color:#f87171}
+.green{color:var(--green)}.orange{color:var(--orange)}.blue{color:var(--blue)}.red{color:var(--red)}.cyan{color:var(--cyan)}
+.empty{color:var(--muted);padding:18px;text-align:center;font-size:13px}
+.chart{height:220px;position:relative;background:linear-gradient(180deg,rgba(37,99,235,.08),transparent);border-radius:12px;border:1px solid var(--line);overflow:hidden}
+.chart svg{width:100%;height:100%;display:block}
+.coins{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.coin{background:#0c1526;border:1px solid var(--line);border-radius:12px;padding:12px}
+.coin .row{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
+.coin b{font-size:14px}
+.split{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+@media (max-width:1100px){.grid-4{grid-template-columns:repeat(2,1fr)}.split{grid-template-columns:1fr}.coins{grid-template-columns:1fr}}
+@media (max-width:820px){.sidebar{display:none}.grid-4{grid-template-columns:1fr}}
+.note{font-size:12px;color:var(--muted)}
+.badge-pop{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800}
+.badge-pop.yellow{background:rgba(250,204,21,.2);color:#facc15;border:1px solid #ca8a04;animation:pulseY 1.6s ease-in-out infinite}
+.badge-pop.cyan{background:rgba(34,211,238,.18);color:#22d3ee;border:1px solid #0891b2;animation:pulseC 1.6s ease-in-out infinite}
+@keyframes pulseY{0%,100%{box-shadow:0 0 0 0 rgba(250,204,21,.45)}50%{box-shadow:0 0 0 8px rgba(250,204,21,0)}}
+@keyframes pulseC{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,.4)}50%{box-shadow:0 0 0 8px rgba(34,211,238,0)}}
+.select-title{background:#0a1322;border:1px solid var(--border);color:#fff;border-radius:8px;padding:6px 8px;font-size:12px}
+
+input.credit{width:110px;background:#0a1322;border:1px solid var(--border);border-radius:8px;padding:7px 8px;color:#fff}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView" class="login-wrap">
+  <div class="login-card">
+    <h1>Own Club <span class="cyan">System</span></h1>
+    <p>Desktop control panel · deposits, withdrawals, members</p>
+    <div class="field"><label>EMAIL</label><input id="adminEmail" placeholder="Email" autocomplete="username"></div>
+    <div class="field"><label>PASSWORD</label><input id="adminPass" type="password" placeholder="Password" autocomplete="current-password"></div>
+    <button class="btn btn-primary" id="adminLoginBtn" onclick="adminLogin()">LOG IN</button>
+    <p class="note" style="margin-top:14px;text-align:center">Desktop dashboard · <a href="/" style="color:#22d3ee">Member app</a></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="dashView" class="app hidden">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">OC</div>
+      <div><b>Own Club</b><span>Share Market · System</span></div>
+    </div>
+    <div class="nav">
+      <div class="nav-section">Main</div>
+      <button class="nav-item active" data-page="overview" onclick="go('overview')">Overview</button>
+      <button class="nav-item" data-page="deposits" onclick="go('deposits')">Deposits</button>
+      <button class="nav-item" data-page="withdrawals" onclick="go('withdrawals')">Withdrawals</button>
+      <button class="nav-item" data-page="members" onclick="go('members')">Members</button>
+      <button class="nav-item" data-page="referrals" onclick="go('referrals')">Affiliate / Team</button>
+      <div class="nav-section">Support</div>
+      <button class="nav-item" data-page="messages" onclick="go('messages')">Chat messages</button>
+      <a href="/" target="_blank">Open member app</a>
+      <button class="nav-item" onclick="logout()">Log Out</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="top-metrics">
+        <div class="metric"><label>Users</label><b id="mUsers">0</b></div>
+        <div class="metric"><label>Total invested</label><b id="mInvested" class="orange">UGX 0</b></div>
+        <div class="metric"><label>Pending WD</label><b id="mPending" class="orange">0</b></div>
+        <div class="metric"><label>Pending amount</label><b id="mPendingAmt" class="cyan">UGX 0</b></div>
+        <div class="metric"><label>Referral payouts</label><b id="mRef" class="green">UGX 0</b></div>
+        <div class="metric"><label>Company fund pool</label><b id="mPool" class="green">$500,000,000</b></div>
+      </div>
+      <div id="pendingAlerts" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div>
+      <div class="top-actions">
+        <button class="btn btn-green btn-sm" type="button" onclick="window.loadAll && window.loadAll()">Refresh</button>
+        <button class="btn btn-red btn-sm" onclick="logout()">Log Out</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- OVERVIEW -->
+      <section id="page-overview">
+        <div class="grid-4">
+          <div class="stat"><label>Total users</label><div class="v" id="sUsers">0</div></div>
+          <div class="stat"><label>Total invested</label><div class="v orange" id="sInvested">UGX 0</div></div>
+          <div class="stat"><label>Pending withdrawals</label><div class="v orange" id="sPending">0</div></div>
+          <div class="stat"><label>Pending amount</label><div class="v cyan" id="sPendingAmt">UGX 0</div></div>
+        </div>
+        <div class="split">
+          <div class="panel">
+            <h2>Activity <small>deposits / approvals trend</small></h2>
+            <div class="chart" id="chartBox">
+              <svg id="chartSvg" viewBox="0 0 600 220" preserveAspectRatio="none"></svg>
+            </div>
+            <div class="coins" id="coinCards"></div>
+          </div>
+          <div class="panel">
+            <h2>Quick actions</h2>
+            <p class="note">Approve deposits only after you verify TxID on MoMo / Tronscan.</p>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+              <button class="btn btn-primary" onclick="go('deposits')">Review deposits</button>
+              <button class="btn btn-primary" style="background:linear-gradient(135deg,#b45309,#f59e0b)" onclick="go('withdrawals')">Review withdrawals</button>
+              <button class="btn btn-ghost" onclick="go('members')">Manage members</button>
+            </div>
+            <div style="margin-top:18px" class="panel" id="rewardPoolBox">
+              <h2 style="margin:0 0 8px">Reward pool</h2>
+              <div class="v green" id="sPool">$500,000,000</div>
+              <p class="note">Tracks platform treasury movements.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DEPOSITS -->
+      <section id="page-deposits" class="hidden">
+        <div class="panel">
+          <h2>Deposit requests <small>TxID verification</small></h2>
+          <div id="depTable"><div class="empty">Loading…</div></div>
+        </div>
+      </section>
+
+      <!-- WITHDRAWALS -->
+      <section id="page-withdrawals" class="hidden">
+        <div class="panel">
+          <h2>Withdrawal requests <small>Under Review → Reviewed → Disbursed</small></h2>
+          <div id="wdTable"><div class="empty">Loading…</div></div>
+        </div>
+      </section>
+
+      <!-- MEMBERS -->
+      <section id="page-members" class="hidden">
+        <div class="panel">
+          <h2>All members <small>manual credit from company fund pool (USD)</small></h2>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+            <input id="memberSearch" placeholder="Search name / phone / email e.g. 0760962048" style="flex:1;min-width:220px;background:#0a1322;border:1px solid var(--border);color:#fff;border-radius:10px;padding:10px 12px">
+            <button class="btn btn-primary btn-sm" type="button" onclick="searchMembers()">Search</button>
+            <button class="btn btn-ghost btn-sm" type="button" onclick="document.getElementById('memberSearch').value='';window.loadAll&&window.loadAll()">Show all</button>
+          </div>
+          <div id="bulkCreditBar" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px;padding:12px;background:#0c1526;border:1px solid var(--border);border-radius:12px">
+            <span class="note">Bulk credit selected:</span>
+            <input id="bulkAmount" type="number" min="1" placeholder="Same UGX for all" style="width:140px;background:#0a1322;border:1px solid var(--border);border-radius:8px;padding:8px;color:#fff">
+            <button class="btn btn-green btn-sm" onclick="bulkCreditSame()">Credit same amount</button>
+            <button class="btn btn-primary btn-sm" onclick="bulkCreditEach()">Credit each row amount (approve all at once)</button>
+            <button class="btn btn-sm" style="background:#1e293b;color:#fff" onclick="openAddUser()">+ Add member / staff</button>
+            <span class="note" id="bulkHint">Select members with checkboxes. Pool pays the credits.</span>
+          </div>
+          <div id="usersTable"><div class="empty">Loading…</div></div>
+        </div>
+      </section>
+
+      <!-- REFERRALS -->
+      <section id="page-referrals" class="hidden">
+        <div class="panel">
+          <h2>Affiliate overview</h2>
+          <div id="refTable"><div class="empty">Loading…</div></div>
+        </div>
+      </section>
+
+      <!-- MESSAGES -->
+      <section id="page-messages" class="hidden">
+        <div class="panel">
+          <h2>Chat Assistant messages</h2>
+          <p class="note">Messages from members via Help chat (when available on API / local sync).</p>
+          <div id="msgTable"><div class="empty">No messages loaded from server yet.</div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+
+/* Real-time WebSocket for admin panel */
+let adminWS = null;
+let adminWSRetry = 0;
+function adminWsConnect(){
+  try{
+    if(adminWS && (adminWS.readyState===0 || adminWS.readyState===1)) return;
+    if(!token) return;
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const url = proto + '//' + location.host + '/ws?token=' + encodeURIComponent(token);
+    const ws = new WebSocket(url);
+    adminWS = ws;
+    ws.onopen = function(){ adminWSRetry = 0; console.log('[admin-ws] connected'); };
+    ws.onmessage = function(ev){
+      try{
+        const msg = JSON.parse(ev.data);
+        const e = msg.event;
+        if(['users','deposit','balance','team','user_joined','pool','withdraw','referral'].indexOf(e) >= 0){
+          if(typeof loadAll === 'function') loadAll();
+          else if(window.loadAll) window.loadAll();
+        }
+      }catch(err){}
+    };
+    ws.onclose = function(){
+      adminWS = null;
+      const wait = Math.min(15000, 1000 * Math.pow(1.5, adminWSRetry++));
+      setTimeout(adminWsConnect, wait);
+    };
+  }catch(e){}
+}
+
+const API = location.origin;
+let token = localStorage.getItem('imate1_admin_token') || '';
+let cache = { stats:null, withdrawals:[], deposits:[], users:[] };
+
+const money = n => 'UGX ' + Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});
+
+async function api(path, opts={}){
+  const headers = Object.assign({'Content-Type':'application/json','Accept':'application/json'}, opts.headers||{});
+  if(token) headers['Authorization'] = 'Bearer ' + token;
+  let res;
+  try {
+    res = await fetch(API + path, Object.assign({}, opts, { headers }));
+  } catch (netErr) {
+    throw new Error('Cannot reach server. Check internet / Railway is online. (' + (netErr && netErr.message ? netErr.message : 'network') + ')');
+  }
+  const raw = await res.text();
+  let data = {};
+  try { data = raw ? JSON.parse(raw) : {}; } catch(e) { data = { error: raw || ('HTTP '+res.status) }; }
+  if(res.status === 401){ logout(); throw new Error(data.error || 'Unauthorized'); }
+  if(!res.ok) throw new Error(data.error || data.message || ('HTTP '+res.status));
+  return data;
+}
+
+function showDash(on){
+  document.getElementById('loginView').classList.toggle('hidden', on);
+  document.getElementById('dashView').classList.toggle('hidden', !on);
+}
+
+function go(page){
+  ['overview','deposits','withdrawals','members','referrals','messages'].forEach(p=>{
+    const el = document.getElementById('page-'+p);
+    if(el) el.classList.toggle('hidden', p!==page);
+  });
+  document.querySelectorAll('.nav-item[data-page]').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-page')===page);
+  });
+}
+
+async function adminLogin(){
+  const email = (document.getElementById('adminEmail').value || '').trim();
+  const password = document.getElementById('adminPass').value || '';
+  if(!email || !password){ alert('Enter email and password'); return; }
+  const btn = document.getElementById('adminLoginBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Signing in…'; }
+  try{
+    const data = await api('/api/login', {
+      method:'POST',
+      body: JSON.stringify({
+        identifier: email,
+        email: email,
+        password: password
+      })
+    });
+    if(!data.token){
+      alert('Login failed: no token returned');
+      return;
+    }
+    if(!data.user || !(data.user.is_admin || data.user.isAdmin || data.user.is_support || data.user.isSupport)){
+      alert('This account is not authorized for the system panel.');
+      return;
+    }
+    token = data.token;
+    localStorage.setItem('imate1_admin_token', token);
+    showDash(true);
+    loadAll();
+    try{ adminWsConnect(); }catch(e){}
+  }catch(e){
+    alert(e.message || 'Login failed');
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = 'Sign in'; }
+  }
+}
+
+function logout(){
+  token = '';
+  localStorage.removeItem('imate1_admin_token');
+  showDash(false);
+}
+
+function drawChart(points){
+  const svg = document.getElementById('chartSvg');
+  if(!svg) return;
+  if(!points || points.length < 2){
+    points = [12,18,15,22,28,24,30,27,33,29,36,32,40,38,42,35,44,41,48,45,52,49,55,50];
+  }
+  const w=600, h=220, pad=16;
+  const max = Math.max.apply(null, points.concat([1]));
+  const min = Math.min.apply(null, points);
+  const span = Math.max(1, max-min);
+  const step = (w - pad*2) / (points.length-1);
+  let d = '';
+  points.forEach((v,i)=>{
+    const x = pad + i*step;
+    const y = h - pad - ((v-min)/span)*(h-pad*2);
+    d += (i? ' L ':'M ') + x.toFixed(1) + ' ' + y.toFixed(1);
+  });
+  const area = d + ' L ' + (w-pad) + ' ' + (h-pad) + ' L ' + pad + ' ' + (h-pad) + ' Z';
+  svg.innerHTML = `
+    <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${area}" fill="url(#g)"/>
+    <path d="${d}" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linejoin="round"/>
+  `;
+}
+
+function renderCoins(users){
+  const box = document.getElementById('coinCards');
+  if(!box) return;
+  const top = (users||[]).filter(u=>!u.is_admin && !u.isAdmin).slice(0,6);
+  if(!top.length){
+    box.innerHTML = '<div class="note">No member activity yet.</div>';
+    return;
+  }
+  box.innerHTML = top.map(u=>`
+    <div class="coin">
+      <div class="row"><span>${u.name||'Member'}</span><span class="badge ok">USER</span></div>
+      <b class="orange">${money(u.balance)}</b>
+      <div class="row" style="margin-top:6px"><span>Shares</span><span>${(u.machines||[]).length}</span></div>
+    </div>
+  `).join('');
+}
+
+function renderDeposits(list){
+  const el = document.getElementById('depTable');
+  if(!el) return;
+  if(!list || !list.length){
+    el.innerHTML = '<div class="empty">No deposit requests yet.</div>';
+    return;
+  }
+  el.innerHTML = `<table>
+    <thead><tr><th>Date</th><th>User</th><th>Phone</th><th>Amount</th><th>TxID</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>${list.map(d=>{
+      const st = (d.status||'pending').toLowerCase();
+      const id = d.id || d._id || '';
+      return `<tr>
+        <td>${d.created_at ? new Date(d.created_at).toLocaleString() : (d.date||'—')}</td>
+        <td>${d.user_name||d.name||'—'}</td>
+        <td>${d.user_phone||d.phone||'—'}</td>
+        <td class="orange">${money(d.amount)}</td>
+        <td style="font-family:monospace;font-size:12px;word-break:break-all;max-width:220px;color:${(function(){var st=String(d.status||'').toLowerCase(); if(st==='confirmed'||st==='approved')return '#22c55e'; if(st==='rejected')return '#ef4444'; return '#facc15';})()}">${d.reference||d.txid||d.txId||d.provider_ref||d.transaction_id||'—'}</td>
+        <td><span class="badge ${st}">${st}</span></td>
+        <td>${st==='pending' ? `
+          <button class="btn btn-green btn-sm" onclick="depAct('${id}','confirm','${d.user_id||d.userId||''}')">Approve</button>
+          <button class="btn btn-red btn-sm" onclick="depAct('${id}','reject','${d.user_id||d.userId||''}')">Reject</button>
+        ` : '—' }</td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+function renderWithdrawals(list){
+  const el = document.getElementById("wdTable");
+  if(!el) return;
+  if(!list || !list.length){
+    el.innerHTML = '<div class="empty">No withdrawal requests yet.</div>';
+    return;
+  }
+  function stLabel(st){
+    st = String(st||"pending").toLowerCase();
+    if(st==="pending" || st==="under_review") return {lab:"UNDER REVIEW", cls:"pending", color:"#22d3ee"};
+    if(st==="reviewed") return {lab:"REVIEWED", cls:"pending", color:"#a78bfa"};
+    if(st==="disbursed" || st==="approved") return {lab:"DISBURSED", cls:"ok", color:"#22c55e"};
+    if(st==="rejected") return {lab:"REJECTED", cls:"rejected", color:"#ef4444"};
+    return {lab:st.toUpperCase(), cls:"pending", color:"#facc15"};
+  }
+  el.innerHTML = `<table>
+    <thead><tr>
+      <th>Date</th><th>User</th><th>Phone</th><th>Amount</th><th>Fee</th><th>Net</th>
+      <th>System TxID</th><th>Status</th><th>Action</th>
+    </tr></thead>
+    <tbody>${list.map(w=>{
+      var st = String(w.status||"pending").toLowerCase();
+      var meta = stLabel(st);
+      var tx = w.txid || w.system_txid || w.reference || "—";
+      var actions = "—";
+      if(st==="pending" || st==="under_review"){
+        actions = `
+          <button class="btn btn-green btn-sm" onclick="act('${w.id}','review')">Mark Reviewed</button>
+          <button class="btn btn-red btn-sm" onclick="act('${w.id}','reject')">Reject</button>`;
+      } else if(st==="reviewed"){
+        actions = `<button class="btn btn-green btn-sm" onclick="act('${w.id}','disburse')">Disburse</button>
+          <button class="btn btn-red btn-sm" onclick="act('${w.id}','reject')">Reject</button>`;
+      }
+      return `<tr>
+        <td>${w.created_at ? new Date(w.created_at).toLocaleString() : (w.date||"—")}</td>
+        <td>${w.user_name||"—"}</td>
+        <td>${w.user_phone||"—"}</td>
+        <td>${money(w.amount)}</td>
+        <td>${money(w.fee)}</td>
+        <td class="green">${money(w.net)}</td>
+        <td style="font-family:monospace;font-size:11px;word-break:break-all;color:${meta.color}">${tx}</td>
+        <td><span class="badge ${meta.cls}" style="color:${meta.color}">${meta.lab}</span></td>
+        <td>${actions}</td>
+      </tr>`;
+    }).join("")}</tbody></table>`;
+}
+
+
+function renderUsers(users){
+  const el = document.getElementById('usersTable');
+  const refEl = document.getElementById('refTable');
+  if(!users) users = [];
+  if(el){
+    el.innerHTML = `<table>
+      <thead><tr>
+        <th><input type="checkbox" id="chkAllMembers" onclick="toggleAllMembers(this)" title="Select for bulk credit"></th>
+        <th>Name</th><th>Title</th><th>Avatar</th><th>Phone</th><th>Email</th><th>Balance</th><th>Shares</th><th>Referrals</th><th>Joined</th><th>Credit UGX</th><th>Edit</th>
+      </tr></thead>
+      <tbody>${users.map(u=>{
+        const id = u.id;
+        const isSys = !!(u.is_admin||u.isAdmin);
+        return `<tr>
+          <td>${isSys?'':`<input type="checkbox" class="mem-chk" value="${id}" data-name="${(u.name||'').replace(/"/g,'')}">`}</td>
+          <td>${u.name||'—'}
+            ${isSys?' <span class="badge ok">SYSTEM</span>':''}
+            ${(u.isSupport||u.is_support||u.is_staff)?' <span class="badge pending">STAFF</span>':''}
+            ${(u.juniorShareholder||u.junior_shareholder)?' <span class="badge ok">JUNIOR SH</span>':''}
+            ${u.title?` <span class="badge ok">${u.title}</span>`:''}
+          </td>
+          <td>
+            <select class="select-title" onchange="setUserTitle('${id}', this.value)">
+              <option value="">— Title —</option>
+              ${['Team leader','Manager','Global Amb','Junior Shareholder','Support','Staff','Co-Manager'].map(t=>
+                `<option value="${t}" ${(u.title===t)?'selected':''}>${t}</option>`
+              ).join('')}
+            </select>
+          </td>
+          <td>
+            <select class="select-title" onchange="setUserAvatar('${id}', this.value)" title="Assign avatar">
+              <option value="">—</option>
+              ${['dog','cat','tiger','leopard','jaguar','elephant'].map(a=>
+                `<option value="${a}" ${(u.avatarPreset===a||u.avatar_preset===a)?'selected':''}>${a}</option>`
+              ).join('')}
+            </select>
+          </td>
+          <td>${u.phone||'—'}</td>
+          <td>${u.email||'—'}</td>
+          <td class="orange">${money(u.balance)}</td>
+          <td>${(u.machines||[]).length}</td>
+          <td>${u.referral_count||u.referralCount||0}</td>
+          <td>${u.created_at ? new Date(u.created_at).toLocaleDateString() : (u.joined||'—')}</td>
+          <td>
+            ${isSys ? '—' : `
+              <input class="credit" id="cr_${id}" type="number" min="1" placeholder="UGX amount" style="width:100px">
+            `}
+          </td>
+          <td>
+            ${isSys ? '—' : `<button class="btn btn-primary btn-sm" onclick="openEditUser('${id}')">Edit</button>`}
+          </td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
+  }
+  if(refEl){
+    const rows = users.filter(u=>!u.is_admin && !u.isAdmin);
+    refEl.innerHTML = `<table>
+      <thead><tr><th>Name</th><th>Title</th><th>Invite code</th><th>Referrals</th><th>Phone</th><th>Email</th></tr></thead>
+      <tbody>${rows.map(u=>`
+        <tr>
+          <td>${u.name||'—'}</td>
+          <td>${u.title||'—'}</td>
+          <td style="font-family:monospace">${u.invite_code||u.inviteCode||'—'}</td>
+          <td>${u.referral_count||u.referralCount||0}</td>
+          <td>${u.phone||'—'}</td>
+          <td>${u.email||'—'}</td>
+        </tr>`).join('')||'<tr><td colspan="6" class="empty">No members</td></tr>'}
+      </tbody></table>`;
+  }
+}
+
+
+
+async function setUserTitle(uid, title){
+  try{
+    await api('/api/admin/set-title', { method:'POST', body: JSON.stringify({ user_id: uid, title: title }) });
+    await loadAll();
+  }catch(e){
+    alert('Title update failed: '+(e.message||e));
+  }
+}
+
+async function setUserAvatar(uid, preset){
+  try{
+    await api('/api/admin/users/upsert', {
+      method:'POST',
+      body: JSON.stringify({ user_id: uid, avatarPreset: preset })
+    });
+    await loadAll();
+  }catch(e){
+    // fallback via set-title endpoint fields
+    try{
+      await api('/api/admin/set-title', { method:'POST', body: JSON.stringify({ user_id: uid, title: '', avatarPreset: preset }) });
+      await loadAll();
+    }catch(e2){ alert('Avatar failed: '+(e2.message||e2)); }
+  }
+}
+
+function openAddUser(){
+  const name = prompt('Full name');
+  if(name==null || !name.trim()) return;
+  const phone = prompt('Phone (with country code e.g. +2567...)');
+  if(phone==null || !phone.trim()) return;
+  const email = prompt('Email');
+  if(email==null || !email.trim()) return;
+  const password = prompt('Temporary password');
+  if(password==null || !password.trim()) return;
+  const title = prompt('Title (Team leader / Manager / Global Amb / Support / Staff / Co-Manager / leave blank)', '') || '';
+  const isStaff = ['Team leader','Manager','Global Amb','Support','Staff','Co-Manager'].indexOf(title) >= 0;
+  api('/api/admin/users/upsert', {
+    method:'POST',
+    body: JSON.stringify({
+      name: name.trim(), phone: phone.trim(), email: email.trim(), password: password.trim(),
+      title: title, is_support: isStaff, is_staff: isStaff, approve: true,
+      can_approve_deposit: title==='Manager'||title==='Co-Manager'||title==='Global Amb',
+      can_approve_withdraw: title==='Manager'||title==='Co-Manager'||title==='Global Amb'
+    })
+  }).then(function(res){
+    alert('Account created for '+(res.user&&res.user.name?res.user.name:name));
+    loadAll();
+  }).catch(function(e){ alert('Create failed: '+(e.message||e)); });
+}
+
+function openEditUser(uid){
+  const u = (cache.users||[]).find(function(x){ return String(x.id)===String(uid); });
+  if(!u){ alert('User not found in list — refresh'); return; }
+  const name = prompt('Name', u.name||''); if(name==null) return;
+  const phone = prompt('Phone', u.phone||''); if(phone==null) return;
+  const email = prompt('Email', u.email||''); if(email==null) return;
+  const password = prompt('New password (leave blank to keep)', ''); if(password==null) return;
+  const title = prompt('Title', u.title||''); if(title==null) return;
+  const body = { user_id: uid, name: name.trim(), phone: phone.trim(), email: email.trim(), title: title.trim() };
+  if(password.trim()) body.password = password.trim();
+  if(['Team leader','Manager','Global Amb','Support','Staff','Co-Manager'].indexOf(title.trim())>=0){
+    body.is_support = true; body.is_staff = true;
+  }
+  api('/api/admin/users/upsert', { method:'POST', body: JSON.stringify(body) })
+    .then(function(){ alert('Updated'); loadAll(); })
+    .catch(function(e){ alert('Edit failed: '+(e.message||e)); });
+}
+
+// Auto-refresh every 20s when dashboard open
+if(!window._imate1AutoRefresh){
+  window._imate1AutoRefresh = setInterval(function(){
+    if(token && document.getElementById('dashView') && !document.getElementById('dashView').classList.contains('hidden')){
+      loadAll().catch(function(){});
+    }
+  }, 20000);
+}
+
+
+
+
+
+async function searchMembers(){
+  const q = (document.getElementById('memberSearch')||{}).value || '';
+  try{
+    const data = await api('/api/admin/users?q=' + encodeURIComponent(q.trim()));
+    cache.users = data.users || [];
+    renderUsers(cache.users);
+    const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+    set('mUsers', cache.users.length);
+    set('sUsers', cache.users.length);
+  }catch(e){ alert('Search failed: '+(e.message||e)); }
+}
+window.searchMembers = searchMembers;
+
+window.loadAll = function renderReferrals(rows){
+  const el = document.getElementById('refTable');
+  if(!el) return;
+  if(!rows || !rows.length){ el.innerHTML = '<div class="empty">No members yet</div>'; return; }
+  let html = '<table><thead><tr><th>Member</th><th>Invite code</th><th>Joined via</th><th>L1</th><th>L2</th><th>Team</th><th>Earnings</th></tr></thead><tbody>';
+  rows.forEach(r=>{
+    html += `<tr>
+      <td><b>${r.name||'—'}</b><br><span class="note">${r.phone||''}<br>${r.email||''}</span></td>
+      <td><code>${r.invite_code||'—'}</code></td>
+      <td>${r.used_invite||'—'}<br><span class="note">${r.referrer_name||''}</span></td>
+      <td>${r.level1||0}</td>
+      <td>${r.level2||0}</td>
+      <td>${r.team_total||0}</td>
+      <td class="green">UGX ${Number(r.referral_earnings||0).toLocaleString()}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+window.renderReferrals = renderReferrals;
+
+async function loadAll(){
+  try{
+    const tasks = [
+      api('/api/admin/stats').catch(()=>({})),
+      api('/api/admin/withdrawals').catch(()=>({withdrawals:[]})),
+      api('/api/admin/users').catch(()=>({users:[]})),
+      api('/api/admin/deposits').catch(()=>({deposits:[]})),
+      api('/api/admin/referrals').catch(()=>({referrals:[]}))
+    ];
+    const [stats, wds, users, deps, refs] = await Promise.all(tasks);
+    try{ renderReferrals((refs&&refs.referrals)||[]); }catch(e){}
+    console.log('loadAll users', (users && users.users && users.users.length) || 0);
+    cache.stats = stats;
+    cache.withdrawals = wds.withdrawals || wds || [];
+    cache.users = users.users || users || [];
+    cache.deposits = deps.deposits || deps || [];
+
+    const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+    set('mUsers', stats.total_users ?? cache.users.length ?? 0);
+    set('sUsers', stats.total_users ?? cache.users.length ?? 0);
+    set('mInvested', money(stats.total_invested||0));
+    set('sInvested', money(stats.total_invested||0));
+    set('mPending', stats.pending_withdrawals ?? 0);
+    set('sPending', stats.pending_withdrawals ?? 0);
+    set('mPendingAmt', money(stats.pending_amount||0));
+    set('sPendingAmt', money(stats.pending_amount||0));
+    set('mRef', money(stats.total_referral_payouts||0));
+    if(stats.reward_pool != null) set('sPool', 'USD ' + Number(stats.reward_pool).toLocaleString());
+
+    renderWithdrawals(cache.withdrawals);
+    renderDeposits(cache.deposits);
+    renderUsers(cache.users);
+    renderCoins(cache.users);
+    // simple activity series from counts
+    const base = Number(stats.total_invested||0) / 10000;
+    const pts = Array.from({length:24}, (_,i)=> Math.max(2, base*0.2 + Math.sin(i/2)*8 + i*1.2 + (i%3)*3));
+    drawChart(pts);
+    try{ updatePendingAlerts(); }catch(eA){}
+  }catch(e){
+    console.error(e);
+    if(String(e.message||'').includes('Unauthorized')) logout();
+  }
+}
+
+async function act(id, action){
+  const note = action==='reject' ? (prompt('Rejection reason (optional):') || '') : '';
+  try{
+    await api('/api/admin/withdrawals/action', {
+      method:'POST',
+      body: JSON.stringify({id, action, note})
+    });
+    var msg = {
+      review: 'Marked as Reviewed',
+      disburse: 'Disbursed — mark paid offline',
+      approve: 'Disbursed',
+      reject: 'Rejected — funds returned'
+    }[action] || 'Updated';
+    try{ alert(msg); }catch(e){}
+    loadAll();
+  }catch(e){ alert(e.message); }
+}
+
+async function depAct(id, action, userId){
+  // Server expects: confirm | reject (not "approve")
+  var apiAction = (action === 'approve' || action === 'confirm') ? 'confirm' : 'reject';
+  const note = apiAction==='reject' ? (prompt('Rejection reason (optional):') || '') : '';
+  if(!userId){
+    // try find from cache
+    var found = (cache.deposits||[]).find(function(d){ return d.id === id; });
+    if(found) userId = found.user_id || found.userId;
+  }
+  if(!userId){ alert('Missing user id for this deposit'); return; }
+  try{
+    await api('/api/admin/deposits/action', {
+      method:'POST',
+      body: JSON.stringify({id: id, action: apiAction, user_id: userId, note: note})
+    });
+    alert(apiAction === 'confirm' ? 'Deposit approved — wallet credited' : 'Deposit rejected');
+    loadAll();
+  }catch(e){ alert(e.message); }
+}
+
+async function creditUser(uid){
+  const inp = document.getElementById('cr_'+uid);
+  const amount = Number(inp && inp.value);
+  if(!amount || amount <= 0){ alert('Enter amount in UGX'); return; }
+  try{
+    const res = await api('/api/admin/credit', {
+      method:'POST',
+      body: JSON.stringify({user_id: uid, amount: amount, note: 'Manual credit from company fund pool'})
+    });
+    // API may wrap single result
+    const ok = res && (res.ok !== false) && !res.error;
+    const bal = (res && res.balance != null) ? res.balance : (res && res.user && res.user.balance);
+    const pool = res && (res.pool_usd != null ? res.pool_usd : null);
+    if(inp) inp.value='';
+    await loadAll();
+    alert('Credited UGX ' + Number(amount).toLocaleString()
+      + (bal!=null ? ('\\nNew balance: UGX ' + Number(bal).toLocaleString()) : '')
+      + (pool!=null ? ('\\nPool: $' + Number(pool).toLocaleString()) : ''));
+  }catch(e){
+    alert('Credit failed: ' + (e && e.message ? e.message : e));
+  }
+}
+
+function toggleAllMembers(master){
+  document.querySelectorAll('.mem-chk').forEach(function(c){ c.checked = !!master.checked; });
+}
+
+async function bulkCreditSame(){
+  var amount = Number((document.getElementById('bulkAmount')||{}).value||0);
+  if(!amount || amount <= 0){ alert('Enter bulk amount in UGX'); return; }
+  var ids = [];
+  document.querySelectorAll('.mem-chk:checked').forEach(function(c){ ids.push(c.value); });
+  if(!ids.length){ alert('Select at least one member'); return; }
+  if(!confirm('Credit UGX '+amount.toLocaleString()+' to '+ids.length+' member(s) from company fund pool?')) return;
+  try{
+    const items = ids.map(function(id){ return {user_id:id, amount:amount}; });
+    const res = await api('/api/admin/credit', { method:'POST', body: JSON.stringify({items: items, note:'Bulk credit from pool'}) });
+    await loadAll();
+    alert('Bulk credit submitted for '+ids.length+' members'
+      + (res && res.pool_usd!=null ? ('\\nPool: $'+Number(res.pool_usd).toLocaleString()) : ''));
+  }catch(e){ alert('Bulk credit failed: '+(e.message||e)); }
+}
+
+async function bulkCreditEach(){
+  var items = [];
+  document.querySelectorAll('.mem-chk:checked').forEach(function(c){
+    var uid = c.value;
+    var inp = document.getElementById('cr_'+uid);
+    var amount = Number(inp && inp.value);
+    if(amount > 0) items.push({user_id: uid, amount: amount});
+  });
+  if(!items.length){ alert('Select members and enter an amount in each Credit UGX box'); return; }
+  if(!confirm('Credit DIFFERENT amounts to '+items.length+' selected members in ONE approval from company fund pool?')) return;
+  try{
+    const res = await api('/api/admin/credit', { method:'POST', body: JSON.stringify({items: items, note:'Bulk credit (per-row) from pool'}) });
+    await loadAll();
+    alert('Bulk credit done for '+items.length+' members'
+      + (res && res.pool_usd!=null ? ('\\nPool: $'+Number(res.pool_usd).toLocaleString()) : ''));
+  }catch(e){ alert('Bulk credit failed: '+(e.message||e)); }
+}
+
+
+try{ window.loadAll = loadAll; window.creditUser = creditUser; window.searchMembers = searchMembers; }catch(e){}
+(async()=>{
+  // leave login fields blank (no prefilled secrets)
+  if(token){
+    try{
+      const me = await api('/api/me');
+      if(me.user && (me.user.is_admin || me.user.isAdmin)){
+        showDash(true);
+        loadAll();
+        return;
+      }
+    }catch(e){}
+    logout();
+  }
+})();
+</script>
+</body>
+</html>
