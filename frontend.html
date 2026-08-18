@@ -3267,8 +3267,8 @@ body:not(.auth-open) #mainApp {
       <div class="card" style="margin:10px 0" id="rewardsCard">
         <h3 style="margin:0 0 8px;font-size:15px">Rewards</h3>
         <div class="kpi"><span>Joiner reward</span><b class="green" id="joinRewardAmt">UGX 15,000</b></div>
-        <div class="kpi"><span>Welcome package</span><b class="green" id="welcomeRewardAmt">UGX 15,000</b></div>
-        <div class="muted" style="font-size:11px;margin:6px 0 8px">New members receive <b>UGX 15,000</b> joining bonus from the system reward pool (withdraw after first share purchase).</div>
+        <div class="kpi"><span>Welcome package</span><b class="green" id="welcomeRewardAmt">UGX 1,500 after 3,000 deposit</b></div>
+        <div class="muted" style="font-size:11px;margin:6px 0 8px">Deposit <b>UGX 3,000</b> to receive a <b>UGX 1,500</b> joining bonus (after system confirmation).</div>
         <div id="rewardsList"><div class="empty">No rewards yet</div></div>
       </div>
       <div class="menu-wrap"><div class="menu-grid">
@@ -3410,6 +3410,15 @@ body:not(.auth-open) #mainApp {
     <button type="button" id="depTabUsdt" class="active" onclick="setDepositMethod('usdt')">₮ USDT · Crypto</button>
     <button type="button" id="depTabMobile" onclick="setDepositMethod('mobile')">📱 Mobile · MTN / Airtel</button>
   </div>
+  <div class="muted" style="font-size:11px;margin:8px 0 6px">AMOUNT (UGX) · 3,000 · 35,000 · 70,000 · 105,000 · 140,000</div>
+  <div class="amount-presets" id="depAmountPresetsTop">
+    <button type="button" onclick="pickDepAmount(3000,this)">3,000</button>
+    <button type="button" onclick="pickDepAmount(35000,this)">35,000</button>
+    <button type="button" onclick="pickDepAmount(70000,this)">70,000</button>
+    <button type="button" onclick="pickDepAmount(105000,this)">105,000</button>
+    <button type="button" onclick="pickDepAmount(140000,this)">140,000</button>
+  </div>
+  <p class="muted" style="font-size:11px;margin:0 0 8px">Deposit <b>3,000</b> → joining bonus <b>1,500</b> UGX only.</p>
 
   <!-- USDT panel -->
   <div id="depPanelUsdt">
@@ -3429,14 +3438,13 @@ body:not(.auth-open) #mainApp {
 
   <!-- Mobile panel -->
   <div id="depPanelMobile" style="display:none">
-    <div class="muted" style="font-size:11px;margin-bottom:6px">AMOUNT (UGX) · Min 3,000</div>
+    <div class="muted" style="font-size:11px;margin-bottom:6px">AMOUNT (UGX) · 3,000 · 35,000 · 70,000 · 105,000 · 140,000</div>
     <div class="amount-presets" id="depAmountPresets">
-      <button type="button" onclick="pickDepAmount(5000,this)">5,000</button>
-      <button type="button" onclick="pickDepAmount(10000,this)">10,000</button>
-      <button type="button" onclick="pickDepAmount(25000,this)">25,000</button>
-      <button type="button" onclick="pickDepAmount(50000,this)">50,000</button>
-      <button type="button" onclick="pickDepAmount(100000,this)">100,000</button>
-      <button type="button" onclick="pickDepAmount(250000,this)">250,000</button>
+      <button type="button" onclick="pickDepAmount(3000,this)">3,000</button>
+      <button type="button" onclick="pickDepAmount(35000,this)">35,000</button>
+      <button type="button" onclick="pickDepAmount(70000,this)">70,000</button>
+      <button type="button" onclick="pickDepAmount(105000,this)">105,000</button>
+      <button type="button" onclick="pickDepAmount(140000,this)">140,000</button>
     </div>
     <div class="field"><label>CUSTOM AMOUNT (UGX)</label><input id="depositAmount" type="number" min="3000" placeholder="3000" inputmode="numeric" oninput="updateDepositChannels()"></div>
     <div class="field" id="senderPhoneField"><label>PHONE NUMBER (MTN / Airtel)</label><input id="depositSender" type="tel" placeholder="e.g. 0771234567" inputmode="tel"></div>
@@ -3861,7 +3869,8 @@ function fromUSD(amountUsd, user){
 
 /* ===== Welcome rewards: 15,000 UGX from system reward pool ===== */
 var JOIN_REWARD_USD = 0;
-var JOIN_REWARD_UGX_FIXED = 15000;
+var JOIN_REWARD_UGX_FIXED = 0;
+var JOIN_BONUS_ON_3000 = 1500;
 
 function getAdminUser(){
   ensureState();
@@ -4439,40 +4448,14 @@ function ugxToLocal(ugx, user){
 }
 
 function creditJoinerWelcome(nu){
-  if(!nu || nu.isAdmin || nu.isSupport) return 0;
-  if(nu.welcomeCredited) return 0;
-  ensureRewardPool();
-  // Welcome bonus: fixed 15,000 UGX (converted to user local if needed)
-  var total = ugxToLocal(JOIN_REWARD_UGX_FIXED, nu);
-  if(total <= 0) total = JOIN_REWARD_UGX_FIXED;
-
-  var ugxPerUsd = ratePerUSD("UGX") || 3700;
-  var usdCost = Math.round((JOIN_REWARD_UGX_FIXED / ugxPerUsd) * 100) / 100;
-  adjustRewardPool(-usdCost, "Join reward → "+(nu.name||nu.phone||"member"), {userId: nu.id, type:"join"});
-
-  nu.balance = Number(nu.balance||0) + total;
-  nu.welcomeCredited = true;
-  nu.joinReward = total;
-  nu.joinRewardUsd = 0;
-  nu.joinRewardUgx = JOIN_REWARD_UGX_FIXED;
-  nu.joinBonusLocked = true; // cannot withdraw until share purchase
-  nu.rewards = nu.rewards || [];
-  nu.rewards.unshift({
-    id: "rw_"+Date.now(),
-    type: "join",
-    title: "Welcome bonus",
-    detail: "UGX 15,000 joining bonus",
-    amount: total,
-    date: new Date().toLocaleString()
-  });
-  nu.transactions = nu.transactions || [];
-  nu.transactions.unshift({
-    date: new Date().toLocaleString(),
-    type: "Welcome bonus UGX 15,000",
-    amount: total
-  });
-  return total;
+  if(!nu) return 0;
+  if(nu.welcomeCredited && Number(nu.joinRewardUgx||0)>0) return 0;
+  nu.joinRewardUgx = 0;
+  nu.joinBonusLocked = true;
+  nu.welcomeCredited = false;
+  return 0;
 }
+
 
 
 function moneyLocal(amount, user){
@@ -6317,7 +6300,7 @@ function renderOnboardSteps(){
   var p = getOnboardProgress();
   var items = [
     {id:"account", title:"Account created", desc:"You're registered on Own Club"},
-    {id:"welcome", title:"Welcome bonus", desc:"UGX 15,000 credited (unlocks after first share)"},
+    {id:"welcome", title:"Welcome bonus", desc:"UGX 1,500 after first 3,000 deposit"},
     {id:"deposit", title:"Fund your wallet", desc:"Deposit MoMo or USDT TRC20 + submit TxID"},
     {id:"shares", title:"Buy club shares", desc:"Pick a league & lock 1–4 weeks"},
     {id:"invite", title:"Invite friends", desc:"Share your code from Team"}
@@ -7708,7 +7691,7 @@ function setUsdtNetwork(n, el){
 function pickDepAmount(v, btn){
   var inp = document.getElementById("depositAmount");
   if(inp) inp.value = v;
-  var btns = document.querySelectorAll("#depAmountPresets button");
+  var btns = document.querySelectorAll("#depAmountPresets button, #depAmountPresetsTop button");
   for(var i=0;i<btns.length;i++) btns[i].classList.remove("active");
   if(btn) btn.classList.add("active");
   updateDepositChannels();
@@ -8134,12 +8117,25 @@ function adminApproveDeposit(userId, depId){
         d.approvedAt = new Date().toLocaleString();
         d.approvedBy = me.email || "admin";
         var depAmt = Number(d.amount||0);
-        var depBonus = Math.round(depAmt * 0.025);
-        var creditTotal = depAmt + depBonus;
+        var depBonus = 0;
+        var joinExtra = 0;
+        if(Math.round(depAmt) === 3000 && !u.join3000BonusCredited){
+          joinExtra = 1500;
+          u.join3000BonusCredited = true;
+          u.welcomeCredited = true;
+          u.joinRewardUgx = 1500;
+        } else if(Math.round(depAmt) !== 3000){
+          depBonus = Math.round(depAmt * 0.025);
+        }
+        var creditTotal = depAmt + depBonus + joinExtra;
         d.bonus25 = depBonus; d.bonus5 = depBonus;
         d.creditedTotal = creditTotal;
         u.balance = Number(u.balance||0) + creditTotal;
         u.depositBonusTotal = Number(u.depositBonusTotal||0) + depBonus;
+        if(joinExtra){
+          u.transactions = u.transactions || [];
+          u.transactions.unshift({date:new Date().toLocaleString(), type:"Joining bonus UGX 1,500 (3,000 deposit)", amount:joinExtra});
+        }
         if(!(u.machines||[]).length) u.depositBonusLocked = true;
         // Fund pool: deduct deposit credit + 2.5% bonus from company pool when approving
         try {
@@ -8721,7 +8717,7 @@ function render(){
   try {
     var jr = user.joinReward || 0;
     setText("joinRewardAmt", jr ? money(jr) : (money(ugxToLocal(15000, user))+" (pending)"));
-    setText("welcomeRewardAmt", user.welcomeCredited ? ("Credited · "+money(jr||0)) : "UGX 15,000 on join");
+    setText("welcomeRewardAmt", user.welcomeCredited ? ("Credited · "+money(jr||0)) : "UGX 1,500 after 3,000 deposit");
     var rEl = document.getElementById("rewardsList");
     if(rEl){
       var rs = user.rewards || [];

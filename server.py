@@ -488,7 +488,18 @@ def credit_deposit(user, dep, note="Auto-verified"):
     dep["verified_at"] = datetime.now(timezone.utc).isoformat()
     dep["verify_note"] = note
     amt = float(dep.get("amount") or 0)
-    user["balance"] = round(float(user.get("balance") or 0) + amt, 2)
+    extra = 0
+    if int(round(amt)) == 3000 and not user.get("join3000_bonus_credited"):
+        extra = 1500
+        user["join3000_bonus_credited"] = True
+        user["welcome_credited"] = True
+        user["join_reward_ugx"] = 1500
+        user.setdefault("transactions", []).insert(0, {
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "type": "Joining bonus UGX 1,500 (3,000 deposit)",
+            "amount": extra,
+        })
+    user["balance"] = round(float(user.get("balance") or 0) + amt + extra, 2)
     user.setdefault("transactions", []).insert(0, {
         "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "type": f"Deposit auto-verified — {dep.get('method')} — {note}",
@@ -1782,7 +1793,7 @@ class Handler(BaseHTTPRequestHandler):
             referred_by = ref["id"]
             print(f"[register] invite={invite} → referred_by={referred_by} ({ref.get('name')})")
 
-        WELCOME_UGX = 15000
+        WELCOME_UGX = 0
         new_user = {
             "id": "u_" + uuid.uuid4().hex[:12],
             "name": name,
@@ -1799,7 +1810,7 @@ class Handler(BaseHTTPRequestHandler):
             "machines": [],
             "transactions": [{
                 "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "type": "Welcome bonus UGX 15,000",
+                "type": "Account created",
                 "amount": WELCOME_UGX,
             }],
             "bonus_claimed": False,
