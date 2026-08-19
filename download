@@ -1,8 +1,0 @@
-__pycache__/
-*.pyc
-.env
-data/users.json
-data/withdrawals.json
-.DS_Store
-*.log
-node_modules/
