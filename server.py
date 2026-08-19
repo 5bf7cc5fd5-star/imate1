@@ -2855,31 +2855,36 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    seed_admin()
-    seed_support_staff()
+    # Bind immediately so Railway healthcheck (/api/health) can succeed.
+    class _Server(ThreadingHTTPServer):
+        allow_reuse_address = True
+        daemon_threads = True
+
+    httpd = _Server((HOST, PORT), Handler)
+    print(f"[boot] Own Club listening on {HOST}:{PORT}", flush=True)
+    print(f"[boot] health http://0.0.0.0:{PORT}/api/health", flush=True)
+
+    def _boot_jobs():
+        try:
+            seed_admin()
+            seed_support_staff()
+        except Exception as e:
+            print("[boot] seed", e)
+        try:
+            ensure_vapid_keys()
+        except Exception as e:
+            print("[push] boot", e)
+        try:
+            # Do not wipe customers on every Railway restart
+            if (os.environ.get("RESET_CUSTOMERS") or "").strip() == "1":
+                wipe_customer_accounts()
+                seed_admin()
+                seed_support_staff()
+        except Exception as e:
+            print("[boot] wipe failed", e)
+
+    threading.Thread(target=_boot_jobs, daemon=True).start()
     try:
-        ensure_vapid_keys()
-    except Exception as _e:
-        print('[push] boot', _e)
-    try:
-        wipe_customer_accounts()
-        seed_admin()
-        seed_support_staff()
-    except Exception as e:
-        print("[boot] wipe failed", e)
-    print(f"""
-╔══════════════════════════════════════════════╗
-║           Own Club Backend              ║
-╠══════════════════════════════════════════════╣
-║  App:    http://localhost:{PORT}/               ║
-║  Admin:  http://localhost:{PORT}/admin          ║
-║  API:    http://localhost:{PORT}/api/health     ║
-║  WS:     ws://localhost:{PORT}/ws                ║
-║                                              ║
-║  Admin login:                                ║
-║    email: {ADMIN_EMAIL}             ║
-║    pass:  {ADMIN_PASSWORD}                    ║
-╚══════════════════════════════════════════════╝
-""")
-    print(f"  WS:     ws://localhost:{PORT}/ws")
-    ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
