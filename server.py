@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-iMate1 Backend
+Own Club Backend
 - Token auth (HMAC)
 - Registration / Login
 - Machine purchases + 5% first-purchase bonus
@@ -21,8 +21,11 @@ import re
 import random
 import string
 from datetime import datetime, timezone
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse
+from http.server import HTTPServer, BaseHTTPRequestHandler, ThreadingHTTPServer
+import struct
+import threading
+from collections import defaultdict
+from urllib.parse import urlparse, parse_qs
 from pathlib import Path
 
 HOST = "0.0.0.0"
@@ -30,18 +33,196 @@ PORT = int(os.environ.get("PORT", "8080"))
 SECRET = os.environ.get("IMATE1_SECRET", "imate1-demo-secret-change-in-production-2026").encode()
 TOKEN_TTL = 60 * 60 * 24 * 7
 
+BASE = Path(__file__).resolve().parent
 DATA_DIR = Path(__file__).parent / "data"
-DATA_DIR.mkdir(exist_ok=True)
-USERS_FILE = DATA_DIR / "users.json"
-WITHDRAWALS_FILE = DATA_DIR / "withdrawals.json"
-OTPS_FILE = DATA_DIR / "otps.json"
-POOL_FILE = DATA_DIR / "fund_pool.json"
-DEFAULT_POOL_USD = 500_000_000.0  # Company fund pool start
-UGX_PER_USD = float(os.environ.get("UGX_PER_USD", "3700"))
 
-ADMIN_EMAIL = "k_hmed@yahoo.com"
-ADMIN_PHONE = "+256780509960"
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Madahketa@17")
+# ---------- Web Push notifications ----------
+PUSH_FILE = DATA_DIR / "push_subscriptions.json"
+VAPID_PRIVATE = os.environ.get("VAPID_PRIVATE_KEY", "").strip()
+VAPID_PUBLIC = os.environ.get("VAPID_PUBLIC_KEY", "").strip()
+VAPID_EMAIL = os.environ.get("VAPID_CONTACT", "mailto:k_hmed@yahoo.com").strip()
+
+def get_push_subs():
+    try:
+        if PUSH_FILE.exists():
+            return json.loads(PUSH_FILE.read_text(encoding="utf-8"))
+    except Exception as e:
+        print("[push] load", e)
+    return []
+
+def save_push_subs(items):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    PUSH_FILE.write_text(json.dumps(items, indent=2), encoding="utf-8")
+
+def upsert_push_sub(user_id, subscription):
+    if not subscription or not isinstance(subscription, dict):
+        return False
+    endpoint = (subscription.get("endpoint") or "").strip()
+    if not endpoint:
+        return False
+    items = get_push_subs()
+    items = [x for x in items if (x.get("subscription") or {}).get("endpoint") != endpoint]
+    items.append({
+        "user_id": user_id,
+        "subscription": subscription,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    })
+    # keep last 500
+    save_push_subs(items[-500:])
+    return True
+
+def remove_push_endpoint(endpoint):
+    items = [x for x in get_push_subs() if (x.get("subscription") or {}).get("endpoint") != endpoint]
+    save_push_subs(items)
+
+def send_web_push(subscription, payload: dict):
+    """Send via pywebpush if VAPID configured."""
+    if not VAPID_PRIVATE or not VAPID_PUBLIC:
+        return {"ok": False, "message": "VAPID keys not configured"}
+    try:
+        from pywebpush import webpush, WebPushException
+        webpush(
+            subscription_info=subscription,
+            data=json.dumps(payload),
+            vapid_private_key=VAPID_PRIVATE,
+            vapid_claims={"sub": VAPID_EMAIL or "mailto:admin@ownclubshares.com"},
+        )
+        return {"ok": True}
+    except Exception as e:
+        msg = str(e)
+        print("[push] send error", msg)
+        if "410" in msg or "404" in msg:
+            try:
+                remove_push_endpoint((subscription or {}).get("endpoint") or "")
+            except Exception:
+                pass
+        return {"ok": False, "message": msg}
+
+def notify_user(user_id, title, body, url="/", tag="ownclub"):
+    """Push to all devices registered for this user + broadcast in-app via WS."""
+    payload = {"title": title, "body": body, "url": url, "tag": tag}
+    try:
+        ws_broadcast("notification", {"user_id": user_id, **payload}, user_id=user_id)
+    except Exception:
+        pass
+    if not user_id:
+        return {"sent": 0}
+    sent = 0
+    for item in get_push_subs():
+        if item.get("user_id") != user_id:
+            continue
+        sub = item.get("subscription")
+        if not sub:
+            continue
+        r = send_web_push(sub, payload)
+        if r.get("ok"):
+            sent += 1
+    return {"sent": sent}
+
+def notify_admins(title, body, url="/admin", tag="admin"):
+    """Notify all admin/support/staff accounts."""
+    n = 0
+    for u in get_users():
+        if u.get("is_admin") or u.get("is_support") or u.get("is_staff") or u.get("can_approve_deposit"):
+            r = notify_user(u.get("id"), title, body, url=url, tag=tag)
+            n += int(r.get("sent") or 0)
+    return {"sent": n}
+
+def ensure_vapid_keys():
+    """Load or create VAPID keys (env or data/vapid.json)."""
+    global VAPID_PRIVATE, VAPID_PUBLIC
+    if VAPID_PRIVATE and VAPID_PUBLIC:
+        return
+    key_path = DATA_DIR / "vapid.json"
+    try:
+        if key_path.exists():
+            data = json.loads(key_path.read_text(encoding="utf-8"))
+            VAPID_PRIVATE = (data.get("private") or "").strip() or VAPID_PRIVATE
+            VAPID_PUBLIC = (data.get("public") or "").strip() or VAPID_PUBLIC
+            if VAPID_PRIVATE and VAPID_PUBLIC:
+                return
+    except Exception as e:
+        print("[push] vapid load", e)
+    try:
+        import base64
+        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.hazmat.primitives import serialization
+        priv = ec.generate_private_key(ec.SECP256R1())
+        priv_bytes = priv.private_numbers().private_value.to_bytes(32, "big")
+        pub_bytes = priv.public_key().public_bytes(
+            encoding=serialization.Encoding.X962,
+            format=serialization.PublicFormat.UncompressedPoint,
+        )
+        VAPID_PRIVATE = base64.urlsafe_b64encode(priv_bytes).decode().rstrip("=")
+        VAPID_PUBLIC = base64.urlsafe_b64encode(pub_bytes).decode().rstrip("=")
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        key_path.write_text(json.dumps({"private": VAPID_PRIVATE, "public": VAPID_PUBLIC}), encoding="utf-8")
+        print("[push] Generated VAPID keys → data/vapid.json")
+    except Exception as e:
+        print("[push] VAPID generate failed:", e)
+
+
+def ws_broadcast(event: str, data=None, user_id=None):
+    """Push event to all connected WS clients (optionally target one user)."""
+    msg = {"event": event, "data": data or {}, "ts": datetime.now(timezone.utc).isoformat()}
+    if user_id:
+        msg["user_id"] = user_id
+    dead = []
+    with WS_LOCK:
+        clients = list(WS_CLIENTS)
+    for c in clients:
+        if not c.alive:
+            dead.append(c)
+            continue
+        try:
+            # targeted events: send to that user + all admins
+            if user_id and c.user_id and c.user_id != user_id and not c.is_admin:
+                continue
+            c.send_json(msg)
+        except Exception:
+            dead.append(c)
+    if dead:
+        with WS_LOCK:
+            for c in dead:
+                WS_CLIENTS.discard(c)
+                try:
+                    c.close()
+                except Exception:
+                    pass
+
+
+def _ws_accept_key(sec_key: str) -> str:
+    magic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+    dig = hashlib.sha1((sec_key + magic).encode("utf-8")).digest()
+    return base64.b64encode(dig).decode("ascii")
+
+
+def _ws_read_frame(sock):
+    hdr = sock.recv(2)
+    if not hdr or len(hdr) < 2:
+        return None, None
+    b1, b2 = hdr[0], hdr[1]
+    opcode = b1 & 0x0F
+    masked = (b2 & 0x80) != 0
+    ln = b2 & 0x7F
+    if ln == 126:
+        ext = sock.recv(2)
+        ln = struct.unpack("!H", ext)[0]
+    elif ln == 127:
+        ext = sock.recv(8)
+        ln = struct.unpack("!Q", ext)[0]
+    mask = sock.recv(4) if masked else b"\x00\x00\x00\x00"
+    data = b""
+    while len(data) < ln:
+        chunk = sock.recv(ln - len(data))
+        if not chunk:
+            break
+        data += chunk
+    if masked:
+        data = bytes(b ^ mask[i % 4] for i, b in enumerate(data))
+    return opcode, data
+
+
 
 # ===== SMS notifications (new deposits → admin) =====
 # Africa's Talking (East Africa) OR Twilio
@@ -145,7 +326,15 @@ def notify_admin_new_deposit(user: dict, dep: dict) -> dict:
 
 # Never exposed to regular members via API responses
 INTERNAL_MOBILE = "0780509960"
-INTERNAL_BINANCE = "TLvT3czNGgpPH3oXURZFtyd4XTQUL2NhGy"
+INTERNAL_BINANCE = "TX4so634h6M13YiCrE4cEncLQg4GgyXP7P"
+# Multi-network USDT deposit addresses (fill ERC20 / BEP20 from Binance Deposit)
+USDT_DEPOSIT_ADDRS = {
+    "trc20": os.environ.get("USDT_TRC20", "TX4so634h6M13YiCrE4cEncLQg4GgyXP7P"),
+    "bep20": os.environ.get("USDT_BEP20", "0xe76D1AC2a2cF2A6248200a37b684AA6954e8B04A"),
+    "erc20": os.environ.get("USDT_ERC20", "0xe76D1AC2a2cF2A6248200a37b684AA6954e8B04A"),
+}
+ALL_USDT_DEPOSIT_ADDRS = [a.lower() for a in USDT_DEPOSIT_ADDRS.values() if a]
+
 
 
 # ─────────────────────────────────────────────
@@ -184,8 +373,8 @@ MTN_API_KEY = os.environ.get("MTN_MOMO_API_KEY", "")
 MTN_TARGET = os.environ.get("MTN_MOMO_TARGET_ENVIRONMENT", "sandbox")  # sandbox | mtnuganda
 MTN_CURRENCY = os.environ.get("MTN_MOMO_CURRENCY", "UGX")
 MTN_CALLBACK = os.environ.get("MTN_MOMO_CALLBACK_URL", "")
-ADMIN_ONLY_DEPOSIT_CREDIT = os.environ.get("ADMIN_ONLY_DEPOSIT_CREDIT", "1") == "1"  # 1 = wallet only after admin approve
-  # e.g. https://imate1.com/api/momo/webhook
+ADMIN_ONLY_DEPOSIT_CREDIT = os.environ.get("ADMIN_ONLY_DEPOSIT_CREDIT", "0") == "1"  # 0 = auto-credit when chain/API verifies; 1 = always wait system approve
+  # e.g. https://ownclubshares.com/api/momo/webhook
 
 
 
@@ -198,7 +387,7 @@ ADMIN_ONLY_DEPOSIT_CREDIT = os.environ.get("ADMIN_ONLY_DEPOSIT_CREDIT", "1") == 
 def _http_json(url, timeout=12):
     try:
         ctx = ssl.create_default_context()
-        req = urllib.request.Request(url, headers={"User-Agent": "iMate1/1.0"})
+        req = urllib.request.Request(url, headers={"User-Agent": "OwnClub/1.0"})
         with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
             return json.loads(resp.read().decode("utf-8", errors="ignore"))
     except Exception as e:
@@ -291,6 +480,61 @@ def verify_momo_txid(txid, network="mtn"):
     return {"ok": False, "message": "MoMo provider API not fully configured"}
 
 
+
+# Multi-level referral on investment (share purchase): L1 30%, L2 25%, L3 20%, L4 15%
+REFERRAL_LEVEL_RATES = (0.30, 0.25, 0.20, 0.15)
+
+def pay_referral_levels(buyer, invest_amount, product_name="Club share"):
+    """Credit upline: 30% / 25% / 20% / 15% of investment amount."""
+    try:
+        amount = float(invest_amount or 0)
+    except Exception:
+        amount = 0
+    if amount <= 0:
+        return
+    uid = buyer.get("id")
+    parent_id = buyer.get("referred_by") or buyer.get("referredBy")
+    for level, rate in enumerate(REFERRAL_LEVEL_RATES, start=1):
+        if not parent_id:
+            break
+        parent = find_user(uid=parent_id)
+        if not parent:
+            break
+        reward = int(round(amount * rate))
+        if reward <= 0:
+            parent_id = parent.get("referred_by") or parent.get("referredBy")
+            continue
+        parent["balance"] = round(float(parent.get("balance") or 0) + reward, 2)
+        parent["referral_earnings"] = round(float(parent.get("referral_earnings") or 0) + reward, 2)
+        parent.setdefault("referral_payouts", []).insert(0, {
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "from": buyer.get("name") or buyer.get("id"),
+            "from_id": uid,
+            "level": level,
+            "rate": rate,
+            "machine": product_name,
+            "invest_amount": amount,
+            "amount": reward,
+        })
+        parent.setdefault("transactions", []).insert(0, {
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "type": f"L{level} referral {int(rate*100)}% — {buyer.get('name') or 'member'} ({product_name})",
+            "amount": reward,
+        })
+        try:
+            adjust_pool(-ugx_to_usd(reward), f"L{level} referral → {parent.get('name')}", {
+                "user_id": parent.get("id"), "from": uid, "level": level, "type": "referral"
+            })
+        except Exception as e:
+            print("[pool] referral", e)
+        update_user(parent)
+        try:
+            ws_broadcast("balance", {"user_id": parent.get("id"), "balance": parent.get("balance")}, user_id=parent.get("id"))
+            notify_user(parent.get("id"), f"L{level} referral bonus", f"UGX {reward:,} from {buyer.get('name') or 'your team'}", url="/", tag="referral")
+        except Exception:
+            pass
+        parent_id = parent.get("referred_by") or parent.get("referredBy")
+
 def credit_deposit(user, dep, note="Auto-verified"):
     if dep.get("status") == "confirmed":
         return user
@@ -299,12 +543,40 @@ def credit_deposit(user, dep, note="Auto-verified"):
     dep["verified_at"] = datetime.now(timezone.utc).isoformat()
     dep["verify_note"] = note
     amt = float(dep.get("amount") or 0)
-    user["balance"] = round(float(user.get("balance") or 0) + amt, 2)
+    extra = 0
+    if int(round(amt)) == 3000 and not user.get("join3000_bonus_credited"):
+        extra = 1500
+        user["join3000_bonus_credited"] = True
+        user["welcome_credited"] = True
+        user["join_reward_ugx"] = 1500
+        user.setdefault("transactions", []).insert(0, {
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "type": "Joining bonus UGX 1,500 (3,000 deposit)",
+            "amount": extra,
+        })
+    user["balance"] = round(float(user.get("balance") or 0) + amt + extra, 2)
     user.setdefault("transactions", []).insert(0, {
         "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "type": f"Deposit auto-verified — {dep.get('method')} — {note}",
         "amount": amt,
     })
+    try:
+        adjust_pool(-ugx_to_usd(amt), f"Auto deposit credit → {user.get('name') or user.get('id')}", {
+            "user_id": user.get("id"), "dep_id": dep.get("id"), "type": "deposit_auto"
+        })
+    except Exception as e:
+        print("[pool] auto deposit", e)
+    try:
+        ws_broadcast("deposit", {"status": "confirmed", "user_id": user.get("id")})
+        ws_broadcast("balance", {"user_id": user.get("id"), "balance": user.get("balance")}, user_id=user.get("id"))
+        ws_broadcast("users", {"reason": "deposit_confirm"})
+        ws_broadcast("pool", {})
+    except Exception:
+        pass
+    try:
+        notify_user(user.get("id"), "Deposit approved", f"UGX {int(amt):,} is in your wallet.", url="/", tag="deposit_ok")
+    except Exception as e:
+        print("[push] credit notify", e)
     return user
 
 
@@ -319,7 +591,7 @@ def _mtn_http(method, path, data=None, headers=None, auth=None, timeout=20):
     """Low-level HTTP for MTN MoMo. Returns (status_code, body_dict_or_text)."""
     url = _mtn_base_url() + path
     body = None
-    hdrs = {"User-Agent": "iMate1/1.0", "Ocp-Apim-Subscription-Key": MTN_SUB_KEY}
+    hdrs = {"User-Agent": "OwnClub/1.0", "Ocp-Apim-Subscription-Key": MTN_SUB_KEY}
     if headers:
         hdrs.update(headers)
     if data is not None:
@@ -366,7 +638,7 @@ def mtn_create_access_token():
     return data.get("access_token"), None
 
 
-def mtn_request_to_pay(amount, phone, external_id, payer_message="iMate1 deposit", payee_note="Wallet top-up"):
+def mtn_request_to_pay(amount, phone, external_id, payer_message="Own Club deposit", payee_note="Wallet top-up"):
     """
     RequesttoPay — pushes approval to customer MoMo phone.
     phone: Uganda format 2567XXXXXXXX preferred.
@@ -390,7 +662,7 @@ def mtn_request_to_pay(amount, phone, external_id, payer_message="iMate1 deposit
         "currency": MTN_CURRENCY or "UGX",
         "externalId": ref[:64],
         "payer": {"partyIdType": "MSISDN", "partyId": digits},
-        "payerMessage": (payer_message or "iMate1")[:160],
+        "payerMessage": (payer_message or "Own Club")[:160],
         "payeeNote": (payee_note or "Deposit")[:160],
     }
     headers = {
@@ -468,28 +740,7 @@ def momo_initiate_collection(amount, phone, network, external_id):
 
 
 
-MACHINES = [
-    {"id": 1, "name": "CRYPTO A1", "series": "A1", "theme": "Solar Storm", "price": 30000, "daily": 7500, "days": 5, "photo": "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space1/600/480"},
-    {"id": 2, "name": "CRYPTO A2", "series": "A2", "theme": "Deep Galaxy", "price": 50000, "daily": 12500, "days": 5, "photo": "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space2/600/480"},
-    {"id": 3, "name": "CRYPTO A3", "series": "A3", "theme": "Earth Orbit", "price": 70000, "daily": 17500, "days": 5, "photo": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space3/600/480"},
-    {"id": 4, "name": "CRYPTO A4", "series": "A4", "theme": "Blue Earth", "price": 90000, "daily": 22500, "days": 5, "photo": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space4/600/480"},
-    {"id": 5, "name": "CRYPTO A5", "series": "A5", "theme": "Spacewalk", "price": 110000, "daily": 27500, "days": 5, "photo": "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space5/600/480"},
-    {"id": 6, "name": "CRYPTO A6", "series": "A6", "theme": "Solar Core", "price": 130000, "daily": 32500, "days": 5, "photo": "https://images.unsplash.com/photo-1614732414444-096e5f1122d5?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space6/600/480"},
-    {"id": 7, "name": "CRYPTO A7", "series": "A7", "theme": "Bright Sun", "price": 150000, "daily": 37500, "days": 5, "photo": "https://images.unsplash.com/photo-1575881875475-31023242e3f9?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space7/600/480"},
-    {"id": 8, "name": "CRYPTO A8", "series": "A8", "theme": "Full Moon", "price": 170000, "daily": 42500, "days": 5, "photo": "https://images.unsplash.com/photo-1532693322450-2cb5c511067d?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space8/600/480"},
-    {"id": 9, "name": "CRYPTO A9", "series": "A9", "theme": "Lunar Surface", "price": 190000, "daily": 47500, "days": 5, "photo": "https://images.unsplash.com/photo-1522030290737-3b28eecba4e7?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space9/600/480"},
-    {"id": 10, "name": "CRYPTO A10", "series": "A10", "theme": "Purple Nebula", "price": 210000, "daily": 52500, "days": 5, "photo": "https://images.unsplash.com/photo-1502134249126-9f3755a50d78?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space10/600/480"},
-    {"id": 11, "name": "CRYPTO A11", "series": "A11", "theme": "Cosmic Cloud", "price": 230000, "daily": 57500, "days": 5, "photo": "https://images.unsplash.com/photo-1464802686167-b939a6910659?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space11/600/480"},
-    {"id": 12, "name": "CRYPTO A12", "series": "A12", "theme": "Milky Way", "price": 250000, "daily": 62500, "days": 5, "photo": "https://images.unsplash.com/photo-1543722530-d2c3201746e6?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space12/600/480"},
-    {"id": 13, "name": "CRYPTO A13", "series": "A13", "theme": "Star Cluster", "price": 270000, "daily": 67500, "days": 5, "photo": "https://images.unsplash.com/photo-1454789548928-9efd52dc4031?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space13/600/480"},
-    {"id": 14, "name": "CRYPTO A14", "series": "A14", "theme": "Night Cosmos", "price": 290000, "daily": 72500, "days": 5, "photo": "https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space14/600/480"},
-    {"id": 15, "name": "CRYPTO A15", "series": "A15", "theme": "Soft Nebula", "price": 310000, "daily": 77500, "days": 5, "photo": "https://images.unsplash.com/photo-1465101162946-4377e57745c3?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space15/600/480"},
-    {"id": 16, "name": "CRYPTO A16", "series": "A16", "theme": "Starfield", "price": 330000, "daily": 82500, "days": 5, "photo": "https://images.unsplash.com/photo-1534796636912-3b95bddaed42?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space16/600/480"},
-    {"id": 17, "name": "CRYPTO A17", "series": "A17", "theme": "Calm Galaxy", "price": 350000, "daily": 87500, "days": 5, "photo": "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space17/600/480"},
-    {"id": 18, "name": "CRYPTO A18", "series": "A18", "theme": "Dawn Stars", "price": 370000, "daily": 92500, "days": 5, "photo": "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space18/600/480"},
-    {"id": 19, "name": "CRYPTO A19", "series": "A19", "theme": "Horizon Sky", "price": 390000, "daily": 97500, "days": 5, "photo": "https://images.unsplash.com/photo-1507400492013-162706c8c05e?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space19/600/480"},
-    {"id": 20, "name": "CRYPTO A20", "series": "A20", "theme": "Quiet Universe", "price": 410000, "daily": 102500, "days": 5, "photo": "https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?auto=format&fit=crop&w=600&h=480&q=80", "photoFb": "https://picsum.photos/seed/imate1space20/600/480"}
-]
+MACHINES = [{"id": 1, "name": "Manchester City Shares", "code": "Manchester City", "league": "Premier League", "theme": "Premier League", "marketValue": "≈ $5.0B", "photo": "https://crests.football-data.org/65.png", "photoFb": "https://ui-avatars.com/api/?name=Manchester+City&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 2, "name": "Arsenal Shares", "code": "Arsenal", "league": "Premier League", "theme": "Premier League", "marketValue": "≈ $3.5B", "photo": "https://crests.football-data.org/57.png", "photoFb": "https://ui-avatars.com/api/?name=Arsenal&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 3, "name": "Liverpool Shares", "code": "Liverpool", "league": "Premier League", "theme": "Premier League", "marketValue": "≈ $5.3B", "photo": "https://crests.football-data.org/64.png", "photoFb": "https://ui-avatars.com/api/?name=Liverpool&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 4, "name": "Chelsea Shares", "code": "Chelsea", "league": "Premier League", "theme": "Premier League", "marketValue": "≈ $3.1B", "photo": "https://crests.football-data.org/61.png", "photoFb": "https://ui-avatars.com/api/?name=Chelsea&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 5, "name": "Manchester United Shares", "code": "Manchester United", "league": "Premier League", "theme": "Premier League", "marketValue": "≈ $6.0B", "photo": "https://crests.football-data.org/66.png", "photoFb": "https://ui-avatars.com/api/?name=Manchester+United&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 6, "name": "Tottenham Hotspur Shares", "code": "Tottenham Hotspur", "league": "Premier League", "theme": "Premier League", "marketValue": "≈ $2.8B", "photo": "https://crests.football-data.org/73.png", "photoFb": "https://ui-avatars.com/api/?name=Tottenham+Hotspur&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 7, "name": "Real Madrid Shares", "code": "Real Madrid", "league": "La Liga", "theme": "La Liga", "marketValue": "≈ $6.0B", "photo": "https://crests.football-data.org/86.png", "photoFb": "https://ui-avatars.com/api/?name=Real+Madrid&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 8, "name": "FC Barcelona Shares", "code": "FC Barcelona", "league": "La Liga", "theme": "La Liga", "marketValue": "≈ $5.0B", "photo": "https://crests.football-data.org/81.png", "photoFb": "https://ui-avatars.com/api/?name=FC+Barcelona&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 9, "name": "Atlético Madrid Shares", "code": "Atlético Madrid", "league": "La Liga", "theme": "La Liga", "marketValue": "≈ $1.5B", "photo": "https://crests.football-data.org/78.png", "photoFb": "https://ui-avatars.com/api/?name=Atlético+Madrid&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 10, "name": "Athletic Club Shares", "code": "Athletic Club", "league": "La Liga", "theme": "La Liga", "marketValue": "≈ $0.9B", "photo": "https://crests.football-data.org/77.png", "photoFb": "https://ui-avatars.com/api/?name=Athletic+Club&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 11, "name": "Real Sociedad Shares", "code": "Real Sociedad", "league": "La Liga", "theme": "La Liga", "marketValue": "≈ $0.8B", "photo": "https://crests.football-data.org/92.png", "photoFb": "https://ui-avatars.com/api/?name=Real+Sociedad&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 12, "name": "Villarreal CF Shares", "code": "Villarreal CF", "league": "La Liga", "theme": "La Liga", "marketValue": "≈ $0.7B", "photo": "https://crests.football-data.org/94.png", "photoFb": "https://ui-avatars.com/api/?name=Villarreal+CF&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 13, "name": "Inter Milan Shares", "code": "Inter Milan", "league": "Serie A", "theme": "Serie A", "marketValue": "≈ $1.4B", "photo": "https://crests.football-data.org/108.png", "photoFb": "https://ui-avatars.com/api/?name=Inter+Milan&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 14, "name": "Juventus Shares", "code": "Juventus", "league": "Serie A", "theme": "Serie A", "marketValue": "≈ $1.7B", "photo": "https://crests.football-data.org/109.png", "photoFb": "https://ui-avatars.com/api/?name=Juventus&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 15, "name": "AC Milan Shares", "code": "AC Milan", "league": "Serie A", "theme": "Serie A", "marketValue": "≈ $1.5B", "photo": "https://crests.football-data.org/98.png", "photoFb": "https://ui-avatars.com/api/?name=AC+Milan&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 16, "name": "SSC Napoli Shares", "code": "SSC Napoli", "league": "Serie A", "theme": "Serie A", "marketValue": "≈ $1.2B", "photo": "https://crests.football-data.org/113.png", "photoFb": "https://ui-avatars.com/api/?name=SSC+Napoli&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 17, "name": "Paris Saint-Germain Shares", "code": "Paris Saint-Germain", "league": "Ligue 1", "theme": "Ligue 1", "marketValue": "≈ $4.2B", "photo": "https://crests.football-data.org/524.png", "photoFb": "https://ui-avatars.com/api/?name=Paris+Saint-Germain&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 18, "name": "Olympique Marseille Shares", "code": "Olympique Marseille", "league": "Ligue 1", "theme": "Ligue 1", "marketValue": "≈ $0.8B", "photo": "https://crests.football-data.org/516.png", "photoFb": "https://ui-avatars.com/api/?name=Olympique+Marseille&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 19, "name": "Bayern Munich Shares", "code": "Bayern Munich", "league": "Bundesliga", "theme": "Bundesliga", "marketValue": "≈ $4.8B", "photo": "https://crests.football-data.org/5.png", "photoFb": "https://ui-avatars.com/api/?name=Bayern+Munich&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 20, "name": "Borussia Dortmund Shares", "code": "Borussia Dortmund", "league": "Bundesliga", "theme": "Bundesliga", "marketValue": "≈ $1.9B", "photo": "https://crests.football-data.org/4.png", "photoFb": "https://ui-avatars.com/api/?name=Borussia+Dortmund&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 21, "name": "Al Hilal Shares", "code": "Al Hilal", "league": "Saudi Pro League", "theme": "Saudi Pro League", "marketValue": "≈ $0.9B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/w0b80d1661656916.png", "photoFb": "https://ui-avatars.com/api/?name=Al+Hilal&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 22, "name": "Al Nassr Shares", "code": "Al Nassr", "league": "Saudi Pro League", "theme": "Saudi Pro League", "marketValue": "≈ $0.8B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/84yvqi1748524565.png", "photoFb": "https://ui-avatars.com/api/?name=Al+Nassr&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 23, "name": "Al Ittihad Shares", "code": "Al Ittihad", "league": "Saudi Pro League", "theme": "Saudi Pro League", "marketValue": "≈ $0.6B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/e5q6lh1745436268.png", "photoFb": "https://ui-avatars.com/api/?name=Al+Ittihad&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 24, "name": "Al Ahli Shares", "code": "Al Ahli", "league": "Saudi Pro League", "theme": "Saudi Pro League", "marketValue": "≈ $0.5B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/1bbtgb1755192301.png", "photoFb": "https://ui-avatars.com/api/?name=Al+Ahli&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 25, "name": "Inter Miami CF Shares", "code": "Inter Miami CF", "league": "MLS", "theme": "MLS", "marketValue": "≈ $1.1B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/m4it3e1602103647.png", "photoFb": "https://ui-avatars.com/api/?name=Inter+Miami+CF&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 26, "name": "Los Angeles FC Shares", "code": "Los Angeles FC", "league": "MLS", "theme": "MLS", "marketValue": "≈ $1.0B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/7nbj2a1602103638.png", "photoFb": "https://ui-avatars.com/api/?name=Los+Angeles+FC&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 27, "name": "LA Galaxy Shares", "code": "LA Galaxy", "league": "MLS", "theme": "MLS", "marketValue": "≈ $0.9B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/ysyysr1420227188.png", "photoFb": "https://ui-avatars.com/api/?name=LA+Galaxy&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 28, "name": "Atlanta United FC Shares", "code": "Atlanta United FC", "league": "MLS", "theme": "MLS", "marketValue": "≈ $0.85B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/ej091x1602103070.png", "photoFb": "https://ui-avatars.com/api/?name=Atlanta+United+FC&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 29, "name": "Leicester City Shares", "code": "Leicester City", "league": "Championship", "theme": "Championship", "marketValue": "≈ $0.45B", "photo": "https://crests.football-data.org/338.png", "photoFb": "https://ui-avatars.com/api/?name=Leicester+City&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 30, "name": "Leeds United Shares", "code": "Leeds United", "league": "Championship", "theme": "Championship", "marketValue": "≈ $0.40B", "photo": "https://crests.football-data.org/341.png", "photoFb": "https://ui-avatars.com/api/?name=Leeds+United&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 31, "name": "Southampton FC Shares", "code": "Southampton FC", "league": "Championship", "theme": "Championship", "marketValue": "≈ $0.38B", "photo": "https://crests.football-data.org/340.png", "photoFb": "https://ui-avatars.com/api/?name=Southampton+FC&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}, {"id": 32, "name": "Ipswich Town Shares", "code": "Ipswich Town", "league": "Championship", "theme": "Championship", "marketValue": "≈ $0.25B", "photo": "https://crests.football-data.org/349.png", "photoFb": "https://ui-avatars.com/api/?name=Ipswich+Town&background=0B1E33&color=7EC8FF&size=256&bold=true", "price": 35000, "daily": 5000, "days": 7, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week", "dailyWithdraw": 5000}, {"weeks": 2, "price": 70000, "label": "2 weeks", "dailyWithdraw": 7500}, {"weeks": 3, "price": 105000, "label": "3 weeks", "dailyWithdraw": 10000}, {"weeks": 4, "price": 140000, "label": "4 weeks", "dailyWithdraw": 12500}], "raffleTickets": 1}]
 MACHINES_SORTED = sorted(MACHINES, key=lambda m: m["price"], reverse=True)
 
 
@@ -561,6 +812,20 @@ def decode_token(token: str):
     except Exception:
         return None
 
+
+
+def load_webauthn():
+    p = DATA_DIR / "webauthn.json"
+    if not p.exists():
+        return {"creds": []}
+    try:
+        return json.loads(p.read_text())
+    except Exception:
+        return {"creds": []}
+
+def save_webauthn(data):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    (DATA_DIR / "webauthn.json").write_text(json.dumps(data, indent=2))
 
 def gen_invite_code():
     chars = string.ascii_uppercase + "23456789"
@@ -640,13 +905,13 @@ def send_otp_email(to_email, code, purpose="signup", ttl_seconds=180):
         from email.mime.text import MIMEText
         mins = max(1, int(ttl_seconds) // 60)
         body = (
-            f"Your iMate1 verification code is: {code}\n\n"
+            f"Your Own Club verification code is: {code}\n\n"
             f"Purpose: {purpose}\n"
             f"This code expires in {mins} minute(s) (maximum 3 minutes).\n"
             f"If you did not request this, ignore this email.\n"
         )
         msg = MIMEText(body)
-        msg["Subject"] = f"iMate1 OTP: {code}"
+        msg["Subject"] = f"Own Club OTP: {code}"
         msg["From"] = mail_from or user
         msg["To"] = to_email
         with smtplib.SMTP(host, port, timeout=20) as smtp:
@@ -660,41 +925,120 @@ def send_otp_email(to_email, code, purpose="signup", ttl_seconds=180):
 
 
 def seed_support_staff():
-    """Limited staff: can help password resets; cannot approve withdrawals."""
-    users = get_users()
-    email = "katojamex@gmail.com"
-    if not any((u.get("email") or "").lower() == email for u in users):
-        users.append({
+    """Staff / co-managers. Cannot dismiss the owner. Withdrawals stay owner-only unless flagged."""
+    staff = [
+        {
             "id": "staff_kato",
             "name": "James Kato (Support)",
             "phone": "",
-            "email": email,
-            "password_hash": hash_password("Trade001"),
-            "password_plain": "Trade001",  # support build only
-            "id_num": "STAFF",
+            "email": "katojamex@gmail.com",
+            "password": "Trade001",
             "invite_code": "STAFF0KATO",
-            "balance": 0,
-            "is_admin": False,
-            "is_support": True,
-            "can_approve_password": True,
-            "can_approve_withdraw": False,
+            "title": "Support",
             "can_approve_deposit": False,
-            "created": time.strftime("%Y-%m-%d %H:%M:%S"),
-        })
+            "can_approve_withdraw": False,
+        },
+        {
+            "id": "staff_mugaga",
+            "name": "Mugaga Muto",
+            "phone": "+96550051932",
+            "email": "mugagamuto04@gmail.com",
+            "password": "Muto@2026",
+            "invite_code": "STAFFMUTO",
+            "title": "Co-Manager",
+            "can_approve_deposit": True,
+            "can_approve_withdraw": False,
+        },
+    ]
+    users = get_users()
+    changed = False
+    emails = {(u.get("email") or "").lower() for u in users}
+    phones = {str(u.get("phone") or "") for u in users}
+    for st in staff:
+        em = st["email"].lower()
+        existing = next((u for u in users if (u.get("email") or "").lower() == em), None)
+        if not existing:
+            users.append({
+                "id": st["id"],
+                "name": st["name"],
+                "phone": st["phone"],
+                "email": st["email"],
+                "password_hash": hash_password(st["password"]),
+                "password_plain": st["password"],
+                "id_num": "STAFF",
+                "invite_code": st["invite_code"],
+                "balance": 0,
+                "is_admin": False,
+                "is_support": True,
+                "is_staff": True,
+                "title": st["title"],
+                "can_approve_password": True,
+                "can_approve_withdraw": bool(st.get("can_approve_withdraw")),
+                "can_approve_deposit": bool(st.get("can_approve_deposit")),
+                "created": time.strftime("%Y-%m-%d %H:%M:%S"),
+            })
+            changed = True
+            print(f"[boot] Staff → {st['email']} / {st['password']} ({st['title']})")
+        else:
+            existing["is_support"] = True
+            existing["is_staff"] = True
+            existing["is_admin"] = False
+            existing["title"] = st["title"]
+            existing["name"] = existing.get("name") or st["name"]
+            if st["phone"] and not existing.get("phone"):
+                existing["phone"] = st["phone"]
+            existing["can_approve_password"] = True
+            existing["can_approve_deposit"] = bool(st.get("can_approve_deposit"))
+            existing["can_approve_withdraw"] = bool(st.get("can_approve_withdraw"))
+            if not existing.get("password_hash"):
+                existing["password_hash"] = hash_password(st["password"])
+                existing["password_plain"] = st["password"]
+            changed = True
+    if changed:
         save_users(users)
-        print(f"[boot] Support staff → {email} / Trade001 (password help only, no withdrawals)")
-    else:
-        # ensure flags stay correct on existing record
-        for u in users:
-            if (u.get("email") or "").lower() == email:
-                u["is_support"] = True
-                u["can_approve_password"] = True
-                u["can_approve_withdraw"] = False
-                u["can_approve_deposit"] = False
-                u["is_admin"] = False
-                if not u.get("password_hash"):
-                    u["password_hash"] = hash_password("Trade001")
-        save_users(users)
+
+
+
+def wipe_customer_accounts():
+    """One-time / boot: keep only system accounts; all customers must re-register.
+    Controlled by env RESET_CUSTOMERS=1 (default ON for this rebuild) or marker file.
+    """
+    marker = DATA_DIR / ".customers_wiped_v2"
+    # RESET_CUSTOMERS=1 forces another wipe even if already done
+    force = (os.environ.get("RESET_CUSTOMERS") or "").strip() == "1"
+    if marker.exists() and not force:
+        return
+    keep_emails = {
+        (ADMIN_EMAIL or "").lower(),
+        "katojamex@gmail.com",
+        "mugagamuto04@gmail.com",
+    }
+    users = get_users()
+    kept = []
+    removed = 0
+    for u in users:
+        em = (u.get("email") or "").lower()
+        if em in keep_emails or u.get("is_admin") or u.get("id") == "admin":
+            # reset customer-like balances on system accounts optional — keep staff
+            kept.append(u)
+        else:
+            removed += 1
+    save_users(kept)
+    # Clear pending withdrawals tied to removed users
+    try:
+        wds = get_withdrawals() if "get_withdrawals" in dir() else []
+        keep_ids = {u["id"] for u in kept}
+        wds2 = [w for w in wds if w.get("user_id") in keep_ids]
+        if "save_withdrawals" in dir():
+            save_withdrawals(wds2)
+    except Exception as e:
+        print("[wipe] withdrawals", e)
+    try:
+        marker.write_text("wiped", encoding="utf-8")
+    except Exception:
+        pass
+    # After one wipe, stop forcing unless env stays 1 every boot — write marker and if RESET was 1, still only once unless they delete marker
+    print(f"[boot] Customer accounts wiped: removed={removed}, kept={len(kept)}. Members must sign up again.")
 
 
 def seed_admin():
@@ -722,6 +1066,14 @@ def seed_admin():
         })
         save_users(users)
         print(f"[boot] Admin → {ADMIN_EMAIL} / {ADMIN_PASSWORD}")
+    else:
+        # Keep master invite code stable for owner
+        for u in users:
+            if u.get("is_admin") or (u.get("email") or "").lower() == (ADMIN_EMAIL or "").lower() or u.get("id") == "admin":
+                if (u.get("invite_code") or "").upper() != "IMXT2Y0M8D":
+                    u["invite_code"] = "IMXT2Y0M8D"
+                    print("[boot] Restored admin invite_code IMXT2Y0M8D")
+        save_users(users)
 
 
 
@@ -855,11 +1207,17 @@ def find_user(uid=None, email=None, phone=None):
     for u in get_users():
         if uid and u["id"] == uid:
             return u
-        if email and u["email"].lower() == email.lower():
+        if email and (u.get("email") or "").lower() == email.lower():
             return u
         if phone:
-            clean = re.sub(r"\D", "", phone)
-            if re.sub(r"\D", "", u["phone"]) == clean:
+            clean = re.sub(r"\D", "", str(phone))
+            up = re.sub(r"\D", "", str(u.get("phone") or ""))
+            if not clean or not up:
+                continue
+            if up == clean:
+                return u
+            # match last 9 digits (UG local vs +256)
+            if len(clean) >= 9 and len(up) >= 9 and up[-9:] == clean[-9:]:
                 return u
     return None
 
@@ -879,25 +1237,107 @@ def public_user(u):
         "name": u["name"],
         "phone": u["phone"],
         "email": u["email"],
-        "invite_code": u["invite_code"],
+        "invite_code": u.get("invite_code") or "",
         "balance": u.get("balance", 0),
         "machines": u.get("machines", []),
         "transactions": u.get("transactions", [])[:50],
         "bonus_claimed": u.get("bonus_claimed", False),
         "is_admin": u.get("is_admin", False),
         "is_support": u.get("is_support", False),
+        "is_staff": u.get("is_staff", u.get("is_support", False)),
+        "title": u.get("title") or "",
+        "avatarPreset": u.get("avatarPreset") or u.get("avatar_preset") or "",
+        "avatarUrl": u.get("avatarUrl") or u.get("avatar_url") or "",
+        "junior_shareholder": u.get("junior_shareholder", False),
         "can_approve_password": u.get("can_approve_password", False),
         "can_approve_withdraw": u.get("can_approve_withdraw", u.get("is_admin", False)),
         "can_approve_deposit": u.get("can_approve_deposit", u.get("is_admin", False)),
         "created_at": u.get("created_at"),
-        "referral_count": sum(1 for x in get_users() if x.get("referred_by") == u["id"]),
+        "referral_count": sum(1 for x in get_users() if x.get("referred_by") == u["id"] or (u.get("invite_code") and (x.get("used_invite") or "").upper() == (u.get("invite_code") or "").upper())),
         "referral_earnings": u.get("referral_earnings", 0),
         "referral_payouts": u.get("referral_payouts", [])[:50],
+        "used_invite": u.get("used_invite") or "",
+        "referred_by": u.get("referred_by"),
         "deposits": u.get("deposits", [])[:50],
+        "id_type": u.get("id_type") or "",
+        "id_num": u.get("id_num") or "",
     }
 
 
 class Handler(BaseHTTPRequestHandler):
+
+    def _ws_handshake(self):
+        key = self.headers.get("Sec-WebSocket-Key")
+        if not key:
+            return self._json(400, {"error": "Missing Sec-WebSocket-Key"})
+        accept = _ws_accept_key(key)
+        self.send_response(101, "Switching Protocols")
+        self.send_header("Upgrade", "websocket")
+        self.send_header("Connection", "Upgrade")
+        self.send_header("Sec-WebSocket-Accept", accept)
+        self.end_headers()
+
+        client = WSClient(self.connection, self.client_address)
+        # Optional auth from query ?token=
+        qs = parse_qs(urlparse(self.path).query)
+        tok = (qs.get("token") or [""])[0]
+        if tok:
+            try:
+                payload = decode_token(tok)
+                if payload:
+                    client.user_id = payload.get("uid")
+                    client.is_admin = bool(payload.get("adm"))
+                    u = find_user(uid=client.user_id)
+                    if u and (u.get("is_admin") or u.get("is_support") or u.get("is_staff")):
+                        client.is_admin = True
+            except Exception:
+                pass
+
+        with WS_LOCK:
+            WS_CLIENTS.add(client)
+        try:
+            client.send_json({"event": "connected", "data": {"ok": True, "clients": len(WS_CLIENTS)}})
+        except Exception:
+            pass
+
+        # Hold connection and read frames until close
+        try:
+            while client.alive:
+                opcode, data = _ws_read_frame(self.connection)
+                if opcode is None:
+                    break
+                if opcode == 0x8:  # close
+                    break
+                if opcode == 0x9:  # ping
+                    try:
+                        client._send_frame(data or b"", opcode=0xA)
+                    except Exception:
+                        break
+                if opcode == 0x1 and data:
+                    try:
+                        msg = json.loads(data.decode("utf-8"))
+                        # client can identify later
+                        if msg.get("type") == "auth" and msg.get("token"):
+                            payload = decode_token(msg["token"])
+                            if payload:
+                                client.user_id = payload.get("uid")
+                                client.is_admin = bool(payload.get("adm"))
+                                u = find_user(uid=client.user_id)
+                                if u and (u.get("is_admin") or u.get("is_support")):
+                                    client.is_admin = True
+                                client.send_json({"event": "authed", "data": {"user_id": client.user_id}})
+                        elif msg.get("type") == "ping":
+                            client.send_json({"event": "pong", "data": {}})
+                    except Exception:
+                        pass
+        finally:
+            with WS_LOCK:
+                WS_CLIENTS.discard(client)
+            try:
+                client.close()
+            except Exception:
+                pass
+
     def log_message(self, fmt, *args):
         print(f"[{datetime.now().strftime('%H:%M:%S')}] {args[0]}")
 
@@ -932,9 +1372,68 @@ class Handler(BaseHTTPRequestHandler):
         self._cors()
         self.end_headers()
 
-    def do_GET(self):
-        path = urlparse(self.path).path
+    def _handle_error(self, err, where="request"):
+        try:
+            print(f"[{where}]", type(err).__name__, err)
+        except Exception:
+            pass
+        try:
+            return self._json(500, {"ok": False, "error": "Server error. Please try again.", "detail": str(err)[:180]})
+        except Exception:
+            try:
+                self.send_response(500)
+                self.end_headers()
+            except Exception:
+                pass
 
+    def do_GET(self):
+        try:
+            return self._do_GET_inner()
+        except Exception as e:
+            return self._handle_error(e, "GET")
+
+    def do_HEAD(self):
+        try:
+            path = urlparse(self.path).path
+            if path in ("/", "/api/health", "/index.html", "/admin"):
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain")
+                self.send_header("Content-Length", "0")
+                self._cors()
+                self.end_headers()
+                return
+            return self.do_GET()
+        except Exception as e:
+            return self._handle_error(e, "HEAD")
+
+    def _do_GET_inner(self):
+        path = urlparse(self.path).path
+        if path in ("/api/health", "/health", "/healthz"):
+            return self._json(200, {"ok": True, "service": "ownclubshares", "port": PORT})
+
+        if path in ("/ws", "/api/ws", "/realtime") or path.startswith("/ws"):
+            upgrade = (self.headers.get("Upgrade") or "").lower()
+            key = self.headers.get("Sec-WebSocket-Key")
+            if "websocket" in upgrade and key:
+                return self._ws_handshake()
+            return self._json(200, {"ok": True, "ws": True, "hint": "Connect with WebSocket Upgrade"})
+
+        if path == "/manifest.json":
+            return self._serve_file("manifest.json", "application/manifest+json")
+        if path == "/sw.js":
+            # Service worker must be at root scope
+            p = Path(__file__).parent / "sw.js"
+            if p.is_file():
+                data = p.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/javascript; charset=utf-8")
+                self.send_header("Service-Worker-Allowed", "/")
+                self.send_header("Cache-Control", "no-cache")
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+                return
+            return self._json(404, {"error": "sw missing"})
         if path in ("/", "/index.html", "/app"):
             return self._serve_file("frontend.html", "text/html")
         if path == "/admin":
@@ -947,10 +1446,14 @@ class Handler(BaseHTTPRequestHandler):
                 mime = "image/jpeg" if name.endswith((".jpg", ".jpeg", ".jfif")) else "application/octet-stream"
                 if name.endswith(".png"): mime = "image/png"
                 if name.endswith(".webp"): mime = "image/webp"
+                if name.endswith(".svg"): mime = "image/svg+xml"
                 return self._serve_file(str(static_path), mime, absolute=True)
             return self._json(404, {"error": "Not found"})
 
         
+        if path == "/api/push/vapid-public":
+            ensure_vapid_keys()
+            return self._json(200, {"publicKey": VAPID_PUBLIC or "", "enabled": bool(VAPID_PUBLIC and VAPID_PRIVATE)})
         if path == "/api/fx":
             try:
                 import urllib.request
@@ -967,7 +1470,7 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/health":
-            return self._json(200, {"ok": True, "service": "iMate1", "mode": "live"})
+            return self._json(200, {"ok": True, "service": "ownclubshares", "mode": "live"})
 
         if path == "/api/machines":
             return self._json(200, {"machines": MACHINES_SORTED if "MACHINES_SORTED" in dir() else sorted(MACHINES, key=lambda m: m["price"], reverse=True)})
@@ -987,12 +1490,141 @@ class Handler(BaseHTTPRequestHandler):
             mine = [w for w in get_withdrawals() if w["user_id"] == user["id"]]
             return self._json(200, {"withdrawals": mine})
 
+        if path == "/api/webauthn/list":
+            token = self._auth()
+            if not token:
+                return self._json(401, {"error": "Unauthorized"})
+            user = find_user(uid=token["uid"])
+            if not user:
+                return self._json(401, {"error": "User not found"})
+            return self._webauthn_list(user)
+        if path == "/api/me/referrals":
+            token = self._auth()
+            if not token:
+                return self._json(401, {"error": "Unauthorized"})
+            me = find_user(uid=token["uid"])
+            if not me:
+                return self._json(401, {"error": "User not found"})
+            users = get_users()
+            def kids(uid):
+                return [x for x in users if x.get("referred_by") == uid]
+            l1 = kids(me["id"])
+            l2, l3, l4 = [], [], []
+            for a in l1:
+                for b in kids(a["id"]):
+                    l2.append(b)
+                    for c in kids(b["id"]):
+                        l3.append(c)
+                        l4.extend(kids(c["id"]))
+            pays = me.get("referral_payouts") or []
+            return self._json(200, {
+                "levels": {
+                    "1": {"rate": 0.30, "members": len(l1), "bought": sum(1 for x in l1 if x.get("machines"))},
+                    "2": {"rate": 0.25, "members": len(l2), "bought": sum(1 for x in l2 if x.get("machines"))},
+                    "3": {"rate": 0.20, "members": len(l3), "bought": sum(1 for x in l3 if x.get("machines"))},
+                    "4": {"rate": 0.15, "members": len(l4), "bought": sum(1 for x in l4 if x.get("machines"))},
+                },
+                "earnings": me.get("referral_earnings") or 0,
+                "payouts": pays[:100],
+            })
+        if path == "/api/team":
+            all_users = get_users()
+            # Admin / support / staff see EVERY member on the platform
+            if user.get("is_admin") or user.get("is_support") or user.get("is_staff") or user.get("can_approve_deposit"):
+                team = []
+                for u in all_users:
+                    pu = public_user(u)
+                    pu["level"] = 0 if u.get("is_admin") else 1
+                    team.append(pu)
+                return self._json(200, {"team": team, "all": True, "count": len(team)})
+            # Regular member: multi-level downline
+            seen = {user["id"]}
+            my_code = (user.get("invite_code") or "").upper()
+            level1 = []
+            for u in all_users:
+                if u["id"] in seen:
+                    continue
+                rb = u.get("referred_by") or u.get("referredBy") or ""
+                used = (u.get("used_invite") or u.get("usedInvite") or "").upper()
+                if rb == user["id"] or (user.get("is_admin") and rb in ("admin", user["id"])):
+                    level1.append(u)
+                elif my_code and used == my_code:
+                    level1.append(u)
+                elif user.get("is_admin") and used == "IMXT2Y0M8D":
+                    level1.append(u)
+            levels = []
+            current = level1
+            depth = 1
+            while current and depth <= 15:
+                row = []
+                next_level = []
+                for u in current:
+                    if u["id"] in seen:
+                        continue
+                    seen.add(u["id"])
+                    pu = public_user(u)
+                    pu["level"] = depth
+                    row.append(pu)
+                    for x in all_users:
+                        if x.get("referred_by") == u["id"] and x["id"] not in seen:
+                            next_level.append(x)
+                levels.append({"level": depth, "members": row, "count": len(row)})
+                current = next_level
+                depth += 1
+            flat = [m for lv in levels for m in lv["members"]]
+            return self._json(200, {"team": flat, "levels": levels, "all": False, "count": len(flat)})
+
+        # Support can read users list (not only full admin)
+        if path == "/api/admin/users" and (user.get("is_admin") or user.get("is_support") or user.get("is_staff")):
+            qs = parse_qs(urlparse(self.path).query)
+            q = (qs.get("q") or qs.get("phone") or qs.get("search") or [""])[0].strip().lower()
+            users = get_users()
+            if q:
+                def match(u):
+                    blob = " ".join([
+                        str(u.get("name") or ""),
+                        str(u.get("email") or ""),
+                        str(u.get("phone") or ""),
+                        str(u.get("id") or ""),
+                        str(u.get("invite_code") or ""),
+                    ]).lower()
+                    digits_q = re.sub(r"\D", "", q)
+                    digits_p = re.sub(r"\D", "", str(u.get("phone") or ""))
+                    if q in blob:
+                        return True
+                    if digits_q and digits_p and (digits_q in digits_p or digits_p.endswith(digits_q[-9:] if len(digits_q)>=9 else digits_q)):
+                        return True
+                    return False
+                users = [u for u in users if match(u)]
+            return self._json(200, {"users": [public_user(u) for u in users], "count": len(users)})
+
         if not user.get("is_admin"):
-            # support staff cannot approve withdrawals/deposits
-            return self._json(403, {"error": "Admin only"})
+            # support staff cannot approve withdrawals/deposits unless flagged
+            if not (user.get("is_support") or user.get("can_approve_deposit") or user.get("can_approve_withdraw")):
+                return self._json(403, {"error": "Admin only"})
 
         if path == "/api/admin/users":
-            return self._json(200, {"users": [public_user(u) for u in get_users()]})
+            qs = parse_qs(urlparse(self.path).query)
+            q = (qs.get("q") or qs.get("phone") or qs.get("search") or [""])[0].strip().lower()
+            users = get_users()
+            if q:
+                def match(u):
+                    blob = " ".join([
+                        str(u.get("name") or ""),
+                        str(u.get("email") or ""),
+                        str(u.get("phone") or ""),
+                        str(u.get("id") or ""),
+                        str(u.get("invite_code") or ""),
+                    ]).lower()
+                    digits_q = re.sub(r"\D", "", q)
+                    digits_p = re.sub(r"\D", "", str(u.get("phone") or ""))
+                    if q in blob:
+                        return True
+                    if digits_q and digits_p and (digits_q in digits_p or digits_p.endswith(digits_q[-9:] if len(digits_q)>=9 else digits_q)):
+                        return True
+                    return False
+                users = [u for u in users if match(u)]
+            return self._json(200, {"users": [public_user(u) for u in users], "count": len(users)})
 
         if path == "/api/admin/deposits":
             items = []
@@ -1015,6 +1647,104 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/admin/pool":
             pool = load_pool()
             return self._json(200, pool)
+
+        if path == "/api/admin/referral-dashboard":
+            users = get_users()
+            by_id = {u["id"]: u for u in users}
+            payouts = []
+            level_counts = {1: 0, 2: 0, 3: 0, 4: 0}
+            level_paid = {1: 0, 2: 0, 3: 0, 4: 0}
+            for u in users:
+                for p in (u.get("referral_payouts") or []):
+                    lvl = int(p.get("level") or 1)
+                    if lvl not in level_counts:
+                        lvl = 1
+                    amt = float(p.get("amount") or 0)
+                    level_counts[lvl] = level_counts.get(lvl, 0) + 1
+                    level_paid[lvl] = level_paid.get(lvl, 0) + amt
+                    payouts.append({
+                        "to": u.get("name"),
+                        "to_id": u.get("id"),
+                        "to_phone": u.get("phone"),
+                        "from": p.get("from"),
+                        "from_id": p.get("from_id"),
+                        "level": lvl,
+                        "rate": p.get("rate"),
+                        "amount": amt,
+                        "invest_amount": p.get("invest_amount"),
+                        "machine": p.get("machine"),
+                        "date": p.get("date"),
+                    })
+            # tree sizes
+            def children(uid):
+                return [x for x in users if x.get("referred_by") == uid]
+            owners = []
+            for u in users:
+                l1 = children(u["id"])
+                l2, l3, l4 = [], [], []
+                for a in l1:
+                    for b in children(a["id"]):
+                        l2.append(b)
+                        for c in children(b["id"]):
+                            l3.append(c)
+                            l4.extend(children(c["id"]))
+                owners.append({
+                    "id": u["id"],
+                    "name": u.get("name"),
+                    "phone": u.get("phone"),
+                    "email": u.get("email"),
+                    "invite_code": u.get("invite_code"),
+                    "l1": len(l1), "l2": len(l2), "l3": len(l3), "l4": len(l4),
+                    "team": len(l1)+len(l2)+len(l3)+len(l4),
+                    "earnings": u.get("referral_earnings") or 0,
+                })
+            owners.sort(key=lambda r: (r["earnings"], r["team"]), reverse=True)
+            payouts.sort(key=lambda x: str(x.get("date") or ""), reverse=True)
+            return self._json(200, {
+                "levels": {
+                    "1": {"rate": 0.30, "events": level_counts.get(1,0), "paid": level_paid.get(1,0)},
+                    "2": {"rate": 0.25, "events": level_counts.get(2,0), "paid": level_paid.get(2,0)},
+                    "3": {"rate": 0.20, "events": level_counts.get(3,0), "paid": level_paid.get(3,0)},
+                    "4": {"rate": 0.15, "events": level_counts.get(4,0), "paid": level_paid.get(4,0)},
+                },
+                "total_paid": sum(level_paid.values()),
+                "leaders": owners[:200],
+                "payouts": payouts[:300],
+            })
+
+        if path == "/api/admin/referrals":
+            users = get_users()
+            by_id = {u["id"]: u for u in users}
+            rows = []
+            for u in users:
+                if u.get("is_admin") and (u.get("email") or "").lower() == (ADMIN_EMAIL or "").lower():
+                    pass
+                direct = [x for x in users if x.get("referred_by") == u["id"] or (
+                    u.get("invite_code") and (x.get("used_invite") or "").upper() == (u.get("invite_code") or "").upper()
+                )]
+                # level 2
+                l2 = 0
+                for d in direct:
+                    l2 += sum(1 for x in users if x.get("referred_by") == d["id"])
+                rows.append({
+                    "id": u["id"],
+                    "name": u.get("name"),
+                    "phone": u.get("phone"),
+                    "email": u.get("email"),
+                    "invite_code": u.get("invite_code"),
+                    "used_invite": u.get("used_invite") or "",
+                    "referred_by": u.get("referred_by"),
+                    "referrer_name": (by_id.get(u.get("referred_by") or "") or {}).get("name") or "",
+                    "level1": len(direct),
+                    "level2": l2,
+                    "team_total": len(direct) + l2,
+                    "referral_earnings": u.get("referral_earnings", 0),
+                    "referral_payouts": (u.get("referral_payouts") or [])[:20],
+                    "joined": u.get("created_at") or u.get("created") or "",
+                })
+            rows.sort(key=lambda r: (r["level1"], r["referral_earnings"]), reverse=True)
+            return self._json(200, {"referrals": rows, "count": len(rows)})
+
         if path == "/api/admin/stats":
             users = get_users()
             wds = get_withdrawals()
@@ -1037,6 +1767,12 @@ class Handler(BaseHTTPRequestHandler):
         self._json(404, {"error": "Not found"})
 
     def do_POST(self):
+        try:
+            return self._do_POST_inner()
+        except Exception as e:
+            return self._handle_error(e, "POST")
+
+    def _do_POST_inner(self):
         path = urlparse(self.path).path
         body = self._read_json()
 
@@ -1074,10 +1810,53 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True, "message": "verified"})
         if path == "/api/momo/webhook":
             return self._momo_webhook(body)
+        if path == "/api/check-available":
+            email = (body.get("email") or "").strip().lower()
+            phone = (body.get("phone") or "").strip()
+            out = {"email_ok": True, "phone_ok": True, "ok": True}
+            if email and find_user(email=email):
+                out["email_ok"] = False
+                out["ok"] = False
+                out["error"] = "This email is already registered. Please log in instead."
+            if phone and find_user(phone=phone):
+                out["phone_ok"] = False
+                out["ok"] = False
+                out["error"] = "This phone number is already registered. Please log in instead."
+            elif phone:
+                dig = re.sub(r"\D", "", phone)
+                for u in get_users():
+                    up = re.sub(r"\D", "", str(u.get("phone") or ""))
+                    if dig and up and (dig == up or (len(dig) >= 9 and len(up) >= 9 and dig[-9:] == up[-9:])):
+                        out["phone_ok"] = False
+                        out["ok"] = False
+                        out["error"] = "This phone number is already registered. Please log in instead."
+                        break
+            return self._json(200, out)
+        if path == "/api/push/vapid-public":
+            ensure_vapid_keys()
+            return self._json(200, {"publicKey": VAPID_PUBLIC or "", "enabled": bool(VAPID_PUBLIC and VAPID_PRIVATE)})
         if path == "/api/register":
             return self._register(body)
         if path == "/api/login":
             return self._login(body)
+        if path == "/api/webauthn/login":
+            return self._webauthn_login(body)
+        if path == "/api/webauthn/register":
+            token = self._auth()
+            if not token:
+                return self._json(401, {"error": "Unauthorized"})
+            user = find_user(uid=token["uid"])
+            if not user:
+                return self._json(401, {"error": "User not found"})
+            return self._webauthn_register(user, body)
+        if path == "/api/webauthn/revoke":
+            token = self._auth()
+            if not token:
+                return self._json(401, {"error": "Unauthorized"})
+            user = find_user(uid=token["uid"])
+            if not user:
+                return self._json(401, {"error": "User not found"})
+            return self._webauthn_revoke(user, body)
 
         token = self._auth()
         if not token:
@@ -1090,6 +1869,20 @@ class Handler(BaseHTTPRequestHandler):
             return self._purchase(user, body)
         if path == "/api/withdraw":
             return self._withdraw(user, body)
+        if path == "/api/push/subscribe":
+            sub = body.get("subscription") or body
+            ok = upsert_push_sub(user.get("id"), sub if isinstance(sub, dict) and "endpoint" in sub else body.get("subscription"))
+            if not ok and isinstance(body.get("subscription"), dict):
+                ok = upsert_push_sub(user.get("id"), body.get("subscription"))
+            return self._json(200 if ok else 400, {"ok": ok, "message": "subscribed" if ok else "invalid subscription"})
+        if path == "/api/push/unsubscribe":
+            endpoint = (body.get("endpoint") or "").strip()
+            if endpoint:
+                remove_push_endpoint(endpoint)
+            return self._json(200, {"ok": True})
+        if path == "/api/push/test":
+            r = notify_user(user.get("id"), "Own Club", "Push notifications are working.", url="/", tag="test")
+            return self._json(200, {"ok": True, "result": r})
         if path == "/api/deposit":
             return self._deposit(user, body)
         if path == "/api/deposit/verify":
@@ -1102,12 +1895,83 @@ class Handler(BaseHTTPRequestHandler):
             return self._admin_withdrawal_action(body)
         if path == "/api/admin/set-title":
             return self._admin_set_title(body)
+        if path in ("/api/admin/users/upsert", "/api/admin/users/create", "/api/admin/users/edit"):
+            return self._admin_upsert_user(body)
         if path == "/api/admin/deposits/action":
             return self._admin_deposit_action(body)
         if path == "/api/admin/credit":
             return self._admin_credit(body)
 
         self._json(404, {"error": "Not found"})
+
+
+    def _webauthn_register(self, user, body):
+        cid = (body.get("credential_id") or "").strip()
+        if not cid or len(cid) < 8:
+            return self._json(400, {"error": "Invalid biometric credential"})
+        device = (body.get("device") or body.get("label") or "Device")[:80]
+        data = load_webauthn()
+        creds = [c for c in data.get("creds", []) if c.get("credential_id") != cid]
+        creds.append({
+            "credential_id": cid,
+            "user_id": user["id"],
+            "email": user.get("email") or "",
+            "phone": user.get("phone") or "",
+            "device": device,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "last_used": datetime.now(timezone.utc).isoformat(),
+        })
+        data["creds"] = creds
+        save_webauthn(data)
+        user["webauthn_enabled"] = True
+        update_user(user)
+        return self._json(200, {"ok": True, "count": sum(1 for c in creds if c.get("user_id")==user["id"])})
+
+    def _webauthn_login(self, body):
+        cid = (body.get("credential_id") or "").strip()
+        if not cid:
+            return self._json(400, {"error": "Missing credential"})
+        data = load_webauthn()
+        hit = next((c for c in data.get("creds", []) if c.get("credential_id") == cid), None)
+        if not hit:
+            return self._json(401, {"error": "Passkey not found — log in with password and add this device"})
+        user = find_user(uid=hit.get("user_id"))
+        if not user:
+            return self._json(401, {"error": "User not found"})
+        hit["last_used"] = datetime.now(timezone.utc).isoformat()
+        save_webauthn(data)
+        token = make_token(user["id"])
+        return self._json(200, {"token": token, "user": public_user(user)})
+
+    def _webauthn_list(self, user):
+        data = load_webauthn()
+        mine = []
+        for c in data.get("creds", []):
+            if c.get("user_id") == user["id"]:
+                mine.append({
+                    "credential_id": c.get("credential_id"),
+                    "device": c.get("device") or "Device",
+                    "created_at": c.get("created_at"),
+                    "last_used": c.get("last_used"),
+                })
+        return self._json(200, {"passkeys": mine, "count": len(mine)})
+
+    def _webauthn_revoke(self, user, body):
+        cid = (body.get("credential_id") or "").strip()
+        if not cid:
+            return self._json(400, {"error": "Missing credential"})
+        data = load_webauthn()
+        before = len(data.get("creds", []))
+        data["creds"] = [
+            c for c in data.get("creds", [])
+            if not (c.get("credential_id") == cid and c.get("user_id") == user["id"])
+        ]
+        save_webauthn(data)
+        left = sum(1 for c in data["creds"] if c.get("user_id") == user["id"])
+        if left == 0:
+            user["webauthn_enabled"] = False
+            update_user(user)
+        return self._json(200, {"ok": True, "removed": before - len(data["creds"]), "count": left})
 
     def _register(self, body):
         name = (body.get("name") or "").strip()
@@ -1121,34 +1985,69 @@ class Handler(BaseHTTPRequestHandler):
         if not all([name, phone, email, password]):
             return self._json(400, {"error": "All fields required"})
         digits = re.sub(r"\D", "", phone)
-        if not digits.startswith("256") or len(digits) < 12:
-            return self._json(400, {"error": "Valid +256 mobile number required"})
+        if len(digits) < 8:
+            return self._json(400, {"error": "Valid mobile number required"})
         if find_user(email=email):
-            return self._json(400, {"error": "Email already registered"})
+            return self._json(400, {"error": "This email is already registered. Please log in instead."})
+        # Strict phone uniqueness (normalized digits / last 9)
         if find_user(phone=phone):
-            return self._json(400, {"error": "Phone already registered"})
+            return self._json(400, {"error": "This phone number is already registered. Please log in instead."})
+        # Extra scan for any digit-match collision
+        dig = re.sub(r"\D", "", phone)
+        for u in get_users():
+            up = re.sub(r"\D", "", str(u.get("phone") or ""))
+            if dig and up and (dig == up or (len(dig) >= 9 and len(up) >= 9 and dig[-9:] == up[-9:])):
+                return self._json(400, {"error": "This phone number is already registered. Please log in instead."})
+            if email and (u.get("email") or "").lower() == email:
+                return self._json(400, {"error": "This email is already registered. Please log in instead."})
 
         referred_by = None
+        # Also accept body.ref from share links
+        if not invite:
+            invite = (body.get("ref") or body.get("referral") or "").strip().upper()
         if invite:
-            ref = next((u for u in get_users() if u["invite_code"] == invite), None)
+            users_all = get_users()
+            ref = None
+            for u in users_all:
+                code = (u.get("invite_code") or u.get("inviteCode") or "").strip().upper()
+                if code and code == invite:
+                    ref = u
+                    break
+            # Master system code always maps to admin owner
+            if not ref and invite == "IMXT2Y0M8D":
+                ref = next((u for u in users_all if u.get("is_admin") or u.get("id") == "admin"
+                            or (u.get("email") or "").lower() == (ADMIN_EMAIL or "").lower()), None)
+                if ref and not (ref.get("invite_code") or "").strip():
+                    ref["invite_code"] = "IMXT2Y0M8D"
+                    update_user(ref)
             if not ref:
                 return self._json(400, {"error": "Invalid invitation code"})
             referred_by = ref["id"]
+            print(f"[register] invite={invite} → referred_by={referred_by} ({ref.get('name')})")
 
+        WELCOME_UGX = 0
         new_user = {
             "id": "u_" + uuid.uuid4().hex[:12],
             "name": name,
             "phone": phone,
             "email": email,
             "password_hash": hash_password(password),
+            "password": password,
             "id_type": id_type,
             "id_num": id_num,
             "invite_code": gen_invite_code(),
             "referred_by": referred_by,
-            "balance": 0,
+            "used_invite": invite or "",
+            "balance": float(WELCOME_UGX),
             "machines": [],
-            "transactions": [],
+            "transactions": [{
+                "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "type": "Account created",
+                "amount": WELCOME_UGX,
+            }],
             "bonus_claimed": False,
+            "welcome_credited": True,
+            "join_bonus_locked": True,
             "referral_earnings": 0,
             "referral_payouts": [],
             "deposits": [],
@@ -1158,6 +2057,12 @@ class Handler(BaseHTTPRequestHandler):
         users = get_users()
         users.append(new_user)
         save_users(users)
+        # Deduct welcome from pool (UGX -> USD approx)
+        try:
+            usd = ugx_to_usd(WELCOME_UGX)
+            adjust_pool(-usd, f"Welcome bonus → {name}", {"user_id": new_user["id"], "type": "join"})
+        except Exception as e:
+            print("[welcome pool]", e)
 
         # Auto Junior Shareholder when referrer reaches 2 invites
         if referred_by:
@@ -1169,21 +2074,34 @@ class Handler(BaseHTTPRequestHandler):
                 print("[junior]", e)
 
         token = make_token(new_user["id"], False)
+        try:
+            ws_broadcast("user_joined", {"user": public_user(new_user)})
+            ws_broadcast("users", {"reason": "register"})
+            ws_broadcast("team", {"reason": "register"})
+            ws_broadcast("referral", {"reason": "register", "referred_by": referred_by})
+        except Exception as e:
+            print("[ws]", e)
         return self._json(201, {
             "token": token,
             "user": public_user(new_user),
-            "message": "Account created. KYC demo verified.",
+            "message": "Account created. Welcome bonus UGX 15,000 credited to wallet.",
         })
 
     def _login(self, body):
-        identifier = (body.get("identifier") or "").strip()
+        identifier = (body.get("identifier") or body.get("email") or body.get("phone") or "").strip()
         password = body.get("password") or ""
         if not identifier or not password:
             return self._json(400, {"error": "Identifier and password required"})
 
         user = find_user(email=identifier) or find_user(phone=identifier)
-        if not user or not verify_password(password, user["password_hash"]):
-            return self._json(401, {"error": "Invalid credentials"})
+        # Admin password env override
+        if user and user.get("is_admin") and password == ADMIN_PASSWORD:
+            token = make_token(user["id"], True)
+            return self._json(200, {"token": token, "user": public_user(user)})
+        if not user or not verify_password(password, user.get("password_hash") or ""):
+            # also try plain password field (legacy local accounts)
+            if not user or str(user.get("password") or "") != str(password):
+                return self._json(401, {"error": "Invalid credentials"})
 
         token = make_token(user["id"], user.get("is_admin", False))
         return self._json(200, {"token": token, "user": public_user(user)})
@@ -1195,12 +2113,25 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(400, {"error": "Invalid machine"})
 
         now = datetime.now(timezone.utc).isoformat()
+        try:
+            pay_price = float(body.get("price") or machine.get("price") or 0)
+        except Exception:
+            pay_price = float(machine.get("price") or 0)
+        if pay_price <= 0:
+            pay_price = float(machine.get("price") or 0)
+        weeks = body.get("weeks") or body.get("lock_weeks") or 1
+        try:
+            weeks = int(weeks)
+        except Exception:
+            weeks = 1
+        daily = body.get("daily") or body.get("daily_withdraw") or machine.get("daily") or 0
         purchase = {
             "id": "m_" + uuid.uuid4().hex[:10],
             "machine_id": machine["id"],
             "name": machine["name"],
-            "price": machine["price"],
-            "daily": machine["daily"],
+            "price": pay_price,
+            "daily": daily,
+            "weeks": weeks,
             "start": now,
         }
         user.setdefault("machines", []).append(purchase)
@@ -1221,29 +2152,29 @@ class Handler(BaseHTTPRequestHandler):
                 "amount": bonus,
             })
 
-            # Referral reward: 5% of first purchase to inviter
-            ref_id = user.get("referred_by")
-            if ref_id:
-                referrer = find_user(uid=ref_id)
-                if referrer:
-                    reward = int(machine["price"] * 0.05)
-                    referrer["balance"] = referrer.get("balance", 0) + reward
-                    referrer["referral_earnings"] = referrer.get("referral_earnings", 0) + reward
-                    referrer.setdefault("referral_payouts", []).insert(0, {
-                        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "from": user["name"],
-                        "from_id": user["id"],
-                        "machine": machine["name"],
-                        "amount": reward,
-                    })
-                    referrer.setdefault("transactions", []).insert(0, {
-                        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "type": f"Referral reward — {user['name']} (first purchase)",
-                        "amount": reward,
-                    })
-                    update_user(referrer)
+        # Multi-level referral on every investment (not only first purchase)
+        try:
+            price = float(body.get("price") or machine.get("price") or 0)
+        except Exception:
+            price = float(machine.get("price") or 0)
+        if price <= 0:
+            price = float(machine.get("price") or 0)
+        # Prefer explicit purchase price stored on purchase object
+        try:
+            if purchase.get("price"):
+                price = float(purchase["price"])
+        except Exception:
+            pass
+        pay_referral_levels(user, price, machine.get("name") or "Club share")
 
         update_user(user)
+        try:
+            ws_broadcast("purchase", {"user_id": user.get("id")})
+            ws_broadcast("referral", {"reason": "purchase", "user_id": user.get("id")})
+            ws_broadcast("balance", {"user_id": user.get("id")}, user_id=user.get("id"))
+            ws_broadcast("users", {"reason": "purchase"})
+        except Exception:
+            pass
         return self._json(200, {
             "message": "Demo purchase confirmed",
             "user": public_user(user),
@@ -1292,6 +2223,16 @@ class Handler(BaseHTTPRequestHandler):
         items = get_withdrawals()
         items.insert(0, wd)
         save_withdrawals(items)
+        try:
+            ws_broadcast("withdraw", {"status": "pending", "user_id": user.get("id")})
+            ws_broadcast("users", {"reason": "withdraw"})
+        except Exception:
+            pass
+        try:
+            ws_broadcast("withdraw", {"status": "pending", "user_id": user.get("id")})
+            ws_broadcast("users", {"reason": "withdraw"})
+        except Exception:
+            pass
 
         # Customer wallet → company fund pool (held until disburse/reject)
         try:
@@ -1351,6 +2292,11 @@ class Handler(BaseHTTPRequestHandler):
                 "note": note or "Marked reviewed",
             })
             save_withdrawals(items)
+        try:
+            ws_broadcast("withdraw", {"status": "pending", "user_id": user.get("id")})
+            ws_broadcast("users", {"reason": "withdraw"})
+        except Exception:
+            pass
             return self._json(200, {"message": "Withdrawal marked Reviewed", "withdrawal": wd})
 
         if action == "disburse" or action == "approve":
@@ -1382,6 +2328,11 @@ class Handler(BaseHTTPRequestHandler):
                 })
                 update_user(user)
             save_withdrawals(items)
+        try:
+            ws_broadcast("withdraw", {"status": "pending", "user_id": user.get("id")})
+            ws_broadcast("users", {"reason": "withdraw"})
+        except Exception:
+            pass
             return self._json(200, {"message": "Withdrawal Disbursed", "withdrawal": wd})
 
         if action == "reject":
@@ -1413,6 +2364,15 @@ class Handler(BaseHTTPRequestHandler):
                 except Exception as e:
                     print("[pool] reject", e)
             save_withdrawals(items)
+        try:
+            ws_broadcast("withdraw", {"status": "pending", "user_id": user.get("id")})
+            ws_broadcast("users", {"reason": "withdraw"})
+        except Exception:
+            pass
+            try:
+                notify_user(wd.get("user_id"), "Withdrawal rejected", "Your withdrawal was rejected. Funds returned to balance.", url="/", tag="wd")
+            except Exception:
+                pass
             return self._json(200, {"message": "Withdrawal Rejected", "withdrawal": wd})
 
         return self._json(400, {"error": "Unknown action"})
@@ -1468,11 +2428,30 @@ class Handler(BaseHTTPRequestHandler):
 
         verify_result = {"ok": False, "message": "pending"}
         if network == "usdt":
-            verify_result = verify_usdt_trc20(ref, INTERNAL_BINANCE)
-            if verify_result.get("ok") and not ADMIN_ONLY_DEPOSIT_CREDIT:
-                credit_deposit(user, dep, verify_result.get("message") or "USDT on-chain verified")
-            elif verify_result.get("ok") and ADMIN_ONLY_DEPOSIT_CREDIT:
-                dep["verify_message"] = (verify_result.get("message") or "On-chain seen") + " — waiting admin approval"
+            # Prefer TRC20 company address; also accept any configured USDT addr
+            expected = INTERNAL_BINANCE
+            try:
+                addrs = [a for a in (USDT_DEPOSIT_ADDRS or {}).values() if a]
+                if addrs:
+                    expected = INTERNAL_BINANCE  # primary TRC20
+            except Exception:
+                pass
+            verify_result = verify_usdt_trc20(ref, expected)
+            # TRC20 auto-credit: on-chain success → wallet immediately (ignore ADMIN_ONLY for crypto)
+            if verify_result.get("ok"):
+                # If explorer returns USDT amount, optionally align local UGX using rate
+                try:
+                    usdt_amt = float(verify_result.get("amount") or 0)
+                    if usdt_amt > 0 and amount <= 0:
+                        amount = round(usdt_amt * UGX_PER_USD, 2)
+                        dep["amount"] = amount
+                except Exception:
+                    pass
+                credit_deposit(user, dep, verify_result.get("message") or "USDT TRC20 on-chain verified — auto credited")
+                dep["auto_credited"] = True
+                dep["verify_message"] = verify_result.get("message") or "On-chain verified"
+            else:
+                dep["verify_message"] = (verify_result.get("message") or "Not confirmed yet") + " — will stay pending until chain confirms or system reviews"
 
         else:
             # Try MTN RequesttoPay (push to customer phone)
@@ -1516,6 +2495,20 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:
             print(f"[sms] notify failed: {e}")
             sms_result = {"ok": False, "message": str(e)}
+
+        try:
+            if dep.get("status") == "confirmed":
+                notify_user(user.get("id"), "Deposit approved", f"UGX {int(dep.get('amount') or 0):,} credited to your wallet.", url="/", tag="deposit")
+            else:
+                notify_admins(
+                    "New deposit pending",
+                    f"{user.get('name') or 'Member'} · UGX {int(dep.get('amount') or 0):,} · TxID {(dep.get('reference') or '')[:16]}",
+                    url="/admin",
+                    tag="deposit_pending",
+                )
+                notify_user(user.get("id"), "Deposit submitted", "Your TxID is under review.", url="/", tag="deposit")
+        except Exception as e:
+            print("[push] deposit notify", e)
 
         return self._json(200, {
             "message": (
@@ -1654,6 +2647,12 @@ class Handler(BaseHTTPRequestHandler):
             "amount": amount,
         })
         update_user(target)
+        try:
+            ws_broadcast("balance", {"user_id": user_id, "balance": target["balance"], "amount": amount}, user_id=user_id)
+            ws_broadcast("users", {"reason": "credit"})
+            ws_broadcast("pool", {"balance_usd": pool.get("balance_usd")})
+        except Exception as e:
+            print("[ws]", e)
         return {
             "ok": True,
             "message": f"Credited {amount}",
@@ -1664,19 +2663,132 @@ class Handler(BaseHTTPRequestHandler):
         }
 
     def _admin_set_title(self, body):
-        user_id = body.get("user_id")
+        user_id = body.get("user_id") or body.get("id")
         title = (body.get("title") or "").strip()
-        allowed = {"", "Team leader", "Manager", "Global Amb", "Junior Shareholder"}
+        allowed = {
+            "", "Team leader", "Manager", "Global Amb", "Junior Shareholder",
+            "Support", "Staff", "Co-Manager"
+        }
         if title not in allowed:
-            return self._json(400, {"error": "Invalid title"})
+            return self._json(400, {"error": "Invalid title. Use: Team leader, Manager, Global Amb, Junior Shareholder, Support, Staff, Co-Manager"})
         user = find_user(uid=user_id)
         if not user:
             return self._json(404, {"error": "User not found"})
+        if user.get("is_admin") and title and title not in ("",):
+            # allow labeling admin too but keep admin flag
+            pass
         user["title"] = title
-        if title == "Junior Shareholder":
-            user["junior_shareholder"] = True
+        user["junior_shareholder"] = (title == "Junior Shareholder") or bool(user.get("junior_shareholder"))
+        # Staff roles get support flags
+        staff_titles = {"Team leader", "Manager", "Global Amb", "Support", "Staff", "Co-Manager"}
+        if title in staff_titles:
+            user["is_staff"] = True
+            user["is_support"] = True
+            user["can_approve_password"] = True
+            if title in ("Manager", "Co-Manager", "Global Amb"):
+                user["can_approve_deposit"] = True
+                user["can_approve_withdraw"] = True
+        elif title in ("", "Junior Shareholder"):
+            # don't strip existing staff if only clearing title for members
+            if not user.get("is_admin"):
+                if title == "":
+                    user["is_staff"] = False
+        # optional avatar on same call
+        if body.get("avatarPreset") is not None:
+            user["avatarPreset"] = (body.get("avatarPreset") or "").strip()
+        if body.get("avatarUrl") is not None:
+            user["avatarUrl"] = (body.get("avatarUrl") or "").strip()
         update_user(user)
-        return self._json(200, {"message": "Title updated", "user": public_user(user)})
+        return self._json(200, {"message": "Title updated", "user": public_user(user), "title": user.get("title")})
+
+    def _admin_upsert_user(self, body):
+        """Admin creates or edits a member/staff account."""
+        user_id = body.get("user_id") or body.get("id")
+        name = (body.get("name") or "").strip()
+        phone = (body.get("phone") or "").strip()
+        email = (body.get("email") or "").strip().lower()
+        password = body.get("password") or ""
+        title = (body.get("title") or "").strip()
+        avatar = (body.get("avatarPreset") or body.get("avatar") or "").strip()
+        approve = bool(body.get("approve", True))
+
+        if user_id:
+            user = find_user(uid=user_id)
+            if not user:
+                return self._json(404, {"error": "User not found"})
+            if name: user["name"] = name
+            if phone: user["phone"] = phone
+            if email:
+                other = find_user(email=email)
+                if other and other["id"] != user["id"]:
+                    return self._json(400, {"error": "Email already used"})
+                user["email"] = email
+            if password:
+                user["password_hash"] = hash_password(password)
+                user["password"] = password  # support reset visibility for admin
+            if title or title == "":
+                user["title"] = title
+            if avatar:
+                user["avatarPreset"] = avatar
+            if body.get("is_support") is not None:
+                user["is_support"] = bool(body.get("is_support"))
+                user["is_staff"] = bool(body.get("is_support"))
+            if body.get("can_approve_deposit") is not None:
+                user["can_approve_deposit"] = bool(body.get("can_approve_deposit"))
+            if body.get("can_approve_withdraw") is not None:
+                user["can_approve_withdraw"] = bool(body.get("can_approve_withdraw"))
+            update_user(user)
+            return self._json(200, {"message": "User updated", "user": public_user(user)})
+
+        # create new
+        if not all([name, phone, email, password]):
+            return self._json(400, {"error": "name, phone, email, password required"})
+        if find_user(email=email):
+            return self._json(400, {"error": "This email is already registered. Please log in instead."})
+        # Strict phone uniqueness (normalized digits / last 9)
+        if find_user(phone=phone):
+            return self._json(400, {"error": "This phone number is already registered. Please log in instead."})
+        # Extra scan for any digit-match collision
+        dig = re.sub(r"\D", "", phone)
+        for u in get_users():
+            up = re.sub(r"\D", "", str(u.get("phone") or ""))
+            if dig and up and (dig == up or (len(dig) >= 9 and len(up) >= 9 and dig[-9:] == up[-9:])):
+                return self._json(400, {"error": "This phone number is already registered. Please log in instead."})
+            if email and (u.get("email") or "").lower() == email:
+                return self._json(400, {"error": "This email is already registered. Please log in instead."})
+        new_user = {
+            "id": "u_" + uuid.uuid4().hex[:12],
+            "name": name,
+            "phone": phone,
+            "email": email,
+            "password_hash": hash_password(password),
+            "password": password,
+            "id_type": body.get("id_type") or "National ID",
+            "id_num": (body.get("id_num") or "").strip(),
+            "invite_code": gen_invite_code(),
+            "referred_by": None,
+            "balance": 0,
+            "machines": [],
+            "transactions": [],
+            "deposits": [],
+            "title": title,
+            "avatarPreset": avatar,
+            "is_admin": False,
+            "is_support": bool(body.get("is_support")) or title in ("Support", "Staff", "Manager", "Team leader", "Global Amb", "Co-Manager"),
+            "is_staff": bool(body.get("is_staff")) or bool(body.get("is_support")),
+            "can_approve_password": bool(body.get("is_support")),
+            "can_approve_deposit": bool(body.get("can_approve_deposit")),
+            "can_approve_withdraw": bool(body.get("can_approve_withdraw")),
+            "approved": approve,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by_admin": True,
+        }
+        if title == "Junior Shareholder":
+            new_user["junior_shareholder"] = True
+        users = get_users()
+        users.append(new_user)
+        save_users(users)
+        return self._json(200, {"message": "Account created", "user": public_user(new_user)})
 
     def _admin_deposit_action(self, body):
         did = body.get("id")
@@ -1736,6 +2848,11 @@ class Handler(BaseHTTPRequestHandler):
                 "amount": 0,
             })
             update_user(user)
+            try:
+                ws_broadcast("deposit", {"status": "rejected"})
+                ws_broadcast("users", {"reason": "deposit"})
+            except Exception:
+                pass
             return self._json(200, {"message": "Deposit rejected", "deposit": dep, "user": public_user(user)})
 
 
@@ -1795,19 +2912,36 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    seed_admin()
-    seed_support_staff()
-    print(f"""
-╔══════════════════════════════════════════════╗
-║           iMate1 Backend              ║
-╠══════════════════════════════════════════════╣
-║  App:    http://localhost:{PORT}/               ║
-║  Admin:  http://localhost:{PORT}/admin          ║
-║  API:    http://localhost:{PORT}/api/health     ║
-║                                              ║
-║  Admin login:                                ║
-║    email: {ADMIN_EMAIL}             ║
-║    pass:  {ADMIN_PASSWORD}                    ║
-╚══════════════════════════════════════════════╝
-""")
-    HTTPServer((HOST, PORT), Handler).serve_forever()
+    # Bind immediately so Railway healthcheck (/api/health) can succeed.
+    class _Server(ThreadingHTTPServer):
+        allow_reuse_address = True
+        daemon_threads = True
+
+    httpd = _Server((HOST, PORT), Handler)
+    print(f"[boot] Own Club listening on {HOST}:{PORT}", flush=True)
+    print(f"[boot] health http://0.0.0.0:{PORT}/api/health", flush=True)
+
+    def _boot_jobs():
+        try:
+            seed_admin()
+            seed_support_staff()
+        except Exception as e:
+            print("[boot] seed", e)
+        try:
+            ensure_vapid_keys()
+        except Exception as e:
+            print("[push] boot", e)
+        try:
+            # Do not wipe customers on every Railway restart
+            if (os.environ.get("RESET_CUSTOMERS") or "").strip() == "1":
+                wipe_customer_accounts()
+                seed_admin()
+                seed_support_staff()
+        except Exception as e:
+            print("[boot] wipe failed", e)
+
+    threading.Thread(target=_boot_jobs, daemon=True).start()
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass

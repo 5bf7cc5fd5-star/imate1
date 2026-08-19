@@ -89,13 +89,35 @@ input.credit{width:110px;background:#0a1322;border:1px solid var(--border);borde
 
 <!-- LOGIN -->
 <div id="loginView" class="login-wrap">
-  <div class="login-card">
-    <h1>Own Club <span class="cyan">System</span></h1>
-    <p>Desktop control panel · deposits, withdrawals, members</p>
-    <div class="field"><label>EMAIL</label><input id="adminEmail" placeholder="Email" autocomplete="username"></div>
-    <div class="field"><label>PASSWORD</label><input id="adminPass" type="password" placeholder="Password" autocomplete="current-password"></div>
-    <button class="btn btn-primary" onclick="adminLogin()">LOG IN</button>
-    <p class="note" style="margin-top:14px;text-align:center">Desktop dashboard · <a href="/" style="color:#22d3ee">Member app</a></p>
+  <div class="login-hero">
+    <div class="oc-wordmark" style="color:#fff;margin-bottom:auto;position:relative;z-index:1">
+      <span class="oc-o" style="border-color:#fff"></span><span class="oc-rest" style="color:#fff">WNCLUB</span><span class="reg" style="color:#fff">®</span>
+    </div>
+    <div>
+      <p class="hero-title">Get moving with Own Club</p>
+      <p class="hero-sub">System panel · deposits · withdrawals · members · team</p>
+    </div>
+  </div>
+  <div class="login-panel">
+    <div class="login-card">
+      <div class="brand-row">
+        <div class="oc-wordmark" style="font-size:20px"><span class="oc-o"></span><span class="oc-rest">WNCLUB</span><span class="reg">®</span></div>
+      </div>
+      <h1>System sign in</h1>
+      <p>Use your authorized email and password</p>
+      <div class="field"><label>Email Address</label><input id="adminEmail" placeholder="Email" autocomplete="username"></div>
+      <div class="field"><label>Password</label><input id="adminPass" type="password" placeholder="Password" autocomplete="current-password"></div>
+      <div class="captcha-box">
+        <div class="ok"><i>✓</i> Success!</div>
+        <div style="font-size:11px;color:#64748b;font-weight:600">Secure login</div>
+      </div>
+      <div class="login-meta">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="adminRemember" style="width:16px;height:16px"> Remember me</label>
+        <a href="#" onclick="alert('Contact system owner to reset password');return false;">Forgot Password?</a>
+      </div>
+      <button class="btn btn-primary" id="adminLoginBtn" onclick="adminLogin()">Log in</button>
+      <p class="note" style="margin-top:14px;text-align:center">Authorized staff only · Own Club Share Market</p>
+    </div>
   </div>
 </div>
 
@@ -116,12 +138,16 @@ input.credit{width:110px;background:#0a1322;border:1px solid var(--border);borde
       <div class="nav-section">Support</div>
       <button class="nav-item" data-page="messages" onclick="go('messages')">Chat messages</button>
       <a href="/" target="_blank">Open member app</a>
-      <button class="nav-item" onclick="logout()">Log out</button>
+      <button class="nav-item" onclick="logout()">Log Out</button>
     </div>
   </aside>
 
   <div class="main">
     <div class="topbar">
+      <span id="liveDot" style="font-size:11px;font-weight:800;color:#16a34a;letter-spacing:.6px;margin-right:8px">LIVE</span>
+
+      <button type="button" class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Menu">☰</button>
+
       <div class="top-metrics">
         <div class="metric"><label>Users</label><b id="mUsers">0</b></div>
         <div class="metric"><label>Total invested</label><b id="mInvested" class="orange">UGX 0</b></div>
@@ -132,12 +158,15 @@ input.credit{width:110px;background:#0a1322;border:1px solid var(--border);borde
       </div>
       <div id="pendingAlerts" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div>
       <div class="top-actions">
-        <button class="btn btn-ghost btn-sm" onclick="loadAll()">Refresh</button>
-        <button class="btn btn-ghost btn-sm" onclick="logout()">Logout</button>
+        <button class="btn btn-green btn-sm" type="button" onclick="window.loadAll && window.loadAll()">Refresh</button>
+        <button class="btn btn-red btn-sm" onclick="logout()">Log Out</button>
       </div>
     </div>
 
     <div class="content">
+      <div class="promo-bar">Own Club System — manage deposits, withdrawals, and members in real time.</div>
+      <p class="welcome-line" id="topWelcome">Welcome</p>
+
       <!-- OVERVIEW -->
       <section id="page-overview">
         <div class="grid-4">
@@ -191,11 +220,17 @@ input.credit{width:110px;background:#0a1322;border:1px solid var(--border);borde
       <section id="page-members" class="hidden">
         <div class="panel">
           <h2>All members <small>manual credit from company fund pool (USD)</small></h2>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+            <input id="memberSearch" placeholder="Search name / phone / email e.g. 0760962048" style="flex:1;min-width:220px;background:#0a1322;border:1px solid var(--border);color:#fff;border-radius:10px;padding:10px 12px">
+            <button class="btn btn-primary btn-sm" type="button" onclick="searchMembers()">Search</button>
+            <button class="btn btn-ghost btn-sm" type="button" onclick="document.getElementById('memberSearch').value='';window.loadAll&&window.loadAll()">Show all</button>
+          </div>
           <div id="bulkCreditBar" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px;padding:12px;background:#0c1526;border:1px solid var(--border);border-radius:12px">
             <span class="note">Bulk credit selected:</span>
             <input id="bulkAmount" type="number" min="1" placeholder="Same UGX for all" style="width:140px;background:#0a1322;border:1px solid var(--border);border-radius:8px;padding:8px;color:#fff">
             <button class="btn btn-green btn-sm" onclick="bulkCreditSame()">Credit same amount</button>
-            <button class="btn btn-primary btn-sm" onclick="bulkCreditEach()">Credit each row amount</button>
+            <button class="btn btn-primary btn-sm" onclick="bulkCreditEach()">Credit each row amount (approve all at once)</button>
+            <button class="btn btn-sm" style="background:#1e293b;color:#fff" onclick="openAddUser()">+ Add member / staff</button>
             <span class="note" id="bulkHint">Select members with checkboxes. Pool pays the credits.</span>
           </div>
           <div id="usersTable"><div class="empty">Loading…</div></div>
@@ -205,8 +240,22 @@ input.credit{width:110px;background:#0a1322;border:1px solid var(--border);borde
       <!-- REFERRALS -->
       <section id="page-referrals" class="hidden">
         <div class="panel">
-          <h2>Affiliate overview</h2>
+          <h2>Referral tracking dashboard <small>30% · 25% · 20% · 15%</small></h2>
+          <div class="kpi-grid" id="refKpis">
+            <div class="kpi"><span>L1 paid (30%)</span><b id="refL1">UGX 0</b></div>
+            <div class="kpi"><span>L2 paid (25%)</span><b id="refL2">UGX 0</b></div>
+            <div class="kpi"><span>L3 paid (20%)</span><b id="refL3">UGX 0</b></div>
+            <div class="kpi"><span>L4 paid (15%)</span><b id="refL4">UGX 0</b></div>
+          </div>
+          <p class="note" id="refTotalPaid">Total paid: UGX 0</p>
+        </div>
+        <div class="panel">
+          <h2>Leaders by team</h2>
           <div id="refTable"><div class="empty">Loading…</div></div>
+        </div>
+        <div class="panel">
+          <h2>Bonus payouts</h2>
+          <div id="refPayouts"><div class="empty">No payouts yet</div></div>
         </div>
       </section>
 
@@ -223,19 +272,87 @@ input.credit{width:110px;background:#0a1322;border:1px solid var(--border);borde
 </div>
 
 <script>
+
+/* Real-time WebSocket for admin panel */
+let adminWS = null;
+let adminWSRetry = 0;
+function adminWsConnect(){
+  try{
+    if(adminWS && (adminWS.readyState===0 || adminWS.readyState===1)) return;
+    if(!token) return;
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const url = proto + '//' + location.host + '/ws?token=' + encodeURIComponent(token);
+    const ws = new WebSocket(url);
+    adminWS = ws;
+    ws.onopen = function(){ adminWSRetry = 0; console.log('[admin-ws] connected');
+      var live = document.getElementById('liveDot');
+      if(live){ live.textContent = 'LIVE'; live.style.color = '#16a34a'; }
+    };
+    ws.onmessage = function(ev){
+      try{
+        const msg = JSON.parse(ev.data);
+        const e = msg.event;
+        if(['users','deposit','balance','team','user_joined','pool','withdraw','referral','purchase','notification'].indexOf(e) >= 0){
+          clearTimeout(window._rtTimer);
+          window._rtTimer = setTimeout(function(){
+            if(typeof loadAll === 'function') loadAll();
+            else if(window.loadAll) window.loadAll();
+          }, 250);
+        }
+        var live = document.getElementById('liveDot');
+        if(live){ live.textContent = 'LIVE'; live.style.opacity = '1'; }
+      }catch(err){}
+    };
+    ws.onclose = function(){
+      var live = document.getElementById('liveDot');
+      if(live){ live.textContent = 'OFFLINE'; live.style.color = '#ef4444'; }
+
+      adminWS = null;
+      const wait = Math.min(15000, 1000 * Math.pow(1.5, adminWSRetry++));
+      setTimeout(adminWsConnect, wait);
+    };
+  }catch(e){}
+}
+
 const API = location.origin;
 let token = localStorage.getItem('imate1_admin_token') || '';
 let cache = { stats:null, withdrawals:[], deposits:[], users:[] };
 
 const money = n => 'UGX ' + Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});
 
+function showSysError(msg){
+  try {
+    var b = document.getElementById('sysErr');
+    if(!b){
+      b = document.createElement('div');
+      b.id = 'sysErr';
+      b.style.cssText = 'position:fixed;top:12px;right:12px;z-index:80;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;padding:10px 14px;border-radius:10px;font-size:13px;max-width:360px;box-shadow:0 8px 20px rgba(0,0,0,.08)';
+      document.body.appendChild(b);
+    }
+    b.textContent = String(msg||'Error');
+    b.style.display = 'block';
+    clearTimeout(window._sysErrT);
+    window._sysErrT = setTimeout(function(){ b.style.display='none'; }, 5000);
+  } catch(e){}
+}
 async function api(path, opts={}){
-  const headers = {'Content-Type':'application/json'};
+  const headers = Object.assign({'Content-Type':'application/json','Accept':'application/json'}, opts.headers||{});
   if(token) headers['Authorization'] = 'Bearer ' + token;
-  const res = await fetch(API + path, {...opts, headers});
-  const data = await res.json().catch(()=>({}));
-  if(res.status === 401){ logout(); throw new Error('Unauthorized'); }
-  if(!res.ok) throw new Error(data.error || data.message || ('HTTP '+res.status));
+  let res;
+  try {
+    res = await fetch(API + path, Object.assign({}, opts, { headers }));
+  } catch (netErr) {
+    throw new Error('Cannot reach server. Check internet / Railway is online. (' + (netErr && netErr.message ? netErr.message : 'network') + ')');
+  }
+  const raw = await res.text();
+  let data = {};
+  try { data = raw ? JSON.parse(raw) : {}; } catch(e) { data = { error: raw || ('HTTP '+res.status) }; }
+  if(res.status === 401){ logout(); throw new Error(data.error || 'Unauthorized'); }
+  if(!res.ok){
+    var em = data.error || data.message || ('HTTP '+res.status);
+    showSysError(em);
+    throw new Error(em);
+  }
   return data;
 }
 
@@ -245,6 +362,8 @@ function showDash(on){
 }
 
 function go(page){
+  try{ document.querySelector('.sidebar').classList.remove('open'); }catch(e){}
+
   ['overview','deposits','withdrawals','members','referrals','messages'].forEach(p=>{
     const el = document.getElementById('page-'+p);
     if(el) el.classList.toggle('hidden', p!==page);
@@ -255,15 +374,25 @@ function go(page){
 }
 
 async function adminLogin(){
+  const email = (document.getElementById('adminEmail').value || '').trim();
+  const password = document.getElementById('adminPass').value || '';
+  if(!email || !password){ alert('Enter email and password'); return; }
+  const btn = document.getElementById('adminLoginBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Signing in…'; }
   try{
     const data = await api('/api/login', {
       method:'POST',
       body: JSON.stringify({
-        identifier: document.getElementById('adminEmail').value.trim(),
-        password: document.getElementById('adminPass').value
+        identifier: email,
+        email: email,
+        password: password
       })
     });
-    if(!data.user || !(data.user.is_admin || data.user.isAdmin)){
+    if(!data.token){
+      alert('Login failed: no token returned');
+      return;
+    }
+    if(!data.user || !(data.user.is_admin || data.user.isAdmin || data.user.is_support || data.user.isSupport)){
       alert('This account is not authorized for the system panel.');
       return;
     }
@@ -271,7 +400,12 @@ async function adminLogin(){
     localStorage.setItem('imate1_admin_token', token);
     showDash(true);
     loadAll();
-  }catch(e){ alert(e.message); }
+    try{ adminWsConnect(); }catch(e){}
+  }catch(e){
+    alert(e.message || 'Login failed');
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = 'Sign in'; }
+  }
 }
 
 function logout(){
@@ -407,20 +541,34 @@ function renderUsers(users){
   if(el){
     el.innerHTML = `<table>
       <thead><tr>
-        <th><input type="checkbox" id="chkAllMembers" onclick="toggleAllMembers(this)"></th>
-        <th>Name</th><th>Title</th><th>Phone</th><th>Email</th><th>Balance</th><th>Shares</th><th>Referrals</th><th>Joined</th><th>Credit UGX</th>
+        <th><input type="checkbox" id="chkAllMembers" onclick="toggleAllMembers(this)" title="Select for bulk credit"></th>
+        <th>Name</th><th>Title</th><th>Avatar</th><th>Phone</th><th>Email</th><th>Balance</th><th>Shares</th><th>Referrals</th><th>Joined</th><th>Credit UGX</th><th>Edit</th>
       </tr></thead>
-      <tbody>${users.map(u=>`
-        <tr>
-          <td>${(u.is_admin||u.isAdmin)?'':`<input type="checkbox" class="mem-chk" value="${u.id}" data-name="${(u.name||'').replace(/"/g,'')}">`}</td>
-          <td>${u.name||'—'}${(u.is_admin||u.isAdmin)?' <span class="badge ok">SYSTEM</span>':''}${(u.isSupport||u.is_support)?' <span class="badge pending">SUPPORT</span>':''}${(u.juniorShareholder||u.junior_shareholder)?' <span class="badge ok">JUNIOR SH</span>':''}</td>
+      <tbody>${users.map(u=>{
+        const id = u.id;
+        const isSys = !!(u.is_admin||u.isAdmin);
+        return `<tr>
+          <td>${isSys?'':`<input type="checkbox" class="mem-chk" value="${id}" data-name="${(u.name||'').replace(/"/g,'')}">`}</td>
+          <td>${u.name||'—'}
+            ${isSys?' <span class="badge ok">SYSTEM</span>':''}
+            ${(u.isSupport||u.is_support||u.is_staff)?' <span class="badge pending">STAFF</span>':''}
+            ${(u.juniorShareholder||u.junior_shareholder)?' <span class="badge ok">JUNIOR SH</span>':''}
+            ${u.title?` <span class="badge ok">${u.title}</span>`:''}
+          </td>
           <td>
-            <select class="select-title" onchange="setUserTitle('${u.id}', this.value)">
+            <select class="select-title" onchange="setUserTitle('${id}', this.value)">
               <option value="">— Title —</option>
-              <option value="Team leader" ${(u.title==='Team leader')?'selected':''}>Team leader</option>
-              <option value="Manager" ${(u.title==='Manager')?'selected':''}>Manager</option>
-              <option value="Global Amb" ${(u.title==='Global Amb')?'selected':''}>Global Amb</option>
-              <option value="Junior Shareholder" ${(u.title==='Junior Shareholder'||u.juniorShareholder)?'selected':''}>Junior Shareholder</option>
+              ${['Team leader','Manager','Global Amb','Junior Shareholder','Support','Staff','Co-Manager'].map(t=>
+                `<option value="${t}" ${(u.title===t)?'selected':''}>${t}</option>`
+              ).join('')}
+            </select>
+          </td>
+          <td>
+            <select class="select-title" onchange="setUserAvatar('${id}', this.value)" title="Assign avatar">
+              <option value="">—</option>
+              ${['dog','cat','tiger','leopard','jaguar','elephant'].map(a=>
+                `<option value="${a}" ${(u.avatarPreset===a||u.avatar_preset===a)?'selected':''}>${a}</option>`
+              ).join('')}
             </select>
           </td>
           <td>${u.phone||'—'}</td>
@@ -430,60 +578,185 @@ function renderUsers(users){
           <td>${u.referral_count||u.referralCount||0}</td>
           <td>${u.created_at ? new Date(u.created_at).toLocaleDateString() : (u.joined||'—')}</td>
           <td>
-            ${(u.is_admin||u.isAdmin) ? '—' : `
-              <input class="credit" id="cr_${u.id}" type="number" min="1" placeholder="UGX">
-              <button class="btn btn-green btn-sm" onclick="creditUser('${u.id}')">Credit</button>
+            ${isSys ? '—' : `
+              <input class="credit" id="cr_${id}" type="number" min="1" placeholder="UGX amount" style="width:100px">
             `}
           </td>
-        </tr>`).join('')}
-      </tbody></table>`;
+          <td>
+            ${isSys ? '—' : `<button class="btn btn-primary btn-sm" onclick="openEditUser('${id}')">Edit</button>`}
+          </td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
   }
   if(refEl){
     const rows = users.filter(u=>!u.is_admin && !u.isAdmin);
     refEl.innerHTML = `<table>
-      <thead><tr><th>Name</th><th>Invite code</th><th>Referrals</th><th>Phone</th><th>Email</th></tr></thead>
+      <thead><tr><th>Name</th><th>Title</th><th>Invite code</th><th>Referrals</th><th>Phone</th><th>Email</th></tr></thead>
       <tbody>${rows.map(u=>`
         <tr>
           <td>${u.name||'—'}</td>
-          <td><code>${u.invite_code||u.inviteCode||'—'}</code></td>
+          <td>${u.title||'—'}</td>
+          <td style="font-family:monospace">${u.invite_code||u.inviteCode||'—'}</td>
           <td>${u.referral_count||u.referralCount||0}</td>
           <td>${u.phone||'—'}</td>
           <td>${u.email||'—'}</td>
-        </tr>`).join('') || '<tr><td colspan="5" class="empty">No members yet</td></tr>'}
+        </tr>`).join('')||'<tr><td colspan="6" class="empty">No members</td></tr>'}
       </tbody></table>`;
   }
 }
 
 
-function updatePendingAlerts(){
-  var box = document.getElementById('pendingAlerts');
-  if(!box) return;
-  var pendDep = (cache.deposits||[]).filter(function(d){ return String(d.status||'').toLowerCase()==='pending'; }).length;
-  var pendWd = (cache.withdrawals||[]).filter(function(w){ var s=String(w.status||'').toLowerCase(); return s==='pending'||s==='under_review'||s==='reviewed'; }).length;
-  var h = '';
-  if(pendDep > 0) h += '<span class="badge-pop yellow">● '+pendDep+' deposit'+(pendDep>1?'s':'')+' pending approval</span>';
-  if(pendWd > 0) h += '<span class="badge-pop cyan">● '+pendWd+' withdrawal'+(pendWd>1?'s':'')+' pending</span>';
-  if(!h) h = '<span class="note">No pending items</span>';
-  box.innerHTML = h;
-  // also highlight nav
-  document.querySelectorAll('.nav-item[data-page]').forEach(function(b){
-    var p = b.getAttribute('data-page');
-    b.style.boxShadow = '';
-    if(p==='deposits' && pendDep>0) b.style.boxShadow = '0 0 0 2px #facc15';
-    if(p==='withdrawals' && pendWd>0) b.style.boxShadow = '0 0 0 2px #22d3ee';
-  });
-}
 
 async function setUserTitle(uid, title){
   try{
     await api('/api/admin/set-title', { method:'POST', body: JSON.stringify({ user_id: uid, title: title }) });
-    loadAll();
+    await loadAll();
   }catch(e){
-    // local fallback message
-    alert('Title API: '+e.message+'\\nTitles: Team leader · Manager · Global Amb · Junior Shareholder (auto)');
+    alert('Title update failed: '+(e.message||e));
   }
 }
 
+async function setUserAvatar(uid, preset){
+  try{
+    await api('/api/admin/users/upsert', {
+      method:'POST',
+      body: JSON.stringify({ user_id: uid, avatarPreset: preset })
+    });
+    await loadAll();
+  }catch(e){
+    // fallback via set-title endpoint fields
+    try{
+      await api('/api/admin/set-title', { method:'POST', body: JSON.stringify({ user_id: uid, title: '', avatarPreset: preset }) });
+      await loadAll();
+    }catch(e2){ alert('Avatar failed: '+(e2.message||e2)); }
+  }
+}
+
+function openAddUser(){
+  const name = prompt('Full name');
+  if(name==null || !name.trim()) return;
+  const phone = prompt('Phone (with country code e.g. +2567...)');
+  if(phone==null || !phone.trim()) return;
+  const email = prompt('Email');
+  if(email==null || !email.trim()) return;
+  const password = prompt('Temporary password');
+  if(password==null || !password.trim()) return;
+  const title = prompt('Title (Team leader / Manager / Global Amb / Support / Staff / Co-Manager / leave blank)', '') || '';
+  const isStaff = ['Team leader','Manager','Global Amb','Support','Staff','Co-Manager'].indexOf(title) >= 0;
+  api('/api/admin/users/upsert', {
+    method:'POST',
+    body: JSON.stringify({
+      name: name.trim(), phone: phone.trim(), email: email.trim(), password: password.trim(),
+      title: title, is_support: isStaff, is_staff: isStaff, approve: true,
+      can_approve_deposit: title==='Manager'||title==='Co-Manager'||title==='Global Amb',
+      can_approve_withdraw: title==='Manager'||title==='Co-Manager'||title==='Global Amb'
+    })
+  }).then(function(res){
+    alert('Account created for '+(res.user&&res.user.name?res.user.name:name));
+    loadAll();
+  }).catch(function(e){ alert('Create failed: '+(e.message||e)); });
+}
+
+function openEditUser(uid){
+  const u = (cache.users||[]).find(function(x){ return String(x.id)===String(uid); });
+  if(!u){ alert('User not found in list — refresh'); return; }
+  const name = prompt('Name', u.name||''); if(name==null) return;
+  const phone = prompt('Phone', u.phone||''); if(phone==null) return;
+  const email = prompt('Email', u.email||''); if(email==null) return;
+  const password = prompt('New password (leave blank to keep)', ''); if(password==null) return;
+  const title = prompt('Title', u.title||''); if(title==null) return;
+  const body = { user_id: uid, name: name.trim(), phone: phone.trim(), email: email.trim(), title: title.trim() };
+  if(password.trim()) body.password = password.trim();
+  if(['Team leader','Manager','Global Amb','Support','Staff','Co-Manager'].indexOf(title.trim())>=0){
+    body.is_support = true; body.is_staff = true;
+  }
+  api('/api/admin/users/upsert', { method:'POST', body: JSON.stringify(body) })
+    .then(function(){ alert('Updated'); loadAll(); })
+    .catch(function(e){ alert('Edit failed: '+(e.message||e)); });
+}
+
+// Auto-refresh every 20s when dashboard open
+if(!window._imate1AutoRefresh){
+  window._imate1AutoRefresh = setInterval(function(){
+    if(token && document.getElementById('dashView') && !document.getElementById('dashView').classList.contains('hidden')){
+      loadAll().catch(function(){});
+    }
+  }, 20000);
+}
+
+
+
+
+
+async function searchMembers(){
+  const q = (document.getElementById('memberSearch')||{}).value || '';
+  try{
+    const data = await api('/api/admin/users?q=' + encodeURIComponent(q.trim()));
+    cache.users = data.users || [];
+    renderUsers(cache.users);
+    const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+    set('mUsers', cache.users.length);
+    set('sUsers', cache.users.length);
+  }catch(e){ alert('Search failed: '+(e.message||e)); }
+}
+window.searchMembers = searchMembers;
+
+function renderReferrals(rows){
+  const el = document.getElementById('refTable');
+  if(!el) return;
+  if(!rows || !rows.length){ el.innerHTML = '<div class="empty">No members yet</div>'; return; }
+  let html = '<table><thead><tr><th>Member</th><th>Invite</th><th>L1</th><th>L2</th><th>L3</th><th>L4</th><th>Team</th><th>Earnings</th></tr></thead><tbody>';
+  rows.forEach(r=>{
+    html += `<tr>
+      <td><b>${r.name||'—'}</b><br><span class="note">${r.phone||''}<br>${r.email||''}</span></td>
+      <td><code>${r.invite_code||'—'}</code></td>
+      <td>${r.l1||r.level1||0}</td>
+      <td>${r.l2||r.level2||0}</td>
+      <td>${r.l3||0}</td>
+      <td>${r.l4||0}</td>
+      <td>${r.team||r.team_total||0}</td>
+      <td style="color:#16a34a;font-weight:700">UGX ${Number(r.earnings||r.referral_earnings||0).toLocaleString()}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+window.renderReferrals = renderReferrals;
+
+function renderReferralDashboard(d){
+  if(!d) return;
+  const set=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
+  const lv = d.levels || {};
+  const fmt = n => 'UGX '+Number(n||0).toLocaleString();
+  set('refL1', fmt((lv['1']||{}).paid));
+  set('refL2', fmt((lv['2']||{}).paid));
+  set('refL3', fmt((lv['3']||{}).paid));
+  set('refL4', fmt((lv['4']||{}).paid));
+  set('refTotalPaid', 'Total paid: '+fmt(d.total_paid)+' · L1 30% · L2 25% · L3 20% · L4 15%');
+  if(d.leaders) renderReferrals(d.leaders);
+  const box = document.getElementById('refPayouts');
+  if(box){
+    const rows = d.payouts || [];
+    if(!rows.length) box.innerHTML = '<div class="empty">No bonus payouts yet</div>';
+    else {
+      let h = '<table><thead><tr><th>Date</th><th>Paid to</th><th>From investor</th><th>Level</th><th>Rate</th><th>Investment</th><th>Bonus</th></tr></thead><tbody>';
+      rows.forEach(p=>{
+        h += `<tr>
+          <td>${p.date||''}</td>
+          <td><b>${p.to||''}</b><br><span class="note">${p.to_phone||''}</span></td>
+          <td>${p.from||''}</td>
+          <td>L${p.level||1}</td>
+          <td>${Math.round((p.rate||0)*100)}%</td>
+          <td>UGX ${Number(p.invest_amount||0).toLocaleString()}</td>
+          <td style="color:#16a34a;font-weight:700">UGX ${Number(p.amount||0).toLocaleString()}</td>
+        </tr>`;
+      });
+      h += '</tbody></table>';
+      box.innerHTML = h;
+    }
+  }
+}
+window.renderReferralDashboard = renderReferralDashboard;
 
 async function loadAll(){
   try{
@@ -491,9 +764,12 @@ async function loadAll(){
       api('/api/admin/stats').catch(()=>({})),
       api('/api/admin/withdrawals').catch(()=>({withdrawals:[]})),
       api('/api/admin/users').catch(()=>({users:[]})),
-      api('/api/admin/deposits').catch(()=>({deposits:[]}))
+      api('/api/admin/deposits').catch(()=>({deposits:[]})),
+      api('/api/admin/referral-dashboard').catch(()=>api('/api/admin/referrals').catch(()=>({})))
     ];
-    const [stats, wds, users, deps] = await Promise.all(tasks);
+    const [stats, wds, users, deps, refs] = await Promise.all(tasks);
+    try{ if(refs && refs.levels) renderReferralDashboard(refs); else renderReferrals((refs&&refs.referrals)||[]); }catch(e){}
+    console.log('loadAll users', (users && users.users && users.users.length) || 0);
     cache.stats = stats;
     cache.withdrawals = wds.withdrawals || wds || [];
     cache.users = users.users || users || [];
@@ -616,7 +892,7 @@ async function bulkCreditEach(){
     if(amount > 0) items.push({user_id: uid, amount: amount});
   });
   if(!items.length){ alert('Select members and enter an amount in each Credit UGX box'); return; }
-  if(!confirm('Credit different amounts to '+items.length+' member(s) from company fund pool?')) return;
+  if(!confirm('Credit DIFFERENT amounts to '+items.length+' selected members in ONE approval from company fund pool?')) return;
   try{
     const res = await api('/api/admin/credit', { method:'POST', body: JSON.stringify({items: items, note:'Bulk credit (per-row) from pool'}) });
     await loadAll();
@@ -626,6 +902,7 @@ async function bulkCreditEach(){
 }
 
 
+try{ window.loadAll = loadAll; window.creditUser = creditUser; window.searchMembers = searchMembers; }catch(e){}
 (async()=>{
   // leave login fields blank (no prefilled secrets)
   if(token){
