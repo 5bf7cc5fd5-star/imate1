@@ -1374,8 +1374,12 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/api/health", "/health", "/healthz"):
             return self._json(200, {"ok": True, "service": "ownclubshares", "port": PORT})
 
-        if path in ("/ws", "/api/ws", "/realtime"):
-            return self._ws_handshake()
+        if path in ("/ws", "/api/ws", "/realtime") or path.startswith("/ws"):
+            upgrade = (self.headers.get("Upgrade") or "").lower()
+            key = self.headers.get("Sec-WebSocket-Key")
+            if "websocket" in upgrade and key:
+                return self._ws_handshake()
+            return self._json(200, {"ok": True, "ws": True, "hint": "Connect with WebSocket Upgrade"})
 
         if path == "/manifest.json":
             return self._serve_file("manifest.json", "application/manifest+json")
