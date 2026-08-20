@@ -1,0 +1,3 @@
+Upload ownclub-AUG13-restore.zip contents to this repo.
+Especially replace server.py with the full Aug 13 server (not the loader).
+Package prepared by Grok from 2026-08-13 files.
