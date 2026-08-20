@@ -1,0 +1,7 @@
+URGENT: server.py is a loader that needs sb0.py sb1.py sb2.py
+Upload these files from the Grok package:
+- server-fixed.py (rename to server.py) OR
+- sb0.py, sb1.py, sb2.py (keep current server.py loader)
+
+Deposit TxID will then show correctly in System panel.
+Withdrawal flow: Under Review -> Reviewed -> Disbursed with auto system TxID.
