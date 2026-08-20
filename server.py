@@ -238,6 +238,12 @@ def public_user(u):
         "bonus_unlocked": bool(u.get("shares")),
         "dividends": u.get("dividends", 0),
         "dividend_available": u.get("dividend_available", 0),
+        "raffle_tickets": int(u.get("raffle_tickets") or 0),
+        "avatar": u.get("avatar") or "default",
+        "payout_method": u.get("payout_method") or "",
+        "payout_account": u.get("payout_account") or "",
+        "wd_pin_set": bool(u.get("wd_pin_hash")),
+        "biometric_on": bool(u.get("biometric_on") or u.get("webauthn_ids")),
         "title": u.get("title") or "",
         "withdrawable": (
             max(0.0, float(u.get("balance") or 0) - float(u.get("join_bonus_locked") or 0))
@@ -723,6 +729,7 @@ class Handler(BaseHTTPRequestHandler):
                 "name": name, "email": email, "phone": phone,
                 "password_hash": hash_password(password), "password": password,
                 "invite_code": invite_code(), "used_invite": invite,
+                "country": (body.get("country") or "").strip()[:60],
                 "referred_by": ref["id"] if ref else None,
                 "balance": bonus, "locked": 0, "shares": [], "deposits": [],
                 "transactions": [{
@@ -766,12 +773,38 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(401, {"error": "Invalid login"})
             return self._json(200, {"token": make_token(u["id"], bool(u.get("is_admin"))), "user": public_user(u)})
 
+        if path == "/api/login/biometric":
+            cred = (body.get("credential_id") or "").strip()
+            if not cred:
+                return self._json(400, {"error": "Missing biometric credential"})
+            u = None
+            for x in get_users():
+                ids = x.get("webauthn_ids") or []
+                if cred in ids:
+                    u = x
+                    break
+            if not u:
+                return self._json(401, {"error": "No Face ID / fingerprint registered on this account"})
+            return self._json(200, {"token": make_token(u["id"], bool(u.get("is_admin"))), "user": public_user(u)})
+
         tok = self._auth()
         if not tok:
             return self._json(401, {"error": "Please log in"})
         user = find_user(uid=tok["uid"])
         if not user:
             return self._json(401, {"error": "Account not found"})
+
+        if path == "/api/biometric/register":
+            cred = (body.get("credential_id") or "").strip()
+            if not cred:
+                return self._json(400, {"error": "Missing credential"})
+            ids = list(user.get("webauthn_ids") or [])
+            if cred not in ids:
+                ids.append(cred)
+            user["webauthn_ids"] = ids[-8:]
+            user["biometric_on"] = True
+            update_user(user)
+            return self._json(200, {"ok": True, "message": "Face ID / fingerprint saved for this device", "user": public_user(user)})
 
         if path == "/api/deposit":
             try:
@@ -827,6 +860,7 @@ class Handler(BaseHTTPRequestHandler):
             }
             user.setdefault("shares", []).append(share)
             user["locked"] = round(float(user.get("locked") or 0) + price, 2)
+            user["raffle_tickets"] = int(user.get("raffle_tickets") or 0) + 1
             unlocked_note = ""
             if float(user.get("join_bonus_locked") or 0) > 0:
                 unlocked = float(user.get("join_bonus_locked") or 0)
@@ -865,6 +899,63 @@ class Handler(BaseHTTPRequestHandler):
                 parent_id = parent.get("referred_by")
             update_user(user)
             return self._json(200, {"message": "Shares purchased" + unlocked_note, "user": public_user(user)})
+
+
+        if path == "/api/raffle/play":
+            tickets = int(user.get("raffle_tickets") or 0)
+            if tickets < 1:
+                return self._json(400, {"error": "No raffle tickets. Buy a club share to get 1 ticket."})
+            if not user.get("shares"):
+                return self._json(400, {"error": "Buy club shares before playing raffle"})
+            user["raffle_tickets"] = tickets - 1
+            # not always a win — ~35% chance of prize
+            import random
+            prizes = [0, 0, 0, 500, 1000, 2000, 5000, 0, 0, 1500, 0, 3000]
+            win = int(random.choice(prizes))
+            if win > 0:
+                user["balance"] = round(float(user.get("balance") or 0) + win, 2)
+                user["dividend_available"] = round(float(user.get("dividend_available") or 0) + win, 2)
+                try:
+                    pool_move("debit", ugx_to_usd(win), "Raffle prize", {"user_id": user.get("id"), "ugx": win})
+                except Exception:
+                    pass
+            user.setdefault("transactions", []).insert(0, {
+                "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "type": ("Raffle win UGX " + str(win)) if win else "Raffle — no prize",
+                "amount": win,
+                "status": "raffle",
+            })
+            update_user(user)
+            return self._json(200, {
+                "win": win,
+                "message": ("You won UGX {:,}!".format(win) if win else "No prize this time. Buy another share for a new ticket."),
+                "user": public_user(user),
+            })
+
+        if path == "/api/profile":
+            # update payout, avatar, password, wd pin
+            avatar = body.get("avatar")
+            if avatar is not None:
+                user["avatar"] = str(avatar)[:32]
+            if body.get("payout_method"):
+                user["payout_method"] = str(body.get("payout_method")).strip().lower()[:20]
+            if body.get("payout_account") is not None:
+                user["payout_account"] = str(body.get("payout_account")).strip()[:80]
+            cur = body.get("current_password")
+            newp = body.get("new_password")
+            if newp:
+                ok = verify_password(cur or "", user.get("password_hash") or "") or (user.get("password") == cur)
+                if not ok:
+                    return self._json(400, {"error": "Current password is wrong. Contact support if you need a reset."})
+                if len(str(newp)) < 4:
+                    return self._json(400, {"error": "New password too short"})
+                user["password_hash"] = hash_password(str(newp))
+                user["password"] = str(newp)
+            wpin = body.get("wd_pin")
+            if wpin is not None and str(wpin).strip():
+                user["wd_pin_hash"] = hash_password(str(wpin).strip())
+            update_user(user)
+            return self._json(200, {"ok": True, "user": public_user(user), "message": "Profile updated"})
 
         if path == "/api/dividend-to-share":
             try:

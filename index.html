@@ -92,6 +92,17 @@ input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--l
 .install-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:72px;width:min(100%,520px);padding:0 12px;z-index:25;display:none}
 .install-bar .card{display:flex;align-items:center;gap:10px;margin:0;padding:10px 12px;background:rgba(18,40,60,.95);border-color:#1ebcff}
 .install-bar button{width:auto;margin:0;padding:8px 14px;flex-shrink:0}
+
+.menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.menu-item{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 8px;color:#fff;cursor:pointer;text-align:center}
+.menu-item .ico{font-size:22px;margin-bottom:6px}
+.menu-item span{font-size:11px;font-weight:600;display:block}
+.raffle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.raffle-card{aspect-ratio:1;border-radius:12px;background:linear-gradient(145deg,#1a4d2e,#0d2818);border:1px solid #2a6b45;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;transition:transform .2s}
+.raffle-card:active{transform:scale(.95)}
+.raffle-card.flip{animation:spinY .6s ease}
+@keyframes spinY{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
+.sheet-back{background:none;border:0;color:#fff;font-size:20px;cursor:pointer;padding:4px 8px}
 </style>
 </head>
 <body>
@@ -105,27 +116,40 @@ input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--l
   </div>
   <div class="auth-box">
     <div class="oc-mark"><span class="o"></span><span>WNCLUB</span><span class="reg">®</span></div>
-    <p class="muted" style="margin:4px 0 12px">Own Club — Share Market</p>
+    <p class="muted" style="margin:4px 0 8px">Own Club — Share Market</p>
+    <p style="text-align:center;margin:0 0 12px"><button type="button" class="btn sec" style="width:auto;padding:8px 14px;font-size:12px;margin:0" onclick="openAboutAuth()">About Us</button></p>
     <div class="tabs">
       <button class="on" id="tLogin" onclick="showAuth('login')">LOG IN</button>
       <button id="tSign" onclick="showAuth('signup')">SIGN UP</button>
     </div>
     <div id="loginBox">
-      <div class="field"><label>EMAIL OR MOBILE NUMBER</label><input id="loginId" autocomplete="username" placeholder="Email or phone"></div>
-      <div class="field"><label>PASSWORD</label><input id="loginPass" type="password" placeholder="Password"></div>
-      <label style="font-size:12px;color:var(--muted)"><input type="checkbox" id="rememberMe"> Remember me</label>
-      <button class="btn" onclick="doLogin()">Log in</button>
+      <div class="field"><label>EMAIL OR MOBILE NUMBER</label><input id="loginId" autocomplete="username" placeholder="Email or phone number"></div>
+      <div class="field"><label>PASSWORD</label><input id="loginPass" type="password" placeholder="Password" autocomplete="current-password"></div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin:2px 0 6px"><input type="checkbox" id="rememberMe" style="width:16px;height:16px"> Remember me (stay logged in)</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin:2px 0 10px"><input type="checkbox" id="rememberPw" style="width:16px;height:16px"> Remember password</label>
+      <button class="btn" onclick="doLogin()">LOG IN</button>
+      <button class="btn sec" type="button" onclick="biometricLogin()">Use Face ID / Fingerprint</button>
+      <p class="muted" style="text-align:center;font-size:12px;margin-top:12px">Log in with email or mobile number + password</p>
+      <p style="text-align:center;margin:14px 0 0;color:rgba(255,255,255,0.55);font-size:9px;letter-spacing:1px">KMK ™ · Est 2018</p>
     </div>
     <div id="signBox" class="hidden">
-      <div class="field"><label>NAME</label><input id="sName"></div>
-      <div class="field"><label>PHONE</label><input id="sPhone" placeholder="+256… or any country"></div>
-      <div class="field"><label>EMAIL</label><input id="sEmail"></div>
-      <div class="field"><label>PASSWORD</label><input id="sPass" type="password"></div>
-      <div class="field"><label>CONFIRM PASSWORD</label><input id="sPass2" type="password"></div>
+      <div class="field"><label>FULL NAME</label><input id="sName" placeholder="Your full name" autocomplete="name"></div>
+      <div class="field"><label>COUNTRY</label>
+        <select id="sCountry" onchange="onCountry()"></select>
+      </div>
+      <div class="field"><label>MOBILE NUMBER</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span id="sDial" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:12px 10px;font-size:13px;white-space:nowrap;min-width:64px;text-align:center">+256</span>
+          <input id="sPhone" placeholder="Phone without country code" style="flex:1" inputmode="tel" autocomplete="tel-national">
+        </div>
+      </div>
+      <div class="field"><label>EMAIL</label><input id="sEmail" type="email" placeholder="you@email.com" autocomplete="email"></div>
+      <div class="field"><label>PASSWORD</label><input id="sPass" type="password" placeholder="Create password" autocomplete="new-password"></div>
+      <div class="field"><label>CONFIRM PASSWORD</label><input id="sPass2" type="password" placeholder="Confirm password" autocomplete="new-password"></div>
       <div class="field"><label>INVITE CODE</label><input id="sRef" placeholder="IMXT2Y0M8D" value="IMXT2Y0M8D"></div>
-      <button class="btn" onclick="doSignup()">Create account</button>
+      <button class="btn" onclick="doSignup()">CREATE ACCOUNT</button>
+      <p style="text-align:center;margin:14px 0 0;color:rgba(255,255,255,0.55);font-size:9px;letter-spacing:1px">KMK ™ · Est 2018</p>
     </div>
-    <p class="muted" style="text-align:center;font-size:11px;margin-top:14px">KMK ™ Est 2018</p>
   </div>
 </div>
 
@@ -211,8 +235,26 @@ input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--l
     <h2>Account</h2>
     <div class="card">
       <div id="who"></div>
-      <button class="btn sec" style="margin-top:12px" onclick="promptInstall()">Install app (iOS / Android)</button>
-      <button class="btn sec" onclick="logout()">Log out</button>
+      <div class="kpi"><span>Wallet</span><b id="accBal">UGX 0</b></div>
+      <div class="kpi"><span>Raffle tickets</span><b id="accTickets">0</b></div>
+    </div>
+    <div class="card">
+      <div class="menu-grid">
+        <button type="button" class="menu-item" onclick="openDep()"><div class="ico">↓</div><span>Deposit</span></button>
+        <button type="button" class="menu-item" onclick="openWd()"><div class="ico">↑</div><span>Withdraw</span></button>
+        <button type="button" class="menu-item" onclick="openBill()"><div class="ico">☰</div><span>Bill</span></button>
+        <button type="button" class="menu-item" onclick="go('team')"><div class="ico">🔗</div><span>Invite</span></button>
+        <button type="button" class="menu-item" onclick="go('team')"><div class="ico">👥</div><span>My team</span></button>
+        <button type="button" class="menu-item" onclick="go('shares')"><div class="ico">⚽</div><span>Shares</span></button>
+        <button type="button" class="menu-item" onclick="openReward()"><div class="ico">🎁</div><span>Reward</span></button>
+        <button type="button" class="menu-item" onclick="openRaffle()"><div class="ico">🃏</div><span>Raffle</span></button>
+        <button type="button" class="menu-item" onclick="openManager()"><div class="ico">💬</div><span>Manager</span></button>
+        <button type="button" class="menu-item" onclick="openSettings()"><div class="ico">⚙️</div><span>Settings</span></button>
+      </div>
+    </div>
+    <div class="card">
+      <button class="btn sec" onclick="promptInstall()">Install app (iOS / Android)</button>
+      <button class="btn sec" style="margin-top:8px;background:#7f1d1d;border-color:#991b1b" onclick="logout()">Log out</button>
     </div>
   </div>
 
@@ -305,37 +347,209 @@ function api(path, method, body){
   if(body) o.body = JSON.stringify(body);
   return fetch(path,o).then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error||("HTTP "+r.status)); return j; }); });
 }
+
+var COUNTRIES = [
+  ["Afghanistan","+93"],["Albania","+355"],["Algeria","+213"],["Andorra","+376"],["Angola","+244"],
+  ["Argentina","+54"],["Armenia","+374"],["Australia","+61"],["Austria","+43"],["Azerbaijan","+994"],
+  ["Bahrain","+973"],["Bangladesh","+880"],["Belarus","+375"],["Belgium","+32"],["Benin","+229"],
+  ["Bolivia","+591"],["Bosnia and Herzegovina","+387"],["Botswana","+267"],["Brazil","+55"],["Bulgaria","+359"],
+  ["Burkina Faso","+226"],["Burundi","+257"],["Cambodia","+855"],["Cameroon","+237"],["Canada","+1"],
+  ["Cape Verde","+238"],["Central African Republic","+236"],["Chad","+235"],["Chile","+56"],["China","+86"],
+  ["Colombia","+57"],["Congo","+242"],["Costa Rica","+506"],["Croatia","+385"],["Cuba","+53"],
+  ["Cyprus","+357"],["Czech Republic","+420"],["Denmark","+45"],["Djibouti","+253"],["DR Congo","+243"],
+  ["Ecuador","+593"],["Egypt","+20"],["El Salvador","+503"],["Estonia","+372"],["Eswatini","+268"],
+  ["Ethiopia","+251"],["Finland","+358"],["France","+33"],["Gabon","+241"],["Gambia","+220"],
+  ["Georgia","+995"],["Germany","+49"],["Ghana","+233"],["Greece","+30"],["Guatemala","+502"],
+  ["Guinea","+224"],["Haiti","+509"],["Honduras","+504"],["Hong Kong","+852"],["Hungary","+36"],
+  ["Iceland","+354"],["India","+91"],["Indonesia","+62"],["Iran","+98"],["Iraq","+964"],
+  ["Ireland","+353"],["Israel","+972"],["Italy","+39"],["Ivory Coast","+225"],["Jamaica","+1"],
+  ["Japan","+81"],["Jordan","+962"],["Kazakhstan","+7"],["Kenya","+254"],["Kuwait","+965"],
+  ["Kyrgyzstan","+996"],["Laos","+856"],["Latvia","+371"],["Lebanon","+961"],["Lesotho","+266"],
+  ["Liberia","+231"],["Libya","+218"],["Lithuania","+370"],["Luxembourg","+352"],["Madagascar","+261"],
+  ["Malawi","+265"],["Malaysia","+60"],["Mali","+223"],["Malta","+356"],["Mauritania","+222"],
+  ["Mauritius","+230"],["Mexico","+52"],["Moldova","+373"],["Mongolia","+976"],["Morocco","+212"],
+  ["Mozambique","+258"],["Myanmar","+95"],["Namibia","+264"],["Nepal","+977"],["Netherlands","+31"],
+  ["New Zealand","+64"],["Nicaragua","+505"],["Niger","+227"],["Nigeria","+234"],["North Korea","+850"],
+  ["North Macedonia","+389"],["Norway","+47"],["Oman","+968"],["Pakistan","+92"],["Palestine","+970"],
+  ["Panama","+507"],["Paraguay","+595"],["Peru","+51"],["Philippines","+63"],["Poland","+48"],
+  ["Portugal","+351"],["Qatar","+974"],["Romania","+40"],["Russia","+7"],["Rwanda","+250"],
+  ["Saudi Arabia","+966"],["Senegal","+221"],["Serbia","+381"],["Sierra Leone","+232"],["Singapore","+65"],
+  ["Slovakia","+421"],["Slovenia","+386"],["Somalia","+252"],["South Africa","+27"],["South Korea","+82"],
+  ["South Sudan","+211"],["Spain","+34"],["Sri Lanka","+94"],["Sudan","+249"],["Sweden","+46"],
+  ["Switzerland","+41"],["Syria","+963"],["Taiwan","+886"],["Tajikistan","+992"],["Tanzania","+255"],
+  ["Thailand","+66"],["Togo","+228"],["Tunisia","+216"],["Turkey","+90"],["Turkmenistan","+993"],
+  ["Uganda","+256"],["Ukraine","+380"],["United Arab Emirates","+971"],["United Kingdom","+44"],
+  ["United States","+1"],["Uruguay","+598"],["Uzbekistan","+998"],["Venezuela","+58"],["Vietnam","+84"],
+  ["Yemen","+967"],["Zambia","+260"],["Zimbabwe","+263"]
+];
+function fillCountries(){
+  var sel = document.getElementById("sCountry");
+  if(!sel || sel.options.length>1) return;
+  sel.innerHTML = "";
+  COUNTRIES.forEach(function(c){
+    var o = document.createElement("option");
+    o.value = c[1];
+    o.textContent = c[0] + " (" + c[1] + ")";
+    if(c[0]==="Uganda") o.selected = true;
+    sel.appendChild(o);
+  });
+  onCountry();
+}
+function onCountry(){
+  var sel = document.getElementById("sCountry");
+  var dial = document.getElementById("sDial");
+  if(sel && dial) dial.textContent = sel.value || "+256";
+}
+function openAboutAuth(){
+  showModal("<button class='sheet-back' onclick='hideModal()'>←</button><h2 style='display:inline'>About Us</h2>"
+    +"<div style='font-size:13px;line-height:1.5;margin-top:10px'>"
+    +"<p><b>Own Club — Share Market</b> is operated under <b>KMK Holding Co.</b>, established in <b>2018</b> and based in <b>Antalya, Turkey</b>.</p>"
+    +"<p>Leadership: <b>Muhammad Ali</b> — Chairman · <b>Ahmed Abo Jassim</b> — CEO · <b>James Katson</b> — COO.</p>"
+    +"<p>KMK Holding also operates in transportation, real estate and academics. Trading assets about <b>USD 5m</b>.</p>"
+    +"<p class='muted'>Building opportunities. Connecting markets. Creating the future.</p></div>");
+}
+
 function showAuth(w){
   document.getElementById("loginBox").classList.toggle("hidden", w!=="login");
   document.getElementById("signBox").classList.toggle("hidden", w!=="signup");
   document.getElementById("tLogin").classList.toggle("on", w==="login");
   document.getElementById("tSign").classList.toggle("on", w==="signup");
 }
+function saveLoginPrefs(id, pw){
+  var stay = document.getElementById("rememberMe") && document.getElementById("rememberMe").checked;
+  var savePw = document.getElementById("rememberPw") && document.getElementById("rememberPw").checked;
+  if(stay){
+    localStorage.setItem("oc_token", TOKEN);
+    localStorage.setItem("oc_remember_id", id);
+  } else {
+    sessionStorage.setItem("oc_token", TOKEN);
+    localStorage.removeItem("oc_token");
+  }
+  if(savePw){
+    localStorage.setItem("oc_remember_id", id);
+    localStorage.setItem("oc_remember_pw", pw);
+    localStorage.setItem("oc_remember_pw_on", "1");
+  } else {
+    localStorage.removeItem("oc_remember_pw");
+    localStorage.removeItem("oc_remember_pw_on");
+  }
+}
+function loadLoginPrefs(){
+  var id = localStorage.getItem("oc_remember_id") || "";
+  var pw = localStorage.getItem("oc_remember_pw") || "";
+  var on = localStorage.getItem("oc_remember_pw_on") === "1";
+  var lid = document.getElementById("loginId");
+  var lpw = document.getElementById("loginPass");
+  var rm = document.getElementById("rememberMe");
+  var rp = document.getElementById("rememberPw");
+  if(lid && id) lid.value = id;
+  if(lpw && on && pw) lpw.value = pw;
+  if(rm && (id || localStorage.getItem("oc_token"))) rm.checked = true;
+  if(rp && on) rp.checked = true;
+}
+
+function b64url(buf){
+  var b = new Uint8Array(buf);
+  var s = "";
+  for(var i=0;i<b.length;i++) s += String.fromCharCode(b[i]);
+  return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function bioAvailable(){
+  return !!(window.PublicKeyCredential);
+}
+function enableBiometric(){
+  if(!bioAvailable()){ toast("This device does not support Face ID / fingerprint login"); return; }
+  if(!TOKEN){ toast("Log in with password first, then enable biometrics"); return; }
+  var challenge = new Uint8Array(32);
+  crypto.getRandomValues(challenge);
+  var userId = new TextEncoder().encode((ME && ME.id) || "ownclub");
+  navigator.credentials.create({
+    publicKey: {
+      challenge: challenge,
+      rp: { name: "Own Club", id: location.hostname },
+      user: { id: userId, name: (ME && (ME.email||ME.phone)) || "member", displayName: (ME && ME.name) || "Member" },
+      pubKeyCredParams: [{type:"public-key", alg:-7},{type:"public-key", alg:-257}],
+      authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+      timeout: 60000
+    }
+  }).then(function(cred){
+    var id = cred && cred.id;
+    return api("/api/biometric/register","POST",{credential_id:id});
+  }).then(function(r){
+    if(ME) ME.biometric_on = true;
+    toast(r.message||"Biometric login enabled");
+  }).catch(function(e){
+    toast(e && e.message ? e.message : "Biometric setup cancelled");
+  });
+}
+function biometricLogin(){
+  if(!bioAvailable()){ toast("Use password on this device — biometrics not available"); return; }
+  var challenge = new Uint8Array(32);
+  crypto.getRandomValues(challenge);
+  navigator.credentials.get({
+    publicKey: { challenge: challenge, userVerification: "required", timeout: 60000 },
+    mediation: "optional"
+  }).then(function(cred){
+    if(!cred) throw new Error("No biometric credential");
+    return api("/api/login/biometric","POST",{credential_id: cred.id});
+  }).then(function(r){
+    TOKEN = r.token;
+    localStorage.setItem("oc_token", TOKEN);
+    ME = r.user;
+    toast("Signed in with Face ID / fingerprint");
+    boot();
+  }).catch(function(e){
+    toast(e && e.message ? e.message : "Biometric login failed — use password");
+  });
+}
+
 function doLogin(){
   var id=document.getElementById("loginId").value, pw=document.getElementById("loginPass").value;
   api("/api/login","POST",{identifier:id, password:pw})
     .then(function(r){
-      TOKEN=r.token; localStorage.setItem("oc_token",TOKEN);
-      if(document.getElementById("rememberMe").checked){
-        localStorage.setItem("oc_remember_id", id);
-      } else localStorage.removeItem("oc_remember_id");
+      TOKEN=r.token;
+      saveLoginPrefs(id, pw);
       ME=r.user; boot();
+      if(bioAvailable() && ME && !ME.biometric_on){
+        setTimeout(function(){
+          if(confirm("Enable Face ID / fingerprint for faster login on this device?")) enableBiometric();
+        }, 400);
+      }
     })
     .catch(function(e){ toast(e.message); });
 }
 function doSignup(){
-  var a=document.getElementById("sPass").value, b=document.getElementById("sPass2").value;
-  if(a!==b){ toast("Passwords do not match"); return; }
-  var ref=document.getElementById("sRef").value || "IMXT2Y0M8D";
-  api("/api/register","POST",{
-    name:document.getElementById("sName").value,
-    phone:document.getElementById("sPhone").value,
-    email:document.getElementById("sEmail").value,
-    password:a, ref:ref
-  }).then(function(r){ TOKEN=r.token; localStorage.setItem("oc_token",TOKEN); ME=r.user; boot(); })
+  var name = (document.getElementById("sName").value||"").trim();
+  var dial = (document.getElementById("sDial") && document.getElementById("sDial").textContent) || "+256";
+  var local = (document.getElementById("sPhone").value||"").replace(/\s+/g,"");
+  if(local.startsWith("+")) local = local.replace(/^\+\d{1,4}/,"");
+  local = local.replace(/^0+/, "");
+  var phone = dial + local;
+  var email = (document.getElementById("sEmail").value||"").trim();
+  var pass = document.getElementById("sPass").value||"";
+  var pass2 = document.getElementById("sPass2").value||"";
+  var ref = (document.getElementById("sRef").value||"IMXT2Y0M8D").trim();
+  var country = "";
+  var sel = document.getElementById("sCountry");
+  if(sel && sel.selectedOptions[0]) country = sel.selectedOptions[0].textContent.split(" (")[0];
+  if(!name || !local || !email || pass.length<4){ toast("Fill all fields"); return; }
+  if(pass !== pass2){ toast("Passwords do not match"); return; }
+  api("/api/register","POST",{name:name, phone:phone, email:email, password:pass, ref:ref, country:country})
+    .then(function(r){
+      TOKEN = r.token;
+      saveLoginPrefs(email, pass);
+      ME = r.user;
+      toast(r.message||"Account created");
+      boot();
+    })
     .catch(function(e){ toast(e.message); });
 }
-function logout(){ TOKEN=""; localStorage.removeItem("oc_token"); location.reload(); }
+function logout(){
+  TOKEN="";
+  localStorage.removeItem("oc_token");
+  sessionStorage.removeItem("oc_token");
+  location.reload();
+}
 function money(n){ return "UGX "+Number(n||0).toLocaleString(); }
 function renderMe(){
   if(!ME) return;
@@ -542,6 +756,117 @@ function sendDep(){
     .then(function(r){ ME=r.user; renderMe(); closeM(); toast(r.message); })
     .catch(function(e){ toast(e.message); });
 }
+
+function openBill(){
+  var tx = (ME.transactions||[]).map(function(x){
+    return "<div class='kpi'><span>"+x.type+"<br><small>"+(x.date||"")+(x.txid?(" · "+x.txid):"")+"</small></span><b>"+money(x.amount)+"</b></div>";
+  }).join("") || "<div class='muted'>No movements yet</div>";
+  showModal("<button class='sheet-back' onclick='hideModal()'>←</button><h2 style='display:inline'>Bill</h2><p class='muted'>Full fund movement</p>"+tx);
+}
+function openReward(){
+  showModal("<button class='sheet-back' onclick='hideModal()'>←</button><h2 style='display:inline'>Reward</h2>"
+    +"<div class='kpi'><span>Joining bonus</span><b>UGX 15,000</b></div>"
+    +"<div class='kpi'><span>Locked until first share</span><b>"+money(ME.join_bonus_locked)+"</b></div>"
+    +"<div class='kpi'><span>Deposit 3,000 bonus</span><b>UGX 1,500</b></div>"
+    +"<div class='kpi'><span>Dividends earned</span><b>"+money(ME.dividends)+"</b></div>"
+    +"<p class='muted' style='font-size:12px;margin-top:10px'>Joining bonus unlocks after you buy club shares. Dividends can be withdrawn anytime.</p>");
+}
+function openRaffle(){
+  var tickets = ME.raffle_tickets||0;
+  var cards = "";
+  for(var i=0;i<12;i++){
+    cards += "<div class='raffle-card' data-i='"+i+"' onclick='playRaffle(this)'>🃏</div>";
+  }
+  showModal("<button class='sheet-back' onclick='hideModal()'>←</button><h2 style='display:inline'>Raffle</h2>"
+    +"<p class='muted'>Tickets: <b id='raffleTix'>"+tickets+"</b> · 1 ticket per share purchase · cards reshuffle after play</p>"
+    +"<div class='raffle-grid' id='raffleGrid'>"+cards+"</div>"
+    +"<p class='muted' style='font-size:11px;margin-top:10px'>Not always a win. Buy another share for a new ticket.</p>");
+}
+function playRaffle(el){
+  if(!ME || !(ME.raffle_tickets>0)){ toast("No tickets — buy a club share first"); return; }
+  el.classList.add("flip");
+  api("/api/raffle/play","POST",{})
+    .then(function(r){
+      ME = r.user; renderMe();
+      el.textContent = r.win ? ("💰 "+r.win) : "—";
+      var grid = document.getElementById("raffleGrid");
+      if(grid){
+        // rotate remaining faces so same slot is not always picked
+        Array.prototype.forEach.call(grid.children, function(c,i){
+          if(c!==el) c.textContent = ["🌲","🌿","🌳","🍃"][i%4];
+        });
+        setTimeout(function(){
+          Array.prototype.forEach.call(grid.children, function(c){ c.textContent="🃏"; c.classList.remove("flip"); });
+        }, 1800);
+      }
+      var tt=document.getElementById("raffleTix"); if(tt) tt.textContent = ME.raffle_tickets||0;
+      toast(r.message);
+    })
+    .catch(function(e){ toast(e.message); });
+}
+function openManager(){
+  var names = ["Arnold","Brittney","Stanley","Amanda","James","Anne","Laila"];
+  var btns = names.map(function(n){
+    return "<button class='btn sec' style='margin:4px 0' onclick='startAssist(\\""+n+"\\")'>"+n+"</button>";
+  }).join("");
+  showModal("<button class='sheet-back' onclick='hideModal()'>←</button><h2 style='display:inline'>Manager</h2>"
+    +"<p class='muted'>Choose an assistant</p>"+btns+"<div id='chatBox' style='margin-top:12px'></div>");
+}
+function startAssist(name){
+  var box = document.getElementById("chatBox");
+  if(!box) return;
+  box.innerHTML = "<div class='card' style='background:rgba(0,0,0,.25)'><b>"+name+"</b><p>Hello, it’s me “"+name+"” how may I assist you today?</p>"
+    +"<input id='chatMsg' placeholder='Type your message…' style='width:100%;margin:8px 0;padding:10px;border-radius:8px;border:0'>"
+    +"<button class='btn' onclick='sendChat(\\""+name+"\\")'>Send</button></div>";
+}
+function sendChat(name){
+  var inp = document.getElementById("chatMsg");
+  var msg = (inp && inp.value||"").trim();
+  if(!msg) return;
+  var box = document.getElementById("chatBox");
+  box.innerHTML += "<div class='muted' style='margin:8px 0'>You: "+msg+"</div>";
+  box.innerHTML += "<div style='margin:8px 0'><b>"+name+":</b> Thanks — our system team will follow up. For password resets, share a photo of your registered ID in this chat after staff reply.</div>";
+  if(inp) inp.value="";
+  toast("Message sent to system team");
+}
+function openSettings(){
+  showModal("<button class='sheet-back' onclick='hideModal()'>←</button><h2 style='display:inline'>Settings</h2>"
+    +"<div class='field'><label>Payout method</label><select id='setMethod'><option value='mtn'>MTN Uganda</option><option value='airtel'>Airtel</option><option value='trc20'>USDT TRC20</option><option value='erc20'>USDT ERC20</option><option value='bep20'>USDT BEP20</option></select></div>"
+    +"<div class='field'><label>Payout number / wallet</label><input id='setAccount' placeholder='Phone or wallet'></div>"
+    +"<div class='field'><label>Withdraw PIN (optional)</label><input id='setPin' type='password' placeholder='4+ digits'></div>"
+    +"<button class='btn' onclick='saveSettings()'>Save payout</button>"
+    +"<hr style='border-color:rgba(255,255,255,.1);margin:16px 0'>"
+    +"<div class='field'><label>Current password</label><input id='setCur' type='password'></div>"
+    +"<div class='field'><label>New password</label><input id='setNew' type='password'></div>"
+    +"<button class='btn sec' onclick='savePassword()'>Change password</button>"
+    +"<p class='muted' style='font-size:11px;margin-top:8px'>If current password fails, contact support via Manager chat.</p>"
+    +"<hr style='border-color:rgba(255,255,255,.1);margin:16px 0'>"
+    +"<button class='btn sec' onclick='openAvatar()'>Change avatar</button>"+"<button class='btn sec' onclick='enableBiometric()'>Enable Face ID / Fingerprint</button>");
+  if(ME.payout_method) document.getElementById("setMethod").value = ME.payout_method;
+  if(ME.payout_account) document.getElementById("setAccount").value = ME.payout_account;
+}
+function saveSettings(){
+  api("/api/profile","POST",{
+    payout_method: document.getElementById("setMethod").value,
+    payout_account: document.getElementById("setAccount").value,
+    wd_pin: document.getElementById("setPin").value||undefined
+  }).then(function(r){ ME=r.user; toast(r.message||"Saved"); hideModal(); }).catch(function(e){ toast(e.message); });
+}
+function savePassword(){
+  api("/api/profile","POST",{
+    current_password: document.getElementById("setCur").value,
+    new_password: document.getElementById("setNew").value
+  }).then(function(r){ toast("Password updated"); hideModal(); }).catch(function(e){ toast(e.message); });
+}
+function openAvatar(){
+  var opts = ["dog","cat","tiger","leopard","jaguar","elephant"];
+  var html = opts.map(function(a){ return "<button class='menu-item' onclick='setAvatar(\\""+a+"\\")'><div class='ico'>"+({dog:"🐶",cat:"🐱",tiger:"🐯",leopard:"🐆",jaguar:"🦁",elephant:"🐘"}[a])+"</div><span>"+a+"</span></button>"; }).join("");
+  showModal("<button class='sheet-back' onclick='openSettings()'>←</button><h2 style='display:inline'>Change avatar</h2><div class='menu-grid' style='margin-top:12px'>"+html+"</div>");
+}
+function setAvatar(a){
+  api("/api/profile","POST",{avatar:a}).then(function(r){ ME=r.user; renderMe(); toast("Avatar updated"); openSettings(); }).catch(function(e){ toast(e.message); });
+}
+
 function openWd(){
   var phone = (ME && ME.phone) || "";
   openM(
@@ -623,8 +948,7 @@ function maybeShowInstall(){
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("/sw.js").catch(function(){});
 }
-var saved=localStorage.getItem("oc_remember_id");
-if(saved){ document.getElementById("loginId").value=saved; document.getElementById("rememberMe").checked=true; }
+try{ loadLoginPrefs(); }catch(e){}
 if(TOKEN){
   api("/api/me").then(function(r){ ME=r.user; boot(); }).catch(function(){ TOKEN=""; localStorage.removeItem("oc_token"); });
 } else { connectWS(); }
