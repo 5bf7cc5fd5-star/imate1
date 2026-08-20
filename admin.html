@@ -62,6 +62,17 @@
 .kpi .head span{font-size:13px;color:#475569;font-weight:600}
 .kpi .head a{font-size:12px;color:var(--blue);text-decoration:none;font-weight:600}
 .kpi .val{font-size:26px;font-weight:800;margin:4px 0 10px}
+.chart-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:14px 0;box-shadow:0 4px 14px rgba(15,23,42,.04)}
+.chart-card h3{margin:0 0 12px;font-size:15px;color:#334155}
+.pies{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0 8px}
+.pie-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:0 4px 14px rgba(15,23,42,.04)}
+.pie-card h3{margin:0 0 4px;font-size:13px;color:#334155;display:flex;justify-content:space-between}
+.pie-card h3 span{color:var(--blue);font-size:12px;cursor:pointer;font-weight:600}
+.pie-wrap{display:flex;align-items:center;gap:14px;min-height:140px}
+.pie-legend{font-size:12px;color:#475569;line-height:1.6}
+.pie-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+.hour-chart{width:100%;height:220px;display:block}
+@media(max-width:900px){.pies{grid-template-columns:1fr}}
 .spark{height:72px;width:100%}
 .spark path{fill:none;stroke:#2563eb;stroke-width:2}
 .spark circle{fill:#2563eb}
@@ -83,7 +94,7 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.3p
   .sidebar.open{transform:none}
   .menu-toggle{display:inline-flex}
 }
-</style>
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}</style>
 </head>
 <body>
 <div id="loginView" class="login-wrap">
@@ -138,14 +149,15 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.3p
     </div>
     <div class="content">
       <div class="promo">Turn your data into smarter decisions — Own Club System · KMK Holding Co.</div>
-      <p class="welcome" id="topWelcome">Welcome</p>
+      <p class="welcome" id="topWelcome">Welcome <span id="liveDot" style="display:inline-flex;align-items:center;gap:6px;margin-left:10px;font-size:12px;color:#16a34a;font-weight:700"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 #22c55e;animation:pulse 1.4s infinite"></span> LIVE</span></p>
 
       <section id="page-overview">
         <div class="tabs" id="rangeTabs">
           <button class="on" type="button" onclick="setRange(this,'day')">Day</button>
           <button type="button" onclick="setRange(this,'week')">Week</button>
           <button type="button" onclick="setRange(this,'month')">Month</button>
-          <span class="date" id="todayDate"></span>
+          <button type="button" onclick="setRange(this,'year')">Year</button>
+          <input type="date" id="todayDate" class="date" onclick="event.stopPropagation()" onchange="setRangeDate(this.value)">
         </div>
         <div class="kpi-grid">
           <button type="button" class="kpi" onclick="go('deposits')">
@@ -188,6 +200,34 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.3p
             <div class="val" id="kWdAmt">UGX 0</div>
             <svg class="spark" id="spark8" viewBox="0 0 200 72" preserveAspectRatio="none"></svg>
           </button>
+        </div>
+
+        <div class="chart-card">
+          <h3>Hourly activity</h3>
+          <svg class="hour-chart" id="hourChart" viewBox="0 0 720 220" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="pies">
+          <div class="pie-card">
+            <h3>Top clubs by share sales <span onclick="go('members')">View Report</span></h3>
+            <div class="pie-wrap">
+              <svg id="pieClubs" width="120" height="120" viewBox="0 0 42 42"></svg>
+              <div class="pie-legend" id="legClubs"></div>
+            </div>
+          </div>
+          <div class="pie-card">
+            <h3>Top payments <span onclick="go('deposits')">View Report</span></h3>
+            <div class="pie-wrap">
+              <svg id="piePay" width="120" height="120" viewBox="0 0 42 42"></svg>
+              <div class="pie-legend" id="legPay"></div>
+            </div>
+          </div>
+          <div class="pie-card">
+            <h3>Top leagues by sales <span onclick="go('members')">View Report</span></h3>
+            <div class="pie-wrap">
+              <svg id="pieLeague" width="120" height="120" viewBox="0 0 42 42"></svg>
+              <div class="pie-legend" id="legLeague"></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -233,6 +273,11 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.3p
 <script>
 var TOKEN = localStorage.getItem("oc_admin") || "";
 var USERS=[], DEPS=[], WDS=[], WS=null, WS_RETRY=0;
+var _reloadT = null;
+function scheduleReload(){
+  if(_reloadT) return;
+  _reloadT = setTimeout(function(){ _reloadT=null; loadAll(); }, 800);
+}
 function connectWS(){
   try{
     if(WS && (WS.readyState===0 || WS.readyState===1)) return;
@@ -243,10 +288,15 @@ function connectWS(){
     WS.onmessage = function(ev){
       try{
         var msg = JSON.parse(ev.data);
-        if(msg.event==="deposit_pending" || msg.event==="admin_notify" || msg.event==="deposit_update" || msg.event==="withdraw_pending" || msg.event==="withdraw_update"){
-          loadAll();
-          var n = document.getElementById("topWelcome");
-          if(n && msg.event==="deposit_pending"){ n.textContent = "New deposit pending — refresh list"; }
+        var live = document.getElementById("liveDot");
+        if(live) live.style.color = "#16a34a";
+        if(msg.event==="stats" && msg.data){
+          if(document.getElementById("kUsers") && msg.data.users!=null) document.getElementById("kUsers").textContent = msg.data.users;
+          if(document.getElementById("kPool") && msg.data.pool_usd!=null) document.getElementById("kPool").textContent = "$"+Number(msg.data.pool_usd).toLocaleString();
+          if(document.getElementById("kPend") && msg.data.pending_deposits!=null) document.getElementById("kPend").textContent = msg.data.pending_deposits;
+        }
+        if(msg.event==="deposit_pending" || msg.event==="admin_notify" || msg.event==="deposit_update" || msg.event==="withdraw_pending" || msg.event==="withdraw_update" || msg.event==="share_bought" || msg.event==="stats" || msg.event==="credit"){
+          scheduleReload();
         }
       }catch(e){}
     };
@@ -273,9 +323,10 @@ function showDash(u){
   document.getElementById("loginView").classList.add("hidden");
   document.getElementById("dashView").classList.remove("hidden");
   document.getElementById("topWelcome").textContent = "Welcome"+(u&&u.name? ", "+u.name : "");
-  document.getElementById("todayDate").textContent = new Date().toISOString().slice(0,10);
+  var td=document.getElementById("todayDate"); if(td){ if(td.tagName==="INPUT") td.value=new Date().toISOString().slice(0,10); else td.textContent=new Date().toISOString().slice(0,10); }
   loadAll();
   connectWS();
+  setInterval(function(){ if(!document.hidden) loadAll(); }, 8000);
 }
 function setRange(btn, range){
   document.querySelectorAll("#rangeTabs button").forEach(function(b){ b.classList.remove("on"); });
@@ -283,6 +334,111 @@ function setRange(btn, range){
   window._range = range || "day";
   loadAll();
 }
+function setRangeDate(val){
+  window._rangeDate = val;
+  loadAll();
+}
+function inRange(iso){
+  if(!iso) return true;
+  var d = String(iso).slice(0,10);
+  var base = window._rangeDate || new Date().toISOString().slice(0,10);
+  var r = window._range || "day";
+  if(r==="day") return d===base;
+  if(r==="week"){
+    var t = new Date(base), from = new Date(t); from.setDate(t.getDate()-6);
+    var x = new Date(d);
+    return x>=from && x<=t;
+  }
+  if(r==="month") return d.slice(0,7)===base.slice(0,7);
+  if(r==="year") return d.slice(0,4)===base.slice(0,4);
+  return true;
+}
+
+function hourLabel(h){
+  var hr = h%12; if(!hr) hr=12;
+  return hr+" "+(h<12?"AM":"PM");
+}
+function drawHourly(){
+  var svg = document.getElementById("hourChart");
+  if(!svg) return;
+  var hours = new Array(24).fill(0);
+  (DEPS||[]).forEach(function(d){
+    var t = d.created_at || d.date || "";
+    var m = String(t).match(/(\d{1,2}):/);
+    var h = m ? Number(m[1]) : 12;
+    if(h>=0 && h<24) hours[h] += Number(d.amount||0);
+  });
+  (USERS||[]).forEach(function(u){
+    (u.shares||[]).forEach(function(s){
+      var t = s.start || "";
+      var m = String(t).match(/T(\d{2})/);
+      var h = m ? Number(m[1]) : null;
+      if(h!=null) hours[h] += Number(s.price||0);
+    });
+  });
+  var max = Math.max.apply(null, hours.concat([1]));
+  var w=720, ht=220, pad=28, bw=(w-pad*2)/24*0.62, gap=(w-pad*2)/24;
+  var html = '<line x1="'+pad+'" y1="'+(ht-28)+'" x2="'+(w-10)+'" y2="'+(ht-28)+'" stroke="#e2e8f0"/>';
+  hours.forEach(function(v,i){
+    var x = pad + i*gap + 4;
+    var bh = (v/max)*(ht-50);
+    var y = ht-28-bh;
+    html += '<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+Math.max(bh,0)+'" rx="3" fill="#4f46e5"/>';
+    if(v>0) html += '<text x="'+(x+bw/2)+'" y="'+(y-4)+'" text-anchor="middle" font-size="8" fill="#334155">'+(v>=1000?(v/1000).toFixed(1)+"k":v)+'</text>';
+    html += '<text x="'+(x+bw/2)+'" y="'+(ht-12)+'" text-anchor="middle" font-size="7" fill="#64748b">'+hourLabel(i)+'</text>';
+  });
+  svg.innerHTML = html;
+}
+function pieSlices(el, items){
+  var svg = document.getElementById(el);
+  if(!svg) return;
+  var colors = ["#1e3a8a","#f97316","#3b82f6","#22c55e","#eab308","#a855f7"];
+  var total = items.reduce(function(s,x){return s+x.v;},0) || 1;
+  var r=15.915, circ=2*Math.PI*r, acc=0;
+  var html = '<circle cx="21" cy="21" r="'+r+'" fill="transparent" stroke="#e2e8f0" stroke-width="8"/>';
+  items.forEach(function(it,i){
+    var len = (it.v/total)*circ;
+    html += '<circle cx="21" cy="21" r="'+r+'" fill="transparent" stroke="'+colors[i%colors.length]+'" stroke-width="8" stroke-dasharray="'+len+' '+(circ-len)+'" stroke-dashoffset="'+(-acc)+'" transform="rotate(-90 21 21)"/>';
+    acc += len;
+  });
+  svg.innerHTML = html;
+}
+function drawFoodics(){
+  drawHourly();
+  var clubs={}, pay={}, leagues={};
+  (USERS||[]).forEach(function(u){
+    (u.shares||[]).forEach(function(s){
+      clubs[s.club||"Club"] = (clubs[s.club||"Club"]||0)+Number(s.price||0);
+      leagues[s.league||"League"] = (leagues[s.league||"League"]||0)+Number(s.price||0);
+    });
+  });
+  (DEPS||[]).forEach(function(d){
+    var m = (d.method||"momo").toLowerCase();
+    if(m.indexOf("usdt")>=0||m.indexOf("trc")>=0||m.indexOf("erc")>=0||m.indexOf("bep")>=0) m="USDT";
+    else if(m.indexOf("airtel")>=0) m="Airtel";
+    else m="MTN / MoMo";
+    pay[m] = (pay[m]||0)+Number(d.amount||0);
+  });
+  function top(obj){
+    return Object.keys(obj).map(function(k){return {n:k,v:obj[k]};}).sort(function(a,b){return b.v-a.v;}).slice(0,5);
+  }
+  var c=top(clubs), p=top(pay), l=top(leagues);
+  if(!c.length) c=[{n:"No sales yet",v:1}];
+  if(!p.length) p=[{n:"No payments yet",v:1}];
+  if(!l.length) l=[{n:"No leagues yet",v:1}];
+  pieSlices("pieClubs", c);
+  pieSlices("piePay", p);
+  pieSlices("pieLeague", l);
+  var colors = ["#1e3a8a","#f97316","#3b82f6","#22c55e","#eab308"];
+  function leg(id, items){
+    var el=document.getElementById(id); if(!el) return;
+    el.innerHTML = items.map(function(it,i){
+      return "<div><i style='background:"+colors[i%colors.length]+"'></i>"+it.n+" · "+(it.v===1 && it.n.indexOf("No ")===0 ? "—" : money(it.v))+"</div>";
+    }).join("");
+  }
+  leg("legClubs", c); leg("legPay", p); leg("legLeague", l);
+}
+
 function go(p){
   ["overview","deposits","withdrawals","members","credits","team"].forEach(function(n){
     var el=document.getElementById("page-"+n); if(el) el.classList.toggle("hidden", n!==p);

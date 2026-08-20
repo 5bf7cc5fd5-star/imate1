@@ -441,6 +441,34 @@ def pay_join_dividend(parent, child, amount, note):
     except Exception:
         pass
 
+
+def admin_stats_payload():
+    users = get_users()
+    wds = load(WD_FILE, [])
+    deps = []
+    for u in users:
+        for d in u.get("deposits") or []:
+            x = dict(d)
+            x["user_id"] = u.get("id")
+            x["user_name"] = u.get("name")
+            deps.append(x)
+    pool = get_pool()
+    return {
+        "users": len(users),
+        "pool_usd": pool.get("usd"),
+        "pending_deposits": sum(1 for d in deps if d.get("status") in ("pending","under_review")),
+        "pending_wd": sum(1 for w in wds if w.get("status") in ("under_review","pending")),
+        "ts": int(time.time()),
+    }
+
+def stats_broadcast_loop():
+    while True:
+        try:
+            ws_broadcast("stats", admin_stats_payload(), admin_only=True)
+        except Exception as e:
+            print("[ws] stats", e)
+        time.sleep(4)
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         print(f"[{datetime.now().strftime('%H:%M:%S')}] {args[0] if args else fmt}", flush=True)
@@ -898,6 +926,10 @@ class Handler(BaseHTTPRequestHandler):
                 update_user(parent)
                 parent_id = parent.get("referred_by")
             update_user(user)
+            try:
+                ws_broadcast("share_bought", {"user_id": user.get("id")}, admin_only=True)
+            except Exception:
+                pass
             return self._json(200, {"message": "Shares purchased" + unlocked_note, "user": public_user(user)})
 
 
@@ -1299,6 +1331,7 @@ def main():
     print(f"[boot] ws ws://0.0.0.0:{PORT}/ws", flush=True)
     threading.Thread(target=seed, daemon=True).start()
     threading.Thread(target=market_broadcast_loop, daemon=True).start()
+    threading.Thread(target=stats_broadcast_loop, daemon=True).start()
     httpd.serve_forever()
 
 if __name__ == "__main__":
