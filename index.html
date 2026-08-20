@@ -33,11 +33,26 @@ input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--l
 .club{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #123}
 .club img{width:40px;height:40px;object-fit:contain;background:#fff;border-radius:8px}
 .kpi{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #123}
-.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(100%,520px);display:grid;grid-template-columns:repeat(5,1fr);background:#071018;border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:20}
-.nav button{border:0;background:none;color:#7a8;font-size:10px}
-.nav button b{display:block;font-size:16px}
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(100%,520px);display:grid;grid-template-columns:repeat(6,1fr);background:#071018;border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:20}
+.nav button{border:0;background:none;color:#7a8;font-size:9px}
+.nav button b{display:block;font-size:15px}
 .nav button.on{color:var(--green)}
 .hidden{display:none!important}
+.mkt-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #123}
+.mkt-row img{width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;flex-shrink:0}
+.mkt-mid{flex:1;min-width:0}
+.mkt-mid b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mkt-bars{display:flex;align-items:flex-end;gap:2px;height:28px;margin-top:4px}
+.mkt-bars i{display:block;width:4px;border-radius:2px 2px 0 0;background:#1ebcff;min-height:4px;transition:height .4s ease}
+.mkt-right{text-align:right;flex-shrink:0}
+.mkt-right .px{font-weight:800;font-size:13px}
+.mkt-right .chg{font-size:11px;font-weight:700}
+.mkt-right .up{color:var(--green)}.mkt-right .dn{color:#f87171}
+.mkt-ticker{overflow:hidden;white-space:nowrap;background:#0a1520;border:1px solid var(--line);border-radius:10px;padding:8px 0;margin:8px 0 12px;position:relative}
+.mkt-ticker .track{display:inline-block;padding-left:100%;animation:ticker 28s linear infinite;font-size:12px}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#20e58b;margin-right:6px;box-shadow:0 0 8px #20e58b;animation:livePulse 1.2s ease-in-out infinite}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#123;padding:10px 14px;border-radius:10px;display:none;z-index:40;max-width:90%}
 /* Auth with football pitch + racing track (from ~4 days ago style) */
 #auth{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden;padding:20px 14px}
@@ -125,6 +140,9 @@ input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--l
     </div>
     <div class="card">
       <div class="kpi"><span>Available</span><b id="bal">UGX 0</b></div>
+      <div class="kpi"><span>Held (withdrawals)</span><b id="pendingWd">UGX 0</b></div>
+      <div class="kpi"><span>Joining bonus (locked)</span><b id="joinLock">UGX 0</b></div>
+      <div class="kpi"><span>Withdrawable</span><b id="withdrawable">UGX 0</b></div>
       <div class="kpi"><span>Invite code</span><b id="inv">—</b></div>
       <button class="btn" onclick="openDep()">DEPOSIT</button>
       <button class="btn sec" onclick="openWd()">WITHDRAW</button>
@@ -136,6 +154,14 @@ input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--l
     </div>
   </div>
 
+  <div id="page-market" class="hidden">
+    <h2><span class="live-dot"></span>Live Market</h2>
+    <p class="muted" style="margin-top:0">Club stocks · real-time tracking · tap a club to buy shares</p>
+    <div class="mkt-ticker"><div class="track" id="mktTicker">Loading market…</div></div>
+    <div class="league" id="mktLeagues"></div>
+    <div class="card" style="padding:8px 12px" id="mktList">Loading…</div>
+  </div>
+
   <div id="page-shares" class="hidden">
     <h2>Buy Club Shares</h2>
     <p class="muted" style="margin-top:0">1–4 week lock · daily coupon return</p>
@@ -144,7 +170,31 @@ input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--l
   </div>
 
   <div id="page-income" class="hidden">
-    <h2>Income</h2>
+    <h2>Dividends & income</h2>
+    <div class="card">
+      <div class="kpi"><span>Total dividends</span><b id="divTotal">UGX 0</b></div>
+      <div class="kpi"><span>Withdrawable now</span><b id="divWd">UGX 0</b></div>
+      <p class="muted" style="font-size:12px;line-height:1.45;margin:8px 0">
+        <b>Dividends — withdraw immediately</b> (no share purchase required), or add them to a club share.<br>
+        Join dividend: same moment they sign up (50% of their joining bonus).<br>
+        Deposit dividend: when their deposit is approved (50% of that deposit).<br>
+        Weekly dividend: 7 days after you become Junior Shareholder (2 directs), then every 7 days (20% of each joining deposit).<br>
+        <b>Joining bonus and deposit funds</b> stay locked until that member buys club shares.
+      </p>
+      <button class="btn" onclick="openWd()">Withdraw dividends</button>
+      <button class="btn sec" onclick="divToShare()">Add dividends to club share</button>
+    </div>
+    <h2>Income & fund movement</h2>
+    <div class="card" style="font-size:12px;line-height:1.45">
+      <b>How withdrawals work</b>
+      <div class="muted" style="margin-top:6px">
+        1) Joining bonus (UGX 15,000) is credited on sign-up but <b>locked</b> until you buy club shares.<br>2) Buy club shares to unlock withdrawals and the joining bonus.<br>
+        3) Submit amount + payout method (MTN / Airtel must match your registered phone, or USDT wallet).<br>
+        4) <b>5% fee</b> is deducted · funds move to <b>Under Review</b> with a system TxID (yellow).<br>
+        5) System <b>Approves / Disburses</b> (green) or <b>Rejects</b> (red — amount returns to your Available balance).<br>
+        6) Actual payout is sent on the method you chose after approval.
+      </div>
+    </div>
     <div class="card" id="txList">No movement yet</div>
   </div>
 
@@ -168,6 +218,7 @@ input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--l
 
   <nav class="nav">
     <button class="on" onclick="go('home',this)"><b>⌂</b>Home</button>
+    <button onclick="go('market',this)"><b>📈</b>Market</button>
     <button onclick="go('shares',this)"><b>⚽</b>Shares</button>
     <button onclick="go('income',this)"><b>₿</b>Income</button>
     <button onclick="go('team',this)"><b>👥</b>Team</button>
@@ -190,7 +241,63 @@ input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--l
 
 <script>
 var TOKEN = localStorage.getItem("oc_token") || "";
-var ME = null, CLUBS = [], LEAGUES = [], LEAGUE = "", deferredPrompt = null;
+var ME = null, CLUBS = [], LEAGUES = [], LEAGUE = "", MKT_LEAGUE = "", deferredPrompt = null;
+var MARKET = {}, MKT_TIMER = null, WS = null, WS_RETRY = 0;
+function connectWS(){
+  try{
+    if(WS && (WS.readyState===0 || WS.readyState===1)) return;
+    var proto = location.protocol==="https:" ? "wss://" : "ws://";
+    var url = proto + location.host + "/ws" + (TOKEN ? ("?token="+encodeURIComponent(TOKEN)) : "");
+    WS = new WebSocket(url);
+    WS.onopen = function(){
+      WS_RETRY = 0;
+      if(TOKEN) try{ WS.send(JSON.stringify({type:"auth", token:TOKEN})); }catch(e){}
+      try{ WS.send(JSON.stringify({type:"subscribe_market"})); }catch(e){}
+    };
+    WS.onmessage = function(ev){
+      try{
+        var msg = JSON.parse(ev.data);
+        if(msg.event==="market" && msg.data && msg.data.clubs){
+          msg.data.clubs.forEach(function(c){
+            MARKET[c.id] = {
+              price: c.price,
+              open: c.open || c.price,
+              hist: c.hist || (MARKET[c.id]&&MARKET[c.id].hist) || [c.price],
+              chg: c.change_pct != null ? c.change_pct : 0
+            };
+          });
+          if(document.getElementById("page-market") && !document.getElementById("page-market").classList.contains("hidden")){
+            renderMarket(); renderTicker();
+          }
+          // refresh share list live tags
+          try{ drawClubs(); }catch(e){}
+        }
+        if(msg.event==="deposit_update" && msg.data && msg.data.user){
+          if(ME && msg.data.user.id===ME.id){
+            ME = msg.data.user; renderMe();
+            toast("Deposit "+(msg.data.status||"updated"));
+          }
+        }
+        if(msg.event==="withdraw_update"){
+          if(msg.data && msg.data.user && ME && msg.data.user.id===ME.id){
+            ME = msg.data.user; renderMe();
+          } else if(TOKEN){
+            api("/api/me").then(function(r){ ME=r.user; renderMe(); }).catch(function(){});
+          }
+          toast("Withdrawal "+(msg.data && msg.data.status ? msg.data.status : "updated"));
+        }
+        if(msg.event==="connected"){ /* ok */ }
+      }catch(e){}
+    };
+    WS.onclose = function(){
+      WS = null;
+      var delay = Math.min(15000, 1000 * Math.pow(1.5, WS_RETRY++));
+      setTimeout(connectWS, delay);
+    };
+    WS.onerror = function(){ try{ WS.close(); }catch(e){} };
+  }catch(e){}
+}
+
 function toast(m){ var t=document.getElementById("toast"); t.textContent=m; t.style.display="block"; setTimeout(function(){t.style.display="none"},2800); }
 function api(path, method, body){
   var o = {method: method||"GET", headers:{"Content-Type":"application/json"}};
@@ -233,11 +340,22 @@ function money(n){ return "UGX "+Number(n||0).toLocaleString(); }
 function renderMe(){
   if(!ME) return;
   document.getElementById("bal").textContent = money(ME.balance);
+  var pw=document.getElementById("pendingWd"); if(pw) pw.textContent = money(ME.pending_withdraw);
+  var jl=document.getElementById("joinLock"); if(jl) jl.textContent = money(ME.join_bonus_locked);
+  var wd=document.getElementById("withdrawable"); if(wd) wd.textContent = money(ME.withdrawable!=null?ME.withdrawable:(ME.shares&&ME.shares.length?ME.balance:0));
   document.getElementById("inv").textContent = ME.invite_code||"—";
   document.getElementById("inv2").textContent = ME.invite_code||"—";
   document.getElementById("refE").textContent = money(ME.referral_earnings);
+  var dt=document.getElementById("divTotal"); if(dt) dt.textContent=money(ME.dividends);
+  var dw=document.getElementById("divWd"); if(dw) dw.textContent=money(ME.dividend_available!=null?ME.dividend_available:ME.withdrawable);
+  var dteam=document.getElementById("divTeam"); if(dteam) dteam.textContent=money(ME.dividends);
   document.getElementById("who").innerHTML = "<b>"+(ME.name||"")+"</b><div class='muted'>"+(ME.email||"")+"<br>"+(ME.phone||"")+"</div>";
-  var tx = (ME.transactions||[]).map(function(t){ return "<div class='kpi'><span>"+t.type+"<br><small>"+(t.date||"")+"</small></span><b>"+money(t.amount)+"</b></div>"; }).join("");
+  var tx = (ME.transactions||[]).map(function(t){
+    var st = (t.status||"");
+    var col = st==="under_review"||st==="pending"?"#fbbf24":(st==="disbursed"||st==="confirmed"?"#20e58b":(st==="rejected"?"#f87171":""));
+    var tag = st ? " <span style='color:"+col+"'>· "+st+"</span>" : "";
+    return "<div class='kpi'><span>"+t.type+tag+"<br><small>"+(t.date||"")+(t.txid?(" · "+t.txid):"")+"</small></span><b>"+money(t.amount)+"</b></div>";
+  }).join("");
   document.getElementById("txList").innerHTML = tx || "No movement yet";
   var sys = document.getElementById("sysCard");
   if(ME.is_admin || ME.is_support){
@@ -246,26 +364,110 @@ function renderMe(){
   } else sys.classList.add("hidden");
 }
 function go(p, btn){
-  ["home","shares","income","team","account"].forEach(function(n){
-    document.getElementById("page-"+n).classList.toggle("hidden", n!==p);
+  ["home","market","shares","income","team","account"].forEach(function(n){
+    var el=document.getElementById("page-"+n); if(el) el.classList.toggle("hidden", n!==p);
   });
   document.querySelectorAll(".nav button").forEach(function(b){ b.classList.remove("on"); });
   if(btn) btn.classList.add("on");
+  if(p==="market"){ startMarket(); } else { stopMarket(); }
+}
+function basePrice(c){
+  // Derive a share-index price from club valuation string or id
+  var m = String(c.marketValue||"").match(/([\d.]+)/);
+  var bn = m ? parseFloat(m[1]) : (1 + (c.id||1)*0.15);
+  return Math.round(35000 * (0.85 + bn * 0.08));
+}
+function initMarket(){
+  CLUBS.forEach(function(c){
+    if(!MARKET[c.id]){
+      var p = basePrice(c);
+      var hist = [];
+      for(var i=0;i<12;i++) hist.push(p * (1 + (Math.random()-0.5)*0.02));
+      MARKET[c.id] = { price:p, open:p, hist:hist, chg:0 };
+    }
+  });
+}
+function tickMarket(){
+  CLUBS.forEach(function(c){
+    var s = MARKET[c.id]; if(!s) return;
+    var drift = (Math.random()-0.48) * 0.012;
+    s.price = Math.max(1000, Math.round(s.price * (1+drift)));
+    s.hist.push(s.price); if(s.hist.length>14) s.hist.shift();
+    s.chg = ((s.price - s.open) / s.open) * 100;
+  });
+  renderMarket();
+  renderTicker();
+}
+function startMarket(){
+  if(!CLUBS.length){ loadClubs().then(function(){ initMarket(); renderMarket(); renderTicker(); }); }
+  else { initMarket(); renderMarket(); renderTicker(); }
+  connectWS();
+  // local tick only if WS not connected
+  if(MKT_TIMER) clearInterval(MKT_TIMER);
+  MKT_TIMER = setInterval(function(){
+    if(!WS || WS.readyState!==1) tickMarket();
+    else try{ WS.send(JSON.stringify({type:"subscribe_market"})); }catch(e){}
+  }, 2000);
+}
+function stopMarket(){ if(MKT_TIMER){ clearInterval(MKT_TIMER); MKT_TIMER=null; } }
+function renderTicker(){
+  var el=document.getElementById("mktTicker"); if(!el) return;
+  var parts = CLUBS.map(function(c){
+    var s=MARKET[c.id]; if(!s) return "";
+    var sign = s.chg>=0?"+":"";
+    var col = s.chg>=0?"#20e58b":"#f87171";
+    return "<span style='margin-right:22px'>"+c.name+" <b style='color:"+col+"'>"+s.price.toLocaleString()+" ("+sign+s.chg.toFixed(2)+"%)</b></span>";
+  }).join("");
+  el.innerHTML = parts || "Market loading…";
+}
+function setMktLeague(l){ MKT_LEAGUE=l; renderMarket(); var lg=document.getElementById("mktLeagues"); if(lg){ lg.querySelectorAll("button").forEach(function(b){ b.classList.toggle("on", b.textContent===l || (l==="" && b.textContent==="All")); }); } }
+function renderMarket(){
+  var lg=document.getElementById("mktLeagues");
+  if(lg && LEAGUES.length){
+    lg.innerHTML = "<button class='"+(MKT_LEAGUE===""?"on":"")+"' onclick='setMktLeague(\"\")'>All</button>" +
+      LEAGUES.map(function(l){ return "<button class='"+(MKT_LEAGUE===l?"on":"")+"' onclick='setMktLeague(\""+l+"\")'>"+l+"</button>"; }).join("");
+  }
+  var list=document.getElementById("mktList"); if(!list) return;
+  var rows = CLUBS.filter(function(c){ return !MKT_LEAGUE || c.league===MKT_LEAGUE; });
+  if(!rows.length){ list.innerHTML="<div class='muted'>No clubs</div>"; return; }
+  list.innerHTML = rows.map(function(c){
+    var s = MARKET[c.id] || {price:basePrice(c), chg:0, hist:[basePrice(c)]};
+    var max = Math.max.apply(null, s.hist.concat([1]));
+    var min = Math.min.apply(null, s.hist);
+    var span = Math.max(1, max-min);
+    var bars = (s.hist||[]).map(function(v){
+      var h = 6 + ((v-min)/span)*22;
+      var col = v >= (s.hist[0]||v) ? "#20e58b" : "#f87171";
+      return "<i style='height:"+h+"px;background:"+col+"'></i>";
+    }).join("");
+    var sign = s.chg>=0?"+":"";
+    var cls = s.chg>=0?"up":"dn";
+    return "<div class='mkt-row' onclick='buy("+c.id+")'>"
+      +"<img src='"+c.photo+"' alt='' onerror=\"this.style.display='none'\">"
+      +"<div class='mkt-mid'><b>"+c.name+"</b><div class='muted' style='font-size:11px'>"+c.league+" · "+(c.marketValue||"")+"</div>"
+      +"<div class='mkt-bars'>"+bars+"</div></div>"
+      +"<div class='mkt-right'><div class='px'>UGX "+Number(s.price).toLocaleString()+"</div>"
+      +"<div class='chg "+cls+"'>"+sign+Number(s.chg).toFixed(2)+"%</div></div></div>";
+  }).join("");
 }
 function loadClubs(){
-  api("/api/clubs").then(function(r){
+  return api("/api/clubs").then(function(r){
     CLUBS=r.clubs||[]; LEAGUES=r.leagues||[];
     LEAGUE = LEAGUE || LEAGUES[0];
     var lg=document.getElementById("leagues");
-    lg.innerHTML = LEAGUES.map(function(l){ return "<button class='"+(l===LEAGUE?"on":"")+"' onclick='setLeague(\""+l+"\")'>"+l+"</button>"; }).join("");
+    if(lg) lg.innerHTML = LEAGUES.map(function(l){ return "<button class='"+(l===LEAGUE?"on":"")+"' onclick='setLeague(\""+l+"\")'>"+l+"</button>"; }).join("");
     drawClubs();
+    initMarket();
   }).catch(function(){});
 }
 function setLeague(l){ LEAGUE=l; loadClubs(); }
 function drawClubs(){
   var box=document.getElementById("clubs");
+  if(!box) return;
   box.innerHTML = CLUBS.filter(function(c){return c.league===LEAGUE;}).map(function(c){
-    return "<div class='club'><img src='"+c.photo+"' alt='' onerror=\"this.style.display='none'\"><div style='flex:1'><b>"+c.name+"</b><div class='muted'>"+c.marketValue+"</div></div><button class='btn' style='width:auto;padding:8px 12px;margin:0' onclick='buy("+c.id+")'>Buy</button></div>";
+    var s = MARKET[c.id];
+    var tag = s ? (" · live UGX "+Number(s.price).toLocaleString()) : "";
+    return "<div class='club'><img src='"+c.photo+"' alt='' onerror=\"this.style.display='none'\"><div style='flex:1'><b>"+c.name+"</b><div class='muted'>"+c.marketValue+tag+"</div></div><button class='btn' style='width:auto;padding:8px 12px;margin:0' onclick='buy("+c.id+")'>Buy</button></div>";
   }).join("");
 }
 function buy(id){
@@ -344,7 +546,7 @@ function openWd(){
   var phone = (ME && ME.phone) || "";
   openM(
     "<h2>Withdraw</h2>"
-    +"<p class='muted'>5% fee · you must own club shares · paid only to your chosen method after system review</p>"
+    +"<p class='muted'>5% fee · buy club shares first · joining bonus unlocks only after first share purchase · paid after system review</p>"
     +"<div class='field'><label>AMOUNT (UGX)</label><input id='wAmt' placeholder='Available "+(ME?money(ME.balance):"")+"'></div>"
     +"<div class='field'><label>PAYOUT METHOD</label><select id='wM' onchange='updateWdHint()'>"
     +"<option value='mtn'>📱 MTN Mobile Money</option>"
@@ -372,6 +574,13 @@ function updateWdHint(){
     if(hint) hint.textContent="Paste the wallet where you want to receive USDT ("+m.toUpperCase()+").";
   }
 }
+function divToShare(){
+  var amt = prompt("Amount of dividends to add to your latest club share (UGX)");
+  if(!amt) return;
+  api("/api/dividend-to-share","POST",{amount:amt})
+    .then(function(r){ ME=r.user; renderMe(); toast(r.message); })
+    .catch(function(e){ toast(e.message); });
+}
 function sendWd(){
   api("/api/withdraw","POST",{
     amount:document.getElementById("wAmt").value,
@@ -383,6 +592,7 @@ function sendWd(){
 function openM(html){ document.getElementById("modalBody").innerHTML=html; document.getElementById("modal").classList.remove("hidden"); document.getElementById("modal").style.display="flex"; }
 function closeM(){ document.getElementById("modal").classList.add("hidden"); document.getElementById("modal").style.display="none"; }
 function boot(){
+  connectWS();
   document.getElementById("auth").classList.add("hidden");
   document.getElementById("main").classList.remove("hidden");
   renderMe(); loadClubs();
@@ -417,7 +627,7 @@ var saved=localStorage.getItem("oc_remember_id");
 if(saved){ document.getElementById("loginId").value=saved; document.getElementById("rememberMe").checked=true; }
 if(TOKEN){
   api("/api/me").then(function(r){ ME=r.user; boot(); }).catch(function(){ TOKEN=""; localStorage.removeItem("oc_token"); });
-}
+} else { connectWS(); }
 </script>
 </body>
 </html>

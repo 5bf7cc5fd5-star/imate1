@@ -56,7 +56,8 @@
 .tabs button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
 .tabs .date{border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:13px;background:#fff}
 .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
-.kpi{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 4px 14px rgba(15,23,42,.04);position:relative}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 4px 14px rgba(15,23,42,.04);position:relative;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.kpi:hover{border-color:#2563eb;box-shadow:0 8px 20px rgba(37,99,235,.12)}
 .kpi .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .kpi .head span{font-size:13px;color:#475569;font-weight:600}
 .kpi .head a{font-size:12px;color:var(--blue);text-decoration:none;font-weight:600}
@@ -120,6 +121,7 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.3p
     <button class="nav-item" data-p="deposits" onclick="go('deposits')"><span class="ico">☰</span> Deposits</button>
     <button class="nav-item" data-p="withdrawals" onclick="go('withdrawals')"><span class="ico">⇄</span> Withdrawals</button>
     <button class="nav-item" data-p="members" onclick="go('members')"><span class="ico">☺</span> Members</button>
+    <button class="nav-item" data-p="credits" onclick="go('credits')"><span class="ico">$</span> Credits / Pool</button>
     <button class="nav-item" data-p="team" onclick="go('team')"><span class="ico">👥</span> Team / Affiliate</button>
     <div class="nav-section">Support</div>
     <a class="nav-item" href="/" target="_blank"><span class="ico">↗</span> Open member app</a>
@@ -139,43 +141,53 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.3p
       <p class="welcome" id="topWelcome">Welcome</p>
 
       <section id="page-overview">
-        <div class="tabs">
-          <button class="on" type="button">Day</button>
-          <button type="button">Week</button>
-          <button type="button">Month</button>
+        <div class="tabs" id="rangeTabs">
+          <button class="on" type="button" onclick="setRange(this,'day')">Day</button>
+          <button type="button" onclick="setRange(this,'week')">Week</button>
+          <button type="button" onclick="setRange(this,'month')">Month</button>
           <span class="date" id="todayDate"></span>
         </div>
         <div class="kpi-grid">
-          <div class="kpi">
-            <div class="head"><span>Deposits</span><a href="#" onclick="go('deposits');return false">View Report</a></div>
+          <button type="button" class="kpi" onclick="go('deposits')">
+            <div class="head"><span>Deposits</span><span style="color:#2f5bff;font-size:12px">View Report →</span></div>
             <div class="val" id="kDepCount">0</div>
             <svg class="spark" id="spark1" viewBox="0 0 200 72" preserveAspectRatio="none"></svg>
-          </div>
-          <div class="kpi">
-            <div class="head"><span>Total deposited</span><a href="#" onclick="go('deposits');return false">View Report</a></div>
+          </button>
+          <button type="button" class="kpi" onclick="go('deposits')">
+            <div class="head"><span>Total deposited</span><span style="color:#2f5bff;font-size:12px">View Report →</span></div>
             <div class="val" id="kDepAmt">UGX 0</div>
             <svg class="spark" id="spark2" viewBox="0 0 200 72" preserveAspectRatio="none"></svg>
-          </div>
-          <div class="kpi">
-            <div class="head"><span>Pending deposits</span><a href="#" onclick="go('deposits');return false">View Report</a></div>
+          </button>
+          <button type="button" class="kpi" onclick="go('deposits')">
+            <div class="head"><span>Pending deposits</span><span style="color:#2f5bff;font-size:12px">View Report →</span></div>
             <div class="val" id="kPend">0</div>
             <svg class="spark" id="spark3" viewBox="0 0 200 72" preserveAspectRatio="none"></svg>
-          </div>
-          <div class="kpi">
-            <div class="head"><span>Members</span><a href="#" onclick="go('members');return false">View Report</a></div>
+          </button>
+          <button type="button" class="kpi" onclick="go('members')">
+            <div class="head"><span>Members</span><span style="color:#2f5bff;font-size:12px">View Report →</span></div>
             <div class="val" id="kUsers">0</div>
             <svg class="spark" id="spark4" viewBox="0 0 200 72" preserveAspectRatio="none"></svg>
-          </div>
-          <div class="kpi">
-            <div class="head"><span>Club shares sold</span><a href="#" onclick="go('members');return false">View Report</a></div>
+          </button>
+          <button type="button" class="kpi" onclick="go('members')">
+            <div class="head"><span>Club shares sold</span><span style="color:#2f5bff;font-size:12px">View Report →</span></div>
             <div class="val" id="kShares">0</div>
             <svg class="spark" id="spark5" viewBox="0 0 200 72" preserveAspectRatio="none"></svg>
-          </div>
-          <div class="kpi">
-            <div class="head"><span>Referral payouts</span><a href="#" onclick="go('team');return false">View Report</a></div>
+          </button>
+          <button type="button" class="kpi" onclick="go('team')">
+            <div class="head"><span>Referral payouts</span><span style="color:#2f5bff;font-size:12px">View Report →</span></div>
             <div class="val" id="kRef">UGX 0</div>
             <svg class="spark" id="spark6" viewBox="0 0 200 72" preserveAspectRatio="none"></svg>
-          </div>
+          </button>
+          <button type="button" class="kpi" onclick="go('credits')">
+            <div class="head"><span>Company fund pool</span><span style="color:#2f5bff;font-size:12px">Credits →</span></div>
+            <div class="val" id="kPool">$500,000,000</div>
+            <svg class="spark" id="spark7" viewBox="0 0 200 72" preserveAspectRatio="none"></svg>
+          </button>
+          <button type="button" class="kpi" onclick="go('withdrawals')">
+            <div class="head"><span>Pending WD amount</span><span style="color:#2f5bff;font-size:12px">View →</span></div>
+            <div class="val" id="kWdAmt">UGX 0</div>
+            <svg class="spark" id="spark8" viewBox="0 0 200 72" preserveAspectRatio="none"></svg>
+          </button>
         </div>
       </section>
 
@@ -188,8 +200,28 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.3p
         <div id="wdBox">Loading…</div>
       </section>
       <section id="page-members" class="panel hidden">
-        <h2>All members</h2>
+        <h2>All members · manual credit</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;align-items:end">
+          <div>
+            <div class="note">Bulk: same amount for selected</div>
+            <input id="bulkAmt" type="number" placeholder="Amount UGX" style="width:140px;padding:8px;border:1px solid var(--border);border-radius:8px">
+          </div>
+          <button class="btn btn-green btn-sm" type="button" onclick="bulkCreditSame()">Credit selected (same amount)</button>
+          <button class="btn btn-primary btn-sm" type="button" onclick="bulkCreditEach()">Credit each row amount</button>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="document.querySelectorAll('.mem-ck').forEach(function(c){c.checked=true})">Select all</button>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="document.querySelectorAll('.mem-ck').forEach(function(c){c.checked=false})">Clear</button>
+        </div>
+        <p class="note" style="margin-top:0">Enter amount per row for single credit, or select several and use bulk.</p>
         <div id="memBox">Loading…</div>
+      </section>
+      <section id="page-credits" class="panel hidden">
+        <h2>Manual credits & company fund pool</h2>
+        <p class="note">Pool starts at <b>$500,000,000</b>. <b>Deposit approved</b> → pool pays the member wallet. <b>Withdrawal submitted</b> → member wallet pays the pool. Reject refunds wallet and takes it back from the pool. Manual credits also leave the pool.</p>
+        <div class="kpi" style="margin-bottom:14px;cursor:default"><span>Company fund pool (USD)</span><b id="poolBal" style="font-size:22px">—</b></div>
+        <h2 style="margin-top:18px">Credit history</h2>
+        <div id="credBox">Loading…</div>
+        <h2 style="margin-top:18px">Pool movements</h2>
+        <div id="poolBox">Loading…</div>
       </section>
       <section id="page-team" class="panel hidden">
         <h2>Team / Affiliate</h2>
@@ -200,7 +232,29 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.3p
 </div>
 <script>
 var TOKEN = localStorage.getItem("oc_admin") || "";
-var USERS=[], DEPS=[], WDS=[];
+var USERS=[], DEPS=[], WDS=[], WS=null, WS_RETRY=0;
+function connectWS(){
+  try{
+    if(WS && (WS.readyState===0 || WS.readyState===1)) return;
+    var proto = location.protocol==="https:" ? "wss://" : "ws://";
+    var url = proto + location.host + "/ws" + (TOKEN ? ("?token="+encodeURIComponent(TOKEN)) : "");
+    WS = new WebSocket(url);
+    WS.onopen = function(){ WS_RETRY=0; try{ WS.send(JSON.stringify({type:"auth", token:TOKEN})); }catch(e){} };
+    WS.onmessage = function(ev){
+      try{
+        var msg = JSON.parse(ev.data);
+        if(msg.event==="deposit_pending" || msg.event==="admin_notify" || msg.event==="deposit_update" || msg.event==="withdraw_pending" || msg.event==="withdraw_update"){
+          loadAll();
+          var n = document.getElementById("topWelcome");
+          if(n && msg.event==="deposit_pending"){ n.textContent = "New deposit pending — refresh list"; }
+        }
+      }catch(e){}
+    };
+    WS.onclose = function(){ WS=null; setTimeout(connectWS, Math.min(15000, 1000*Math.pow(1.5, WS_RETRY++))); };
+    WS.onerror = function(){ try{ WS.close(); }catch(e){} };
+  }catch(e){}
+}
+
 function api(path, method, body){
   var o = {method: method||"GET", headers:{"Content-Type":"application/json"}};
   if(TOKEN) o.headers.Authorization = "Bearer "+TOKEN;
@@ -221,9 +275,16 @@ function showDash(u){
   document.getElementById("topWelcome").textContent = "Welcome"+(u&&u.name? ", "+u.name : "");
   document.getElementById("todayDate").textContent = new Date().toISOString().slice(0,10);
   loadAll();
+  connectWS();
+}
+function setRange(btn, range){
+  document.querySelectorAll("#rangeTabs button").forEach(function(b){ b.classList.remove("on"); });
+  if(btn) btn.classList.add("on");
+  window._range = range || "day";
+  loadAll();
 }
 function go(p){
-  ["overview","deposits","withdrawals","members","team"].forEach(function(n){
+  ["overview","deposits","withdrawals","members","credits","team"].forEach(function(n){
     var el=document.getElementById("page-"+n); if(el) el.classList.toggle("hidden", n!==p);
   });
   document.querySelectorAll(".nav-item").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-p")===p); });
@@ -247,16 +308,23 @@ function loadAll(){
     api("/api/admin/users").catch(function(){return {users:[]};}),
     api("/api/admin/deposits").catch(function(){return {deposits:[]};}),
     api("/api/admin/withdrawals").catch(function(){return {withdrawals:[]};}),
-    api("/api/admin/stats").catch(function(){return {};})
+    api("/api/admin/stats").catch(function(){return {};}),
+    api("/api/admin/credits").catch(function(){return {credits:[], pool:{}};})
   ]).then(function(arr){
     USERS=arr[0].users||[]; DEPS=arr[1].deposits||[]; WDS=arr[2].withdrawals||[];
     var st=arr[3]||{};
+    if(arr[4]){ if(arr[4].credits) st.credits=arr[4].credits; if(arr[4].pool){ st.pool_usd=arr[4].pool.usd; st.pool_movements=arr[4].pool.movements||[]; } }
     document.getElementById("kUsers").textContent=st.users!=null?st.users:USERS.length;
     document.getElementById("kDepCount").textContent=st.deposits_count!=null?st.deposits_count:DEPS.filter(function(d){return d.status==="confirmed";}).length;
     document.getElementById("kPend").textContent=st.pending_deposits!=null?st.pending_deposits:DEPS.filter(function(d){return d.status==="pending";}).length;
     document.getElementById("kDepAmt").textContent=money(st.total_deposited);
     document.getElementById("kShares").textContent=st.total_shares||0;
     document.getElementById("kRef").textContent=money(st.referral_payouts);
+    if(document.getElementById("kPool")) document.getElementById("kPool").textContent="$"+Number(st.pool_usd!=null?st.pool_usd:500000000).toLocaleString();
+    if(document.getElementById("kWdAmt")) document.getElementById("kWdAmt").textContent=money(st.pending_wd_amount);
+    window._credits = st.credits||[];
+    window._poolMoves = st.pool_movements||[];
+    renderCredits();
     var s=st.spark||[1,2,4,6,3,2,5,4,3,2,1,2];
     ["spark1","spark2","spark3","spark4","spark5","spark6"].forEach(function(id,i){ spark(id, s.map(function(v,j){return v+((i+j)%3);})); });
     renderDeps(); renderWds(); renderMem(); renderTeam();
@@ -277,18 +345,107 @@ function renderDeps(){
 }
 function renderWds(){
   if(!WDS.length){ document.getElementById("wdBox").innerHTML="<div class='note'>No withdrawal requests yet</div>"; return; }
-  var wh="<table><tr><th>Date</th><th>Member</th><th>Amount</th><th>TxID</th><th>Status</th></tr>";
+  var wh="<table><tr><th>Date</th><th>Member</th><th>Amount</th><th>Fee 5%</th><th>Net</th><th>Method</th><th>TxID</th><th>Status</th><th>Action</th></tr>";
   WDS.forEach(function(w){
-    wh += "<tr><td>"+(w.created_at||"")+"</td><td>"+(w.name||w.user_id)+"</td><td>"+money(w.amount)+"</td><td>"+(w.txid||"")+"</td><td>"+(w.status||"")+"</td></tr>";
+    var st = w.status||"";
+    var badge = st==="under_review"||st==="pending"?"pending":(st==="disbursed"||st==="reviewed"?"ok":"rej");
+    var txStyle = st==="under_review"||st==="pending"?"color:#b45309;font-weight:700":(st==="disbursed"?"color:#166534;font-weight:700":"color:#b91c1c;font-weight:700");
+    var act = (st==="under_review"||st==="pending")
+      ? "<button class='btn btn-green btn-sm' onclick='wdAct(\""+w.id+"\",\"approve\")'>Approve / Disburse</button> "
+        +"<button class='btn btn-red btn-sm' onclick='wdAct(\""+w.id+"\",\"reject\")'>Reject</button>"
+      : "—";
+    wh += "<tr><td>"+(w.created_at||"")+"</td><td><b>"+(w.name||w.user_id)+"</b><br>"+(w.phone||"")+"<br><span class='note'>"+(w.account||"")+"</span></td>"
+      +"<td>"+money(w.amount)+"</td><td>"+money(w.fee)+"</td><td>"+money(w.net)+"</td><td>"+(w.method||"")+"</td>"
+      +"<td style='"+txStyle+"'>"+(w.txid||"—")+"</td><td><span class='badge "+badge+"'>"+st+"</span></td><td>"+act+"</td></tr>";
   });
   document.getElementById("wdBox").innerHTML=wh+"</table>";
 }
+function wdAct(id, action){
+  var label = action==="reject"?"Reject and refund to member balance?":"Mark as disbursed (paid outside the app)?";
+  if(!confirm(label)) return;
+  api("/api/admin/withdraw-action","POST",{withdraw_id:id, action:action})
+    .then(function(){ loadAll(); })
+    .catch(function(e){ alert(e.message); });
+}
+function renderCredits(){
+  var creds = window._credits||[];
+  var moves = window._poolMoves||[];
+  if(document.getElementById("poolBal"))
+    document.getElementById("poolBal").textContent = "$"+Number((moves[0]&&moves[0].balance_usd!=null)?moves[0].balance_usd:(document.getElementById("kPool")?document.getElementById("kPool").textContent.replace(/[^0-9.]/g,""):0)).toLocaleString();
+  if(document.getElementById("credBox")){
+    if(!creds.length) document.getElementById("credBox").innerHTML="<div class='note'>No manual credits yet. Use Members → Credit.</div>";
+    else {
+      var h="<table><tr><th>Date</th><th>Member</th><th>Amount</th><th>Note</th><th>By</th></tr>";
+      creds.forEach(function(c){
+        h+="<tr><td>"+(c.created_at||"")+"</td><td>"+(c.name||c.user_id)+"</td><td>"+money(c.amount)+"</td><td>"+(c.note||"")+"</td><td>"+(c.by||"")+"</td></tr>";
+      });
+      document.getElementById("credBox").innerHTML=h+"</table>";
+    }
+  }
+  if(document.getElementById("poolBox")){
+    if(!moves.length) document.getElementById("poolBox").innerHTML="<div class='note'>No pool movements yet</div>";
+    else {
+      var h="<table><tr><th>Date</th><th>Type</th><th>USD</th><th>Balance</th><th>Note</th></tr>";
+      moves.forEach(function(m){
+        h+="<tr><td>"+(m.at||"")+"</td><td>"+(m.kind||"")+"</td><td>$"+Number(m.amount_usd||0).toLocaleString()+"</td><td>$"+Number(m.balance_usd||0).toLocaleString()+"</td><td>"+(m.note||"")+"</td></tr>";
+      });
+      document.getElementById("poolBox").innerHTML=h+"</table>";
+    }
+  }
+}
 function renderMem(){
-  var mh="<table><tr><th>Name</th><th>Phone</th><th>Email</th><th>Title</th><th>Balance</th><th>Shares</th><th>Invite</th></tr>";
+  var mh="<table><tr><th></th><th>Name</th><th>Phone</th><th>Email</th><th>Title</th><th>Balance</th><th>Shares</th><th>Credit UGX</th><th></th></tr>";
   USERS.forEach(function(u){
-    mh += "<tr><td><b>"+(u.name||"")+"</b></td><td>"+(u.phone||"")+"</td><td>"+(u.email||"")+"</td><td>"+(u.title||"")+"</td><td>"+money(u.balance)+"</td><td>"+(u.shares?u.shares.length:0)+"</td><td>"+(u.invite_code||"")+"</td></tr>";
+    mh += "<tr>"
+      +"<td><input type='checkbox' class='mem-ck' data-id='"+u.id+"'></td>"
+      +"<td><b>"+(u.name||"")+"</b><div class='note'>"+(u.invite_code||"")+"</div></td>"
+      +"<td>"+(u.phone||"")+"</td><td>"+(u.email||"")+"</td><td>"+(u.title||"")+"</td>"
+      +"<td>"+money(u.balance)+"</td><td>"+(u.shares?u.shares.length:0)+"</td>"
+      +"<td><input class='credit-amt' data-id='"+u.id+"' type='number' min='0' placeholder='0' style='width:110px;padding:7px;border:1px solid var(--border);border-radius:8px'></td>"
+      +"<td><button class='btn btn-green btn-sm' type='button' onclick='creditOne(\""+u.id+"\")'>Credit</button></td>"
+      +"</tr>";
   });
   document.getElementById("memBox").innerHTML=mh+"</table>";
+}
+function creditOne(uid){
+  var inp = document.querySelector(".credit-amt[data-id='"+uid+"']");
+  var amt = inp ? Number(inp.value||0) : 0;
+  if(amt<=0){ alert("Enter amount greater than 0"); return; }
+  var note = prompt("Note (optional)", "Manual credit") || "Manual credit";
+  api("/api/admin/credit","POST",{user_id:uid, amount:amt, note:note})
+    .then(function(){ loadAll(); alert("Credited UGX "+amt.toLocaleString()); })
+    .catch(function(e){ alert(e.message); });
+}
+function bulkCreditSame(){
+  var amt = Number(document.getElementById("bulkAmt").value||0);
+  if(amt<=0){ alert("Enter bulk amount"); return; }
+  var ids = Array.from(document.querySelectorAll(".mem-ck:checked")).map(function(c){ return c.getAttribute("data-id"); });
+  if(!ids.length){ alert("Select at least one member"); return; }
+  if(!confirm("Credit UGX "+amt.toLocaleString()+" to "+ids.length+" member(s)?")) return;
+  api("/api/admin/bulk-credit","POST",{user_ids:ids, amount:amt, note:"Bulk credit"})
+    .then(function(r){ loadAll(); alert("Done: "+(r.results||[]).filter(function(x){return x.ok;}).length+" credited"); })
+    .catch(function(e){ alert(e.message); });
+}
+function bulkCreditEach(){
+  var items = [];
+  document.querySelectorAll(".credit-amt").forEach(function(inp){
+    var amt = Number(inp.value||0);
+    var id = inp.getAttribute("data-id");
+    var ck = document.querySelector(".mem-ck[data-id='"+id+"']");
+    if(ck && ck.checked && amt>0) items.push({user_id:id, amount:amt});
+  });
+  if(!items.length){
+    // if nothing checked, take any row with amount filled
+    document.querySelectorAll(".credit-amt").forEach(function(inp){
+      var amt = Number(inp.value||0);
+      if(amt>0) items.push({user_id:inp.getAttribute("data-id"), amount:amt});
+    });
+  }
+  if(!items.length){ alert("Enter amounts (and select rows if using selection)"); return; }
+  if(!confirm("Credit different amounts to "+items.length+" member(s)?")) return;
+  api("/api/admin/bulk-credit","POST",{items:items, note:"Bulk credit (per row)"})
+    .then(function(r){ loadAll(); alert("Done: "+(r.results||[]).filter(function(x){return x.ok;}).length+" credited"); })
+    .catch(function(e){ alert(e.message); });
 }
 function renderTeam(){
   var rows=USERS.filter(function(u){return u.referral_earnings||u.referred_by;});
