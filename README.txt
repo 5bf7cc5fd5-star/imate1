@@ -1,8 +1,4 @@
-Own Club — clean clubs build
-
-Upload ALL files in this folder to the GitHub repo root.
-Railway: leave Healthcheck path EMPTY.
-
-https://YOUR-DOMAIN/
-https://YOUR-DOMAIN/admin
-https://YOUR-DOMAIN/api/health
+Own Club Share Market
+Deployed from Grok auto-push
+Deposits require customer TxID and show in System panel
+Withdrawals: system auto TxID, Under Review → Reviewed → Disbursed
