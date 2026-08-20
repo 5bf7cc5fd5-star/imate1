@@ -1,14 +1,19 @@
-# Own Club — deploy
+# Own Club — Share Market
 
-1. Upload ALL files in this folder to the GitHub repo root.
-2. Railway → Deploy from that repo (root directory empty).
-3. Networking: generate domain, target port 8080.
+Auto-deployed from Grok to GitHub → Railway.
 
-Open:
-- https://YOUR-DOMAIN/
-- https://YOUR-DOMAIN/admin
-- https://YOUR-DOMAIN/api/health
+## URLs
+- App: https://ownclubshares.co/
+- Admin: https://ownclubshares.co/admin
 
-Variables (optional):
-- ADMIN_PASSWORD
-- IMATE1_SECRET
+## Stack
+- Python stdlib server (`server.py`)
+- Member PWA (`index.html`)
+- System panel (`admin.html`)
+
+## Admin
+- Email: k_hmed@yahoo.com
+- Password: set via ADMIN_PASSWORD (default Madahketa@17)
+
+## Deploy
+Railway watches `main`. Grok pushes updates here automatically.
