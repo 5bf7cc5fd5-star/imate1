@@ -1,19 +1,30 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Own Club — Share Market</title></head>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Own Club — Share Market</title>
+</head>
 <body style="margin:0;background:#03070d;color:#fff;font-family:system-ui">
-<p style="padding:24px;text-align:center">Loading Own Club…</p>
+<p id="st" style="padding:28px;text-align:center">Loading Own Club…</p>
 <script>
-Promise.all([1,2,3,4,5,6].map(function(n){
-  return fetch("/static/fp"+n+".html",{cache:"no-store"}).then(function(r){
-    if(!r.ok) throw new Error("missing part "+n);
-    return r.text();
-  });
-})).then(function(parts){
-  document.open();
-  document.write(parts.join(""));
-  document.close();
-}).catch(function(e){
-  document.body.innerHTML="<p style='padding:24px'>Could not load app: "+e.message+"</p>";
-});
+(async function(){
+  try{
+    var parts=[];
+    for(var i=1;i<=8;i++){
+      var t=await fetch("/static/a"+i+".b64",{cache:"no-store"}).then(function(r){
+        if(!r.ok) throw new Error("missing part "+i);
+        return r.text();
+      });
+      var bin=Uint8Array.from(atob(t.replace(/\s/g,"")), function(c){return c.charCodeAt(0);});
+      var stream=new Blob([bin]).stream().pipeThrough(new DecompressionStream("gzip"));
+      parts.push(await new Response(stream).text());
+    }
+    document.open();
+    document.write(parts.join(""));
+    document.close();
+  }catch(e){
+    document.getElementById("st").textContent="Could not load app: "+e.message;
+  }
+})();
 </script>
 </body></html>
