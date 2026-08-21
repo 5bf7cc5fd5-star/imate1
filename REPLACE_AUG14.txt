@@ -1,0 +1,12 @@
+Use the 14 August 2026 Own Club frontend EXACTLY.
+
+File: imate1-pack/frontend.html dated 2026-08-14 19:09 (339,243 bytes)
+Title: Own Club — Share Market
+Build: IMATE1_BUILD:2026-08-12-training-v12
+
+On GitHub ownclubshares.co:
+1. Delete or overwrite frontend.html and index.html
+2. Upload frontend.html AND index.html from ownclub-AUG14-REPLACE.zip (same file twice)
+3. Commit. Railway will redeploy.
+
+Do not keep the small 57KB frontend.
