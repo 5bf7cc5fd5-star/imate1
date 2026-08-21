@@ -1,0 +1,14 @@
+REPLACE the current 57KB frontend with the 13 August 2026 file.
+
+Source: imate1-railway.zip dated 2026-08-13 13:28
+frontend.html = 242,540 bytes
+Title: Own Club — Share Market
+
+Upload ALL of these from ownclub-AUG13-EXACT.zip over the existing files:
+- frontend.html
+- index.html
+- admin.html
+- server.py
+
+Then commit. Railway will redeploy.
+The current small Home screen (Available / Held / System access) is the WRONG file.
