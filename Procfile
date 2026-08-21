@@ -1,1 +1,1 @@
-web: python boot.py
+web: python server.py
