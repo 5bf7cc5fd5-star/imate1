@@ -1,0 +1,1 @@
+Fullscreen CSS deployed 2026-08-21. Replace frontend.html + index.html from ownclub-fullscreen.zip if this note is the only new file.
