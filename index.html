@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <title>Own Club — Share Market</title>
 <!-- NO_OTP_BUILD:2026-08-12 -->
-<!-- IMATE1_BUILD:2026-08-12-training-v12 -->
+<!-- OWNCLUB_BUILD:2026-08-12-training-v12 -->
 <!-- OFFICIAL_BUILD:2026-08-22 Own Club Share Market -->
 <style>
 :root{--bg:#03070d;--blue:#00a8ff;--green:#20e58b;--orange:#ff9d25;--text:#f4f8ff;--muted:#93a4b8}
@@ -2290,7 +2290,7 @@ function fetchFxRates(force){
     if(data && data.result === "success" && data.rates){
       fxRates = data.rates;
       fxUpdatedAt = Date.now();
-      try { localStorage.setItem("imate1_fx", JSON.stringify({rates: fxRates, at: fxUpdatedAt})); } catch(e){}
+      try { localStorage.setItem("ownclub_fx", JSON.stringify({rates: fxRates, at: fxUpdatedAt})); } catch(e){}
       try { if(typeof render === "function") render(); } catch(e){}
       return fxRates;
     }
@@ -2299,7 +2299,7 @@ function fetchFxRates(force){
     console.warn("FX API offline, using fallback rates", err);
     // try cache
     try {
-      var cached = JSON.parse(localStorage.getItem("imate1_fx") || "null");
+      var cached = JSON.parse(localStorage.getItem("ownclub_fx") || "null");
       if(cached && cached.rates){ fxRates = cached.rates; fxUpdatedAt = cached.at || 0; }
     } catch(e){}
     if(!fxRates){
@@ -2312,7 +2312,7 @@ function fetchFxRates(force){
 
 function initCurrencyApi(){
   try {
-    var cached = JSON.parse(localStorage.getItem("imate1_fx") || "null");
+    var cached = JSON.parse(localStorage.getItem("ownclub_fx") || "null");
     if(cached && cached.rates){ fxRates = cached.rates; fxUpdatedAt = cached.at || 0; }
   } catch(e){}
   fetchFxRates(false);
@@ -2333,7 +2333,7 @@ function sortMachinesByLeague(arr){
 }
 machines = sortMachinesByLeague(machines);
 
-var raffleCards = [{"id": 1, "name": "R1", "theme": "Stadium", "price": 500, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 1500}, {"id": 2, "name": "R2", "theme": "Stadium", "price": 1000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 3000}, {"id": 3, "name": "R3", "theme": "Stadium", "price": 2000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 6000}, {"id": 4, "name": "R4", "theme": "Stadium", "price": 3500, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 10500}, {"id": 5, "name": "R5", "theme": "Stadium", "price": 5000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 15000}, {"id": 6, "name": "R6", "theme": "Stadium", "price": 7500, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 22500}, {"id": 7, "name": "R7", "theme": "Stadium", "price": 10000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 30000}, {"id": 8, "name": "R8", "theme": "Stadium", "price": 15000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 45000}, {"id": 9, "name": "R9", "theme": "Stadium", "price": 20000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 60000}, {"id": 10, "name": "R10", "theme": "Stadium", "price": 30000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 90000}, {"id": 11, "name": "R11", "theme": "Stadium", "price": 40000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 120000}, {"id": 12, "name": "R12", "theme": "Stadium", "price": 50000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 150000}];
+var raffleCards = [{"id": 1, "name": "R1", "theme": "Stadium", "price": 500, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/ownclubstadium/600/600", "prize": 1500}, {"id": 2, "name": "R2", "theme": "Stadium", "price": 1000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/ownclubstadium/600/600", "prize": 3000}, {"id": 3, "name": "R3", "theme": "Stadium", "price": 2000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/ownclubstadium/600/600", "prize": 6000}, {"id": 4, "name": "R4", "theme": "Stadium", "price": 3500, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/ownclubstadium/600/600", "prize": 10500}, {"id": 5, "name": "R5", "theme": "Stadium", "price": 5000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/ownclubstadium/600/600", "prize": 15000}, {"id": 6, "name": "R6", "theme": "Stadium", "price": 7500, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/ownclubstadium/600/600", "prize": 22500}, {"id": 7, "name": "R7", "theme": "Stadium", "price": 10000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/ownclubstadium/600/600", "prize": 30000}, {"id": 8, "name": "R8", "theme": "Stadium", "price": 15000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/ownclubstadium/600/600", "prize": 45000}, {"id": 9, "name": "R9", "theme": "Stadium", "price": 20000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/ownclubstadium/600/600", "prize": 60000}, {"id": 10, "name": "R10", "theme": "Stadium", "price": 30000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/ownclubstadium/600/600", "prize": 90000}, {"id": 11, "name": "R11", "theme": "Stadium", "price": 40000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/ownclubstadium/600/600", "prize": 120000}, {"id": 12, "name": "R12", "theme": "Stadium", "price": 50000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/ownclubstadium/600/600", "prize": 150000}];
 
 
 var DEPOSIT_MM = "0779168109";
@@ -2520,7 +2520,7 @@ function ensureStaffUser(){
 }
 
 function ensureState(){ if(!state||typeof state!=="object") state={users:[],currentUserId:null}; if(!Array.isArray(state.users)) state.users=[]; return state; }
-function save(){ ensureState(); try{safeStorage.setItem("iMate1",JSON.stringify(state));}catch(e){} try{render();}catch(e){console.error(e);} }
+function save(){ ensureState(); try{safeStorage.setItem("Own Club",JSON.stringify(state));}catch(e){} try{render();}catch(e){console.error(e);} }
 function currentUser(){ ensureState(); if(!state.currentUserId) return null; for(var i=0;i<state.users.length;i++){ if(state.users[i]&&state.users[i].id===state.currentUserId) return state.users[i]; } return null; }
 
 function syncAuthBackground(){
@@ -2633,7 +2633,7 @@ function calcBalances(user){
           type: "Lock complete — "+(m.name||"Machine")+" to Balance",
           amount: finalBal
         });
-        try{ safeStorage.setItem("iMate1", JSON.stringify(state)); }catch(e){}
+        try{ safeStorage.setItem("Own Club", JSON.stringify(state)); }catch(e){}
       }
     }
   }
@@ -2650,7 +2650,7 @@ function calcBalances(user){
 
 function loadState(){
   try {
-    var raw = safeStorage.getItem("iMate1");
+    var raw = safeStorage.getItem("Own Club");
     if(raw){ try{ var p=JSON.parse(raw); if(p&&typeof p==="object") state=p; }catch(e){} }
   } catch(e){}
   ensureState();
@@ -2658,7 +2658,7 @@ function loadState(){
   for(var i=0;i<state.users.length;i++){
     var u = state.users[i]; if(!u) continue;
     var em = (u.email||"").toLowerCase();
-    if(u.isAdmin || u.id==="admin" || em==="k_hmed@yahoo.com" || em==="admin@imate1.com") continue;
+    if(u.isAdmin || u.id==="admin" || em==="k_hmed@yahoo.com" || em==="admin@ownclub.com") continue;
     filtered.push(u);
   }
   state.users = filtered;
@@ -2674,7 +2674,7 @@ function loadState(){
     for(var j=0;j<state.users.length;j++){ if(state.users[j].id===state.currentUserId){ ok=true; break; } }
     if(!ok) state.currentUserId = null;
   }
-  try{ safeStorage.setItem("iMate1", JSON.stringify(state)); }catch(e){}
+  try{ safeStorage.setItem("Own Club", JSON.stringify(state)); }catch(e){}
 }
 
 
@@ -2941,7 +2941,7 @@ function doLogin(){
     }
 
     state.currentUserId = user.id;
-    try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
+    try { safeStorage.setItem("Own Club", JSON.stringify(state)); } catch(e) {}
 
     var auth = document.getElementById("authScreen");
     var main = document.getElementById("mainApp");
@@ -3080,7 +3080,7 @@ function doSignup(){
 
     state.users.push(nu);
     state.currentUserId = nu.id;
-    try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
+    try { safeStorage.setItem("Own Club", JSON.stringify(state)); } catch(e) {}
 
     // Force UI into app
     var auth = document.getElementById("authScreen");
@@ -3100,7 +3100,7 @@ function doSignup(){
 }
 
 
-function logout(){ ensureState(); state.currentUserId=null; try{safeStorage.setItem("iMate1",JSON.stringify(state));}catch(e){} showApp(); }
+function logout(){ ensureState(); state.currentUserId=null; try{safeStorage.setItem("Own Club",JSON.stringify(state));}catch(e){} showApp(); }
 
 
 function setHomeUclBackground(page){
@@ -3754,7 +3754,7 @@ function notifyAdminDepositSms(dep, user){
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + (localStorage.getItem("imate1_token") || "")
+        "Authorization": "Bearer " + (localStorage.getItem("ownclub_token") || "")
       },
       body: JSON.stringify(payload)
     }).then(function(r){ return r.json().catch(function(){ return {}; }); })
@@ -3820,7 +3820,7 @@ function submitDeposit(){
       status: "pending"
     });
 
-    try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
+    try { safeStorage.setItem("Own Club", JSON.stringify(state)); } catch(e) {}
     try { closeModal("depositFundsModal"); } catch(e) {}
     try { save(); } catch(e) {}
     try { renderAdminPendingDeposits(); } catch(e) {}
@@ -4253,7 +4253,7 @@ function copyInvite(){
   var l=document.getElementById("myInviteLink").textContent;
   copyText(l, "Link copied");
 }
-function resetAppData(){ if(confirm("Reset ALL local data on this device? This cannot be undone.")){ try{safeStorage.removeItem("iMate1");}catch(e){} location.reload(); } }
+function resetAppData(){ if(confirm("Reset ALL local data on this device? This cannot be undone.")){ try{safeStorage.removeItem("Own Club");}catch(e){} location.reload(); } }
 
 /* ===== RENDER ===== */
 function render(){
