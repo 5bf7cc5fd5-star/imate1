@@ -1,25 +1,51 @@
 (function(){
-  function tight(){
+  function pack(){
     var s=document.getElementById("authScreen")||document.querySelector(".auth-screen");
     if(!s) return;
+    document.documentElement.classList.add("auth-open");
+    document.body.classList.add("auth-open");
+    s.style.setProperty("height","100dvh","important");
+    s.style.setProperty("max-height","100dvh","important");
+    s.style.setProperty("overflow","hidden","important");
+    s.style.setProperty("display","flex","important");
+    s.style.setProperty("flex-direction","column","important");
     s.style.setProperty("justify-content","flex-start","important");
+    s.style.setProperty("padding","28px 18px 12px","important");
     s.style.setProperty("gap","0","important");
-    s.style.setProperty("padding-top","48px","important");
-    var kids=s.querySelectorAll(".auth-center,.auth-card,.auth-logo,.tabs,form");
-    for(var i=0;i<kids.length;i++){
-      kids[i].style.setProperty("margin-top","0","important");
-      kids[i].style.setProperty("margin-bottom","10px","important");
-      kids[i].style.setProperty("min-height","0","important");
+    var nodes=s.querySelectorAll("*");
+    for(var i=0;i<nodes.length;i++){
+      var el=nodes[i];
+      el.style.setProperty("flex-grow","0","important");
+      var tag=el.tagName;
+      if(tag==="IMG"||tag==="SVG"||tag==="CANVAS"){
+        el.style.setProperty("max-height","56px","important");
+        el.style.setProperty("height","56px","important");
+        el.style.setProperty("object-fit","contain","important");
+      }
     }
-    var spacers=s.querySelectorAll(".auth-bg,.auth-hero,.spacer,[style*='flex:1'],[style*='flex: 1']");
-    for(var j=0;j<spacers.length;j++){
-      spacers[j].style.setProperty("display","none","important");
-      spacers[j].style.setProperty("flex","0","important");
-      spacers[j].style.setProperty("height","0","important");
+    var packEl=document.getElementById("ocPack");
+    if(!packEl){
+      packEl=document.createElement("div");
+      packEl.id="ocPack";
+      var move=[];
+      var kids=Array.prototype.slice.call(s.children);
+      kids.forEach(function(ch){
+        if(ch.id==="ocPack") return;
+        var cls=(ch.className||"")+" "+(ch.id||"");
+        if(/bg|hero|particle|canvas|space/i.test(cls)) {
+          ch.style.setProperty("display","none","important");
+          return;
+        }
+        move.push(ch);
+      });
+      s.insertBefore(packEl, s.firstChild);
+      move.forEach(function(ch){ packEl.appendChild(ch); });
     }
+    packEl.style.cssText="width:100%;max-width:390px;margin:0 auto;display:flex;flex-direction:column;gap:8px;";
   }
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", tight);
-  else tight();
-  setTimeout(tight, 50);
-  setTimeout(tight, 400);
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", pack);
+  else pack();
+  setTimeout(pack, 30);
+  setTimeout(pack, 250);
+  setTimeout(pack, 800);
 })();

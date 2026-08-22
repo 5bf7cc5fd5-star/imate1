@@ -22,29 +22,19 @@ for script in ("inject_ops.py", "fix_admin_phone.py", "migrate.py"):
         except Exception as e:
             print(script, "failed", e)
 
-sp = root / "server.py"
-if sp.exists():
-    t = sp.read_text(encoding="utf-8", errors="replace")
-    t = t.replace("+256780509960", "+256779168109")
-    old = "DATA_DIR = Path(__file__).parent / \"data\"\nDATA_DIR.mkdir(exist_ok=True)"
-    new = """try:\n    import persist as _persist\n    DATA_DIR = _persist.init()\nexcept Exception:\n    DATA_DIR = Path(__file__).parent / \"data\"\n    DATA_DIR.mkdir(exist_ok=True)"""
-    if old in t and "import persist as _persist" not in t:
-        t = t.replace(old, new, 1)
-    sp.write_text(t, encoding="utf-8")
-
 INJECT = """
-<link rel=\"stylesheet\" href=\"/static/login-tight.css?v=29\">
-<link rel=\"stylesheet\" href=\"/static/edge-fix.css?v=29\">
-<script src=\"/static/login-tight.js?v=29\"></script>
-<script src=\"/static/market-data.js?v=29\"></script>
-<script src=\"/static/lock-nav.js?v=29\"></script>
-<script src=\"/static/nav-rules.js?v=29\"></script>
-<script src=\"/static/member-id.js?v=29\"></script>
-<script src=\"/static/tx-history.js?v=29\"></script>
-<style id=\"fullbleed-29\">
-#authScreen,.auth-screen{justify-content:flex-start!important;padding-top:48px!important;background:#f0f2f5!important;}
-#authScreen .auth-logo{margin:0 0 14px!important;}
-#authScreen .tabs{margin:0 0 8px!important;}
+<link rel=\"stylesheet\" href=\"/static/login-tight.css?v=30\">
+<script src=\"/static/login-tight.js?v=30\"></script>
+<script src=\"/static/market-data.js?v=30\"></script>
+<script src=\"/static/lock-nav.js?v=30\"></script>
+<script src=\"/static/nav-rules.js?v=30\"></script>
+<script src=\"/static/member-id.js?v=30\"></script>
+<script src=\"/static/tx-history.js?v=30\"></script>
+<style id=\"login-iphone-30\">
+#authScreen{justify-content:flex-start!important;overflow:hidden!important;height:100dvh!important;padding:28px 18px 12px!important;}
+#authScreen .auth-logo{margin:0 0 8px!important;}
+#authScreen img,#authScreen svg{max-height:56px!important;height:56px!important;}
+#authScreen input{min-height:40px!important;height:40px!important;margin:0!important;}
 </style>
 """
 
@@ -59,10 +49,10 @@ for name in ("index.html", "frontend.html"):
     p = root / name
     if p.exists():
         old = p.read_text(encoding="utf-8", errors="replace")
-        new = inject_once(old, "login-tight.css?v=29", INJECT)
+        new = inject_once(old, "login-iphone-30", INJECT)
         if new != old:
             p.write_text(new, encoding="utf-8")
-            print("login tight", name)
+            print("iphone login", name)
 
 print("boot starting server")
 runpy.run_path(str(root / "server.py"), run_name="__main__")

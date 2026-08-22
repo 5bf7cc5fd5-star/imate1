@@ -1,80 +1,107 @@
-/* Facebook-like compact login: small gap under logo */
+/* iPhone 15 Pro: whole login on one screen, no middle hole */
+html.auth-open, body.auth-open {
+  overflow: hidden !important;
+  height: 100dvh !important;
+  background: #f0f2f5 !important;
+}
 #authScreen,
 .auth-screen {
+  position: fixed !important;
+  inset: 0 !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  width: 100% !important;
+  overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: flex-start !important;
   align-items: center !important;
   gap: 0 !important;
-  padding: 48px 20px 24px !important;
-  min-height: 100dvh !important;
-  height: auto !important;
+  padding: 28px 18px 12px !important;
   background: #f0f2f5 !important;
-  overflow-y: auto !important;
+  z-index: 50 !important;
+}
+#authScreen > * {
+  flex: 0 0 auto !important;
+  min-height: 0 !important;
 }
 #authScreen .auth-bg,
 #authScreen .auth-hero,
 #authScreen .spacer,
-#authScreen .auth-gap {
+#authScreen .auth-gap,
+#authScreen canvas,
+#ocPack + .auth-bg {
   display: none !important;
   height: 0 !important;
-  flex: 0 !important;
+  flex: 0 0 0 !important;
 }
-#authScreen .auth-center,
-#authScreen .auth-card,
-#authScreen .login-wrap,
-#authScreen form {
-  width: 100% !important;
-  max-width: 396px !important;
-  margin: 0 auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: flex-start !important;
-  align-items: stretch !important;
-  gap: 10px !important;
-  position: relative !important;
-  top: 0 !important;
-  transform: none !important;
+#authScreen img,
+#authScreen svg,
+#authScreen .skyline,
+#authScreen .city,
+#authScreen .brand-art {
+  max-height: 56px !important;
+  height: 56px !important;
+  width: auto !important;
+  object-fit: contain !important;
+  margin: 0 auto 4px !important;
 }
 #authScreen .auth-logo,
-#authScreen .brand,
-#authScreen h1 {
-  margin: 0 0 14px !important;
+#authScreen .brand {
+  margin: 0 0 8px !important;
   padding: 0 !important;
-  text-align: center !important;
 }
 #authScreen .auth-logo h1,
 #authScreen h1 {
-  font-size: 28px !important;
-  letter-spacing: 0.5px !important;
-  line-height: 1.1 !important;
+  font-size: 22px !important;
+  line-height: 1.15 !important;
+  margin: 0 !important;
 }
 #authScreen .auth-logo p,
 #authScreen .auth-sub {
-  margin: 4px 0 0 !important;
-  font-size: 12px !important;
-  letter-spacing: 1px !important;
+  margin: 2px 0 0 !important;
+  font-size: 11px !important;
+}
+#ocPack {
+  width: 100% !important;
+  max-width: 390px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+#authScreen .auth-center,
+#authScreen .auth-card,
+#authScreen form {
+  width: 100% !important;
+  max-width: 390px !important;
+  margin: 0 auto !important;
+  position: static !important;
+  top: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  gap: 8px !important;
 }
 #authScreen .tabs {
-  margin: 0 0 8px !important;
-  gap: 0 !important;
+  margin: 0 !important;
 }
 #authScreen input,
 #authScreen select,
 #authScreen textarea {
-  margin: 0 0 10px !important;
-  padding: 14px 16px !important;
+  margin: 0 !important;
+  padding: 10px 12px !important;
+  min-height: 40px !important;
+  height: 40px !important;
   border-radius: 8px !important;
-  min-height: 48px !important;
+  font-size: 16px !important;
 }
 #authScreen .btn,
 #authScreen button.btn,
 #authScreen button[type="submit"] {
-  margin: 4px 0 8px !important;
-  min-height: 48px !important;
+  min-height: 42px !important;
+  height: 42px !important;
+  margin: 2px 0 !important;
   border-radius: 8px !important;
 }
-#authScreen .auth-links,
-#authScreen .muted {
-  margin: 4px 0 !important;
-}
+#authScreen .field { margin: 0 !important; }
+#authScreen .field label { margin: 0 0 3px !important; font-size: 12px !important; }
