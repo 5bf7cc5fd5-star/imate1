@@ -21,10 +21,12 @@ button,input,select,textarea{font:inherit}
 .side-nav button.on,.side-nav button:hover{background:var(--ps);color:var(--p);font-weight:700}
 .content{flex:1;min-width:0}.topbar{height:56px;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:10}
 .chip{border:1px solid var(--b);background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer}.chip-p{background:var(--p);color:#fff;border-color:var(--p)}
-.page{padding:20px;max-width:1280px}.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.page{padding:20px;max-width:1400px}.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
 .kpi{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:16px}.kpi .lbl{font-size:12px;color:var(--m);font-weight:600}.kpi .val{font-size:22px;font-weight:800;margin-top:8px}
 .card{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:18px;margin-bottom:14px}.card h3{margin:0 0 14px;font-size:15px}
-table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--m);padding:10px 8px;border-bottom:1px solid var(--b)}td{padding:12px 8px;border-bottom:1px solid var(--b)}
+.table-wrap{overflow:auto;max-height:70vh}
+table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--m);padding:10px 8px;border-bottom:1px solid var(--b);position:sticky;top:0;background:#fff}
+td{padding:10px 8px;border-bottom:1px solid var(--b);vertical-align:top}
 .badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}
 .badge-ok{background:#dcfce7;color:#166534}.badge-bad{background:#fee2e2;color:#991b1b}.badge-wait{background:#fef3c7;color:#92400e}
 .badge-l1{background:#ede9fe;color:#5b21b6}.badge-l2{background:#e0f2fe;color:#075985}.badge-l3{background:#fce7f3;color:#9d174d}.badge-root{background:#fef3c7;color:#92400e}
@@ -32,8 +34,12 @@ table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;font
 .btn-ok{background:#16a34a;color:#fff}.btn-bad{background:#dc2626;color:#fff}.btn-neu{background:#e5e7eb;color:#111}
 .hidden{display:none!important}.toast{position:fixed;right:18px;bottom:18px;background:#111;color:#fff;padding:11px 14px;border-radius:10px;display:none;z-index:50;font-size:13px}
 .empty{color:var(--m);font-size:13px;padding:18px 0}.tree-node{border:1px solid var(--b);border-radius:12px;padding:12px;margin:8px 0;background:#fafafa}.tree-children{margin-left:18px;border-left:2px solid #e9d5ff;padding-left:12px}
-.field{margin-bottom:12px}.field label{display:block;font-size:12px;font-weight:600;margin-bottom:6px}.field input,.field textarea{width:100%;padding:10px 12px;border:1px solid var(--b);border-radius:10px}
+.field{margin-bottom:12px}.field label{display:block;font-size:12px;font-weight:600;margin-bottom:6px}.field input,.field textarea,.field select{width:100%;padding:10px 12px;border:1px solid var(--b);border-radius:10px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:960px){.sidebar{display:none}.kpis,.grid2{grid-template-columns:1fr}}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:11px}
+.pos{color:#166534;font-weight:700}.neg{color:#991b1b;font-weight:700}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filters input,.filters select{padding:8px 10px;border:1px solid var(--b);border-radius:8px}
 </style></head><body>
 <div id="loginView" class="login-shell"><div class="login-card"><h1>Console</h1><p class="sub">Own Club · KMK Holding</p>
 <label>Email</label><input id="email" type="email"><label>Password</label><input id="pass" type="password">
@@ -45,6 +51,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;font
 <button class="on" data-page="dashboard" onclick="goPage('dashboard',this)">Dashboard</button>
 <button data-page="deposits" onclick="goPage('deposits',this)">Deposits</button>
 <button data-page="withdrawals" onclick="goPage('withdrawals',this)">Withdrawals</button>
+<button data-page="logs" onclick="goPage('logs',this)">Transaction log</button>
 <div class="sec">Inventory</div>
 <button data-page="pool" onclick="goPage('pool',this)">Company Pool</button>
 <div class="sec">People</div>
@@ -61,22 +68,38 @@ table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;font
 <main class="page">
 <section id="page-dashboard"><div class="kpis">
 <div class="kpi"><div class="lbl">Members</div><div class="val" id="kUsers">0</div></div>
-<div class="kpi"><div class="lbl">Net invested</div><div class="val" id="kInv">UGX 0</div></div>
-<div class="kpi"><div class="lbl">Company pool</div><div class="val" id="kPool">UGX 0</div></div>
+<div class="kpi"><div class="lbl">Net invested</div><div class="val" id="kInv">$0</div></div>
+<div class="kpi"><div class="lbl">Company pool</div><div class="val" id="kPool">$0</div></div>
 <div class="kpi"><div class="lbl">Pending WD</div><div class="val" id="kPwd">0</div></div>
 </div>
 <div class="card"><h3>Operations</h3><p class="empty" style="padding-top:0">
 <b>Deposit approve:</b> Company Pool ↓ → member wallet ↑.<br>
 <b>Withdraw approve/disburse:</b> member wallet already ↓ → Company Pool ↑.<br>
-Rules from <b>15 Aug 2026</b>. Track inviters under Referrals.
+Rules from <b>15 Aug 2026</b>. Full movement history is under <b>Transaction log</b>.
 </p></div></section>
 <section id="page-deposits" class="hidden"><div class="card"><h3>Deposits</h3><div id="depTable"></div></div></section>
 <section id="page-withdrawals" class="hidden"><div class="card"><h3>Withdrawals</h3><div id="wdTable"></div></div></section>
+<section id="page-logs" class="hidden">
+<div class="kpis">
+<div class="kpi"><div class="lbl">Log rows</div><div class="val" id="logN">0</div></div>
+<div class="kpi"><div class="lbl">Pool</div><div class="val" id="logPool">$0</div></div>
+<div class="kpi"><div class="lbl">Deposits</div><div class="val" id="logDep">0</div></div>
+<div class="kpi"><div class="lbl">Withdrawals</div><div class="val" id="logWd">0</div></div>
+</div>
+<div class="card">
+<h3>Transaction log</h3>
+<div class="filters">
+<select id="logSrc" onchange="renderLogs()"><option value="all">All sources</option><option value="pool">Company pool</option><option value="deposit">Deposits</option><option value="withdraw">Withdrawals</option><option value="credit">Credits</option><option value="member">Member wallet</option></select>
+<input id="logQ" placeholder="Search name, email, TxID, note, id" oninput="renderLogs()">
+</div>
+<div class="table-wrap" id="logTable"></div>
+</div>
+</section>
 <section id="page-pool" class="hidden">
 <div class="kpis"><div class="kpi"><div class="lbl">Pool balance</div><div class="val" id="poolBal">0</div></div>
 <div class="kpi"><div class="lbl">Ledger rows</div><div class="val" id="poolN">0</div></div>
 <div class="kpi"><div class="lbl">Updated</div><div class="val" id="poolAt" style="font-size:13px">—</div></div>
-<div class="kpi"><div class="lbl">Currency</div><div class="val" id="poolCur">UGX</div></div></div>
+<div class="kpi"><div class="lbl">Currency</div><div class="val" id="poolCur">USD</div></div></div>
 <div class="card grid2"><div><h3>Set balance</h3>
 <div class="field"><label>Balance</label><input id="poolSetBal" type="number" step="0.01"></div>
 <div class="field"><label>Note</label><input id="poolSetNote"></div>
@@ -85,7 +108,7 @@ Rules from <b>15 Aug 2026</b>. Track inviters under Referrals.
 <div class="field"><label>Amount</label><input id="poolAdjAmt" type="number" step="0.01"></div>
 <div class="field"><label>Note</label><input id="poolAdjNote"></div>
 <button class="chip chip-p" onclick="adjPool()">Post</button></div></div>
-<div class="card"><h3>Inventory ledger</h3><div id="poolLedger"></div></div>
+<div class="card"><h3>Inventory ledger</h3><div class="table-wrap" id="poolLedger"></div></div>
 </section>
 <section id="page-members" class="hidden"><div class="card"><h3>Members</h3><div id="memTable"></div></div></section>
 <section id="page-referrals" class="hidden"><div class="card">
@@ -111,31 +134,89 @@ Rules from <b>15 Aug 2026</b>. Track inviters under Referrals.
 <div class="toast" id="toast"></div>
 <script>
 var TOKEN=localStorage.getItem("oc_sys_token")||"";
-var DEPOSITS=[],WITHDRAWALS=[],USERS=[],ROOT_CODE="IMXT2Y0M8D";
-var PAGES=["dashboard","deposits","withdrawals","pool","members","referrals","credit","rules"];
+var DEPOSITS=[],WITHDRAWALS=[],USERS=[],POOL={ledger:[]},ROOT_CODE="IMXT2Y0M8D";
+var PAGES=["dashboard","deposits","withdrawals","logs","pool","members","referrals","credit","rules"];
 function toast(m){var t=document.getElementById("toast");t.textContent=m;t.style.display="block";setTimeout(function(){t.style.display="none"},2800)}
-function money(n){return "UGX "+Number(n||0).toLocaleString()}
+function money(n){n=Number(n||0);var sign=n<0?"-":"";return sign+"$"+Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+function when(x){return String(x||"").replace("T"," ").slice(0,19)||"—"}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]})}
 function api(path,method,body){var o={method:method||"GET",headers:{"Content-Type":"application/json"}};if(TOKEN)o.headers.Authorization="Bearer "+TOKEN;if(body!==undefined&&method&&method!=="GET")o.body=JSON.stringify(body);return fetch(path,o).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||("HTTP "+r.status));return j})})}
 function doLogin(){api("/api/login","POST",{identifier:document.getElementById("email").value.trim(),password:document.getElementById("pass").value}).then(function(r){if(!(r.user&&(r.user.is_admin||r.user.is_support)))throw new Error("System only");TOKEN=r.token;localStorage.setItem("oc_sys_token",TOKEN);showShell()}).catch(function(e){toast(e.message)})}
 function logout(){TOKEN="";localStorage.removeItem("oc_sys_token");location.reload()}
 function showShell(){document.getElementById("loginView").classList.add("hidden");document.getElementById("shellView").classList.remove("hidden");refreshAll()}
-function goPage(name,btn){PAGES.forEach(function(p){var el=document.getElementById("page-"+p);if(el)el.classList.toggle("hidden",p!==name)});document.querySelectorAll(".side-nav button[data-page]").forEach(function(b){b.classList.remove("on")});if(btn)btn.classList.add("on");document.getElementById("crumb").innerHTML="<b>"+name+"</b>";if(name==="pool")loadPool();if(name==="rules")loadRules()}
-function badge(st){st=String(st||"").toLowerCase();if(/confirm|disburse|approv|ok|paid/.test(st))return"badge-ok";if(/reject|fail|cancel/.test(st))return"badge-bad";return"badge-wait"}
+function goPage(name,btn){PAGES.forEach(function(p){var el=document.getElementById("page-"+p);if(el)el.classList.toggle("hidden",p!==name)});document.querySelectorAll(".side-nav button[data-page]").forEach(function(b){b.classList.remove("on")});if(btn)btn.classList.add("on");document.getElementById("crumb").innerHTML="<b>"+name+"</b>";if(name==="pool")loadPool();if(name==="rules")loadRules();if(name==="logs")renderLogs()}
+function badge(st){st=String(st||"").toLowerCase();if(/confirm|disburse|approv|ok|paid|opening/.test(st))return"badge-ok";if(/reject|fail|cancel/.test(st))return"badge-bad";return"badge-wait"}
 function normCode(c){return String(c||"").trim().toUpperCase()}
 function userCode(u){return normCode(u.inviteCode||u.invite_code||u.referralCode||u.code)}
 function usedCode(u){return normCode(u.referredBy||u.referred_by||u.invitedBy||u.invited_by||u.parentCode||u.usedInvite||u.signup_invite||u.inviteUsed)}
 function sharesCount(u){return (u.machines&&u.machines.length)||u.shares||0}
+function findUser(id){id=String(id||"");return USERS.find(function(u){return String(u.id||"")===id||String(u.email||"")===id||String(u.phone||"")===id})}
+function memberLabel(id,fallback){var u=findUser(id);if(u)return (u.name||"Member")+" · "+(u.phone||u.email||"");return fallback||id||"—"}
 function classifyLevels(users){var byCode={},levelOf={};users.forEach(function(u){var c=userCode(u);if(c)byCode[c]=u});function levelFor(u,d){if(d>20)return 99;var id=u.id||u.email||userCode(u);if(levelOf[id]!=null)return levelOf[id];if(u.is_admin||(u.email||"").toLowerCase()==="k_hmed@yahoo.com"){levelOf[id]=0;return 0}var used=usedCode(u);if(!used||used===ROOT_CODE){levelOf[id]=1;return 1}var parent=byCode[used];if(!parent){levelOf[id]=1;return 1}levelOf[id]=levelFor(parent,d+1)+1;return levelOf[id]}users.forEach(function(u){levelFor(u,0)});return{levelOf:levelOf,byCode:byCode}}
+function buildLog(){
+  var rows=[];
+  (POOL.ledger||[]).forEach(function(e){
+    var m=e.meta||{};
+    rows.push({at:e.at||"",src:"pool",id:e.id||"",type:e.type||"ledger",member:memberLabel(m.user_id),amount:e.amount,before:e.balance_before,after:e.balance_after,txid:m.txid||m.tx_id||"",ref:m.deposit_id||m.withdrawal_id||"",status:e.type||"",note:e.note||"",raw:e});
+  });
+  DEPOSITS.forEach(function(d){
+    rows.push({at:d.date||d.created_at||"",src:"deposit",id:d.id||"",type:"deposit",member:d.name||d.user_name||memberLabel(d.user_id),amount:d.amount,before:"",after:"",txid:d.txid||d.tx_id||"",ref:d.user_id||"",status:d.status||"pending",note:(d.method||"")+(d.note?" — "+d.note:""),raw:d});
+  });
+  WITHDRAWALS.forEach(function(w){
+    rows.push({at:w.date||w.created_at||"",src:"withdraw",id:w.id||"",type:"withdraw",member:w.name||w.user_name||memberLabel(w.user_id),amount:w.amount,before:"",after:"",txid:w.txid||w.destination||"",ref:w.user_id||"",status:w.status||"pending",note:(w.method||"")+(w.admin_note?" — "+w.admin_note:""),raw:w});
+  });
+  USERS.forEach(function(u){
+    (u.transactions||[]).forEach(function(t,i){
+      var typ=String(t.type||"tx");
+      var src=/credit/i.test(typ)?"credit":"member";
+      rows.push({at:t.date||t.at||"",src:src,id:(u.id||u.email||"u")+"-tx-"+i,type:typ,member:(u.name||"")+" · "+(u.phone||u.email||""),amount:t.amount,before:"",after:"",txid:t.txid||"",ref:u.id||"",status:"posted",note:typ,raw:t});
+    });
+  });
+  rows.sort(function(a,b){return String(b.at).localeCompare(String(a.at))});
+  return rows;
+}
+function renderLogs(){
+  var src=(document.getElementById("logSrc")||{}).value||"all";
+  var q=((document.getElementById("logQ")||{}).value||"").trim().toLowerCase();
+  var rows=buildLog().filter(function(r){
+    if(src!=="all" && r.src!==src) return false;
+    if(!q) return true;
+    return (r.member+" "+r.type+" "+r.id+" "+r.txid+" "+r.note+" "+r.ref).toLowerCase().indexOf(q)>=0;
+  });
+  document.getElementById("logN").textContent=rows.length;
+  document.getElementById("logPool").textContent=money(POOL.balance);
+  document.getElementById("logDep").textContent=DEPOSITS.length;
+  document.getElementById("logWd").textContent=WITHDRAWALS.length;
+  if(!rows.length){document.getElementById("logTable").innerHTML="<div class='empty'>No matching rows</div>";return}
+  var h="<table><thead><tr><th>When</th><th>Source</th><th>ID</th><th>Type</th><th>Member</th><th>Amount</th><th>Pool before</th><th>Pool after</th><th>TxID / dest</th><th>Ref</th><th>Status</th><th>Note</th></tr></thead><tbody>";
+  rows.forEach(function(r){
+    var amtCls=Number(r.amount)<0?"neg":"pos";
+    h+="<tr>"+
+      "<td class='mono'>"+esc(when(r.at))+"</td>"+
+      "<td>"+esc(r.src)+"</td>"+
+      "<td class='mono'>"+esc(r.id)+"</td>"+
+      "<td>"+esc(r.type)+"</td>"+
+      "<td>"+esc(r.member)+"</td>"+
+      "<td class='"+amtCls+"'>"+money(r.amount)+"</td>"+
+      "<td>"+(r.before===""?"—":money(r.before))+"</td>"+
+      "<td>"+(r.after===""?"—":money(r.after))+"</td>"+
+      "<td class='mono'>"+esc(r.txid||"—")+"</td>"+
+      "<td class='mono'>"+esc(r.ref||"—")+"</td>"+
+      "<td><span class='badge "+badge(r.status)+"'>"+esc(r.status)+"</span></td>"+
+      "<td>"+esc(r.note)+"</td></tr>";
+  });
+  document.getElementById("logTable").innerHTML=h+"</tbody></table>";
+}
 function renderReferrals(){var cls=classifyLevels(USERS);var rows=USERS.map(function(u){var id=u.id||u.email||userCode(u);return{u:u,level:cls.levelOf[id]==null?1:cls.levelOf[id],code:userCode(u),used:usedCode(u),shares:sharesCount(u)}}).sort(function(a,b){return a.level-b.level});var c1=0,c2=0,c3=0,cb=0;rows.forEach(function(r){if(r.level===0)return;if(r.level===1)c1++;else if(r.level===2)c2++;else c3++;if(r.shares>0)cb++});document.getElementById("refL1").textContent=c1;document.getElementById("refL2").textContent=c2;document.getElementById("refL3").textContent=c3;document.getElementById("refBuy").textContent=cb;var h="<table><thead><tr><th>Level</th><th>Name</th><th>Phone</th><th>Email</th><th>Invite code</th><th>Invited by</th><th>Shares</th></tr></thead><tbody>";rows.forEach(function(r){var inv=r.used===ROOT_CODE?ROOT_CODE+" (root)":(cls.byCode[r.used]?(cls.byCode[r.used].name||"")+" · "+r.used:(r.used||"—"));h+="<tr><td><span class='badge "+(r.level===0?"badge-root":r.level===1?"badge-l1":r.level===2?"badge-l2":"badge-l3")+"'>"+(r.level===0?"ROOT":"L"+r.level)+"</span></td><td>"+(r.u.name||"—")+"</td><td>"+(r.u.phone||"—")+"</td><td>"+(r.u.email||"—")+"</td><td><code>"+(r.code||"—")+"</code></td><td>"+inv+"</td><td>"+r.shares+"</td></tr>"});document.getElementById("refTable").innerHTML=h+"</tbody></table>";var children={};rows.forEach(function(r){if(r.level===0)return;var k=r.used||ROOT_CODE;if(!children[k])children[k]=[];children[k].push(r)});function rn(code,d){var list=children[code]||[];if(!list.length)return d===0?"<div class='empty'>No referrals under "+code+"</div>":"";var out="";list.forEach(function(r){out+="<div class='tree-node'><b>"+(r.u.name||"Member")+"</b> L"+r.level+" · <code>"+(r.code||"")+"</code><div style='font-size:12px;color:#6b7280'>"+(r.u.phone||"")+" · "+(r.u.email||"")+"</div>";if(r.code&&children[r.code])out+="<div class='tree-children'>"+rn(r.code,d+1)+"</div>";out+="</div>"});return out}document.getElementById("refTree").innerHTML=rn(ROOT_CODE,0)}
-function loadPool(){api("/api/admin/pool").then(function(p){document.getElementById("poolBal").textContent=money(p.balance);document.getElementById("kPool").textContent=money(p.balance);document.getElementById("poolN").textContent=(p.ledger||[]).length;document.getElementById("poolAt").textContent=(p.updated_at||"").toString().slice(0,19).replace("T"," ");document.getElementById("poolCur").textContent=p.currency||"UGX";var led=p.ledger||[];if(!led.length){document.getElementById("poolLedger").innerHTML="<div class='empty'>No ledger yet</div>";return}var h="<table><thead><tr><th>When</th><th>Type</th><th>Amount</th><th>After</th><th>Note</th></tr></thead><tbody>";led.slice(0,100).forEach(function(e){h+="<tr><td>"+(e.at||"").toString().slice(0,19).replace("T"," ")+"</td><td>"+e.type+"</td><td>"+money(e.amount)+"</td><td>"+money(e.balance_after)+"</td><td>"+(e.note||"")+"</td></tr>"});document.getElementById("poolLedger").innerHTML=h+"</tbody></table>"}).catch(function(e){document.getElementById("poolLedger").innerHTML="<div class='empty'>"+e.message+"</div>"})}
+function loadPool(){api("/api/admin/pool").then(function(p){POOL=p||{ledger:[]};document.getElementById("poolBal").textContent=money(p.balance);document.getElementById("kPool").textContent=money(p.balance);document.getElementById("poolN").textContent=(p.ledger||[]).length;document.getElementById("poolAt").textContent=when(p.updated_at);document.getElementById("poolCur").textContent=p.currency||"USD";var led=p.ledger||[];if(!led.length){document.getElementById("poolLedger").innerHTML="<div class='empty'>No ledger yet</div>";renderLogs();return}var h="<table><thead><tr><th>When</th><th>ID</th><th>Type</th><th>Amount</th><th>Before</th><th>After</th><th>Member / ref</th><th>Note</th></tr></thead><tbody>";led.slice(0,300).forEach(function(e){var m=e.meta||{};h+="<tr><td class='mono'>"+esc(when(e.at))+"</td><td class='mono'>"+esc(e.id||"")+"</td><td>"+esc(e.type)+"</td><td class='"+(Number(e.amount)<0?"neg":"pos")+"'>"+money(e.amount)+"</td><td>"+money(e.balance_before)+"</td><td>"+money(e.balance_after)+"</td><td>"+esc(memberLabel(m.user_id,m.deposit_id||m.withdrawal_id||""))+"</td><td>"+esc(e.note||"")+"</td></tr>"});document.getElementById("poolLedger").innerHTML=h+"</tbody></table>";renderLogs()}).catch(function(e){document.getElementById("poolLedger").innerHTML="<div class='empty'>"+e.message+"</div>"})}
 function setPool(){api("/api/admin/pool/set","POST",{balance:Number(document.getElementById("poolSetBal").value),note:document.getElementById("poolSetNote").value||"set"}).then(function(){toast("Pool saved");loadPool()}).catch(function(e){toast(e.message)})}
 function adjPool(){api("/api/admin/pool/adjust","POST",{type:"adjust",amount:Number(document.getElementById("poolAdjAmt").value),note:document.getElementById("poolAdjNote").value||"adj"}).then(function(){toast("Posted");loadPool()}).catch(function(e){toast(e.message)})}
 function loadRules(){api("/api/admin/withdraw-rules").then(function(r){var caps=r.vip_daily_caps||{};var h="<p><b>Effective:</b> "+(r.effective_from||"2026-08-15")+" · Fee "+((r.fee_pct||0.05)*100)+"%</p><table><thead><tr><th>VIP</th><th>Max / day</th></tr></thead><tbody>";Object.keys(caps).sort().forEach(function(k){h+="<tr><td>VIP-"+k+"</td><td>"+money(caps[k])+"</td></tr>"});h+="</tbody></table><h3 style='margin-top:14px'>Deposit</h3><ul>"+(r.deposit_flow||[]).map(function(x){return"<li>"+x+"</li>"}).join("")+"</ul><h3>Withdraw</h3><ul>"+(r.flow||[]).map(function(x){return"<li>"+x+"</li>"}).join("")+"</ul>";document.getElementById("rulesBox").innerHTML=h}).catch(function(e){document.getElementById("rulesBox").innerHTML="<div class='empty'>"+e.message+"</div>"})}
 function creditOne(){api("/api/admin/credit","POST",{identifier:document.getElementById("crId").value.trim(),amount:Number(document.getElementById("crAmt").value),note:document.getElementById("crNote").value}).then(function(){toast("Credited");refreshAll()}).catch(function(e){toast(e.message)})}
 function creditBulk(){api("/api/admin/credit/bulk","POST",{lines:document.getElementById("crBulk").value}).then(function(r){var ok=(r.results||[]).filter(function(x){return x.ok}).length;var bad=(r.results||[]).filter(function(x){return!x.ok});document.getElementById("crBulkOut").innerHTML="<b>"+ok+" ok</b>, "+bad.length+" failed<br>"+bad.map(function(x){return(x.identifier||"")+" — "+x.error}).join("<br>");toast("Bulk done");refreshAll()}).catch(function(e){toast(e.message)})}
-function refreshAll(){api("/api/admin/stats").then(function(s){document.getElementById("kUsers").textContent=s.users||s.total_users||0;document.getElementById("kInv").textContent=money(s.invested||s.total_invested||0);document.getElementById("kPwd").textContent=s.pending_withdrawals||0}).catch(function(){});loadPool();api("/api/admin/deposits").then(function(r){DEPOSITS=r.deposits||[];renderDeposits()}).catch(function(e){document.getElementById("depTable").innerHTML="<div class='empty'>"+e.message+"</div>"});api("/api/admin/withdrawals").then(function(r){WITHDRAWALS=r.withdrawals||[];renderWithdrawals()}).catch(function(e){document.getElementById("wdTable").innerHTML="<div class='empty'>"+e.message+"</div>"});api("/api/admin/users").then(function(r){USERS=r.users||[];renderMembers();renderReferrals()}).catch(function(e){document.getElementById("memTable").innerHTML="<div class='empty'>"+e.message+"</div>"})}
-function renderDeposits(){if(!DEPOSITS.length){document.getElementById("depTable").innerHTML="<div class='empty'>No deposits</div>";return}var h="<table><thead><tr><th>Date</th><th>Member</th><th>Phone</th><th>Amount</th><th>TxID</th><th>Status</th><th></th></tr></thead><tbody>";DEPOSITS.forEach(function(d){var st=d.status||"pending",id=d.id||"",uid=d.user_id||"";h+="<tr><td>"+(d.date||d.created_at||"—")+"</td><td>"+(d.name||d.user_name||d.user||"—")+"</td><td>"+(d.phone||d.user_phone||"—")+"</td><td>"+money(d.amount)+"</td><td>"+(d.txid||d.tx_id||"—")+"</td><td><span class='badge "+badge(st)+"'>"+st+"</span></td><td class='row-actions'>";if(/pend|submit/i.test(st))h+="<button class='btn-ok' onclick='depAct(\""+id+"\",\""+uid+"\",\"confirm\")'>Approve → pool→wallet</button><button class='btn-bad' onclick='depAct(\""+id+"\",\""+uid+"\",\"reject\")'>Reject</button>";h+="</td></tr>"});document.getElementById("depTable").innerHTML=h+"</tbody></table>"}
-function renderWithdrawals(){if(!WITHDRAWALS.length){document.getElementById("wdTable").innerHTML="<div class='empty'>No withdrawals</div>";return}var h="<table><thead><tr><th>Date</th><th>Member</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>";WITHDRAWALS.forEach(function(w){var st=w.status||"pending",id=w.id||"";h+="<tr><td>"+(w.date||w.created_at||"—")+"</td><td>"+(w.name||w.user_name||w.user||"—")+"</td><td>"+money(w.amount)+"</td><td><span class='badge "+badge(st)+"'>"+st+"</span></td><td class='row-actions'>";if(/review|pend/i.test(st)&&!/reviewed|approv|disburse/i.test(st))h+="<button class='btn-neu' onclick='wdAct(\""+id+"\",\"review\")'>Review</button><button class='btn-ok' onclick='wdAct(\""+id+"\",\"approve\")'>Approve → pool</button><button class='btn-bad' onclick='wdAct(\""+id+"\",\"reject\")'>Reject</button>";else if(/reviewed|approv/i.test(st)&&!/disburse/i.test(st))h+="<button class='btn-ok' onclick='wdAct(\""+id+"\",\"disburse\")'>Disburse → pool</button>";h+="</td></tr>"});document.getElementById("wdTable").innerHTML=h+"</tbody></table>"}
+function refreshAll(){api("/api/admin/stats").then(function(s){document.getElementById("kUsers").textContent=s.users||s.total_users||0;document.getElementById("kInv").textContent=money(s.invested||s.total_invested||0);document.getElementById("kPwd").textContent=s.pending_withdrawals||0}).catch(function(){});loadPool();api("/api/admin/deposits").then(function(r){DEPOSITS=r.deposits||[];renderDeposits();renderLogs()}).catch(function(e){document.getElementById("depTable").innerHTML="<div class='empty'>"+e.message+"</div>"});api("/api/admin/withdrawals").then(function(r){WITHDRAWALS=r.withdrawals||[];renderWithdrawals();renderLogs()}).catch(function(e){document.getElementById("wdTable").innerHTML="<div class='empty'>"+e.message+"</div>"});api("/api/admin/users").then(function(r){USERS=r.users||[];renderMembers();renderReferrals();renderLogs()}).catch(function(e){document.getElementById("memTable").innerHTML="<div class='empty'>"+e.message+"</div>"})}
+function renderDeposits(){if(!DEPOSITS.length){document.getElementById("depTable").innerHTML="<div class='empty'>No deposits</div>";return}var h="<table><thead><tr><th>Date</th><th>ID</th><th>Member</th><th>Phone</th><th>Amount</th><th>Method</th><th>TxID</th><th>Status</th><th></th></tr></thead><tbody>";DEPOSITS.forEach(function(d){var st=d.status||"pending",id=d.id||"",uid=d.user_id||"";h+="<tr><td class='mono'>"+esc(when(d.date||d.created_at))+"</td><td class='mono'>"+esc(id)+"</td><td>"+esc(d.name||d.user_name||d.user||"—")+"</td><td>"+esc(d.phone||d.user_phone||"—")+"</td><td>"+money(d.amount)+"</td><td>"+esc(d.method||"—")+"</td><td class='mono'>"+esc(d.txid||d.tx_id||"—")+"</td><td><span class='badge "+badge(st)+"'>"+st+"</span></td><td class='row-actions'>";if(/pend|submit/i.test(st))h+="<button class='btn-ok' onclick='depAct(\""+id+"\",\""+uid+"\",\"confirm\")'>Approve → pool→wallet</button><button class='btn-bad' onclick='depAct(\""+id+"\",\""+uid+"\",\"reject\")'>Reject</button>";h+="</td></tr>"});document.getElementById("depTable").innerHTML=h+"</tbody></table>"}
+function renderWithdrawals(){if(!WITHDRAWALS.length){document.getElementById("wdTable").innerHTML="<div class='empty'>No withdrawals</div>";return}var h="<table><thead><tr><th>Date</th><th>ID</th><th>Member</th><th>Amount</th><th>Fee</th><th>Dest</th><th>Status</th><th></th></tr></thead><tbody>";WITHDRAWALS.forEach(function(w){var st=w.status||"pending",id=w.id||"";h+="<tr><td class='mono'>"+esc(when(w.date||w.created_at))+"</td><td class='mono'>"+esc(id)+"</td><td>"+esc(w.name||w.user_name||w.user||"—")+"</td><td>"+money(w.amount)+"</td><td>"+money(w.fee)+"</td><td class='mono'>"+esc(w.destination||w.method||"—")+"</td><td><span class='badge "+badge(st)+"'>"+st+"</span></td><td class='row-actions'>";if(/review|pend/i.test(st)&&!/reviewed|approv|disburse/i.test(st))h+="<button class='btn-neu' onclick='wdAct(\""+id+"\",\"review\")'>Review</button><button class='btn-ok' onclick='wdAct(\""+id+"\",\"approve\")'>Approve → pool</button><button class='btn-bad' onclick='wdAct(\""+id+"\",\"reject\")'>Reject</button>";else if(/reviewed|approv/i.test(st)&&!/disburse/i.test(st))h+="<button class='btn-ok' onclick='wdAct(\""+id+"\",\"disburse\")'>Disburse → pool</button>";h+="</td></tr>"});document.getElementById("wdTable").innerHTML=h+"</tbody></table>"}
 function renderMembers(){if(!USERS.length){document.getElementById("memTable").innerHTML="<div class='empty'>No members</div>";return}var cls=classifyLevels(USERS);var h="<table><thead><tr><th>Level</th><th>Name</th><th>Phone</th><th>Email</th><th>Balance</th><th>Shares</th><th>Code</th><th>Invited by</th></tr></thead><tbody>";USERS.forEach(function(u){var id=u.id||u.email||userCode(u),lv=cls.levelOf[id]==null?1:cls.levelOf[id],used=usedCode(u);h+="<tr><td><span class='badge "+(lv===0?"badge-root":lv===1?"badge-l1":lv===2?"badge-l2":"badge-l3")+"'>"+(lv===0?"ROOT":"L"+lv)+"</span></td><td>"+(u.name||"—")+"</td><td>"+(u.phone||"—")+"</td><td>"+(u.email||"—")+"</td><td>"+money(u.balance)+"</td><td>"+sharesCount(u)+"</td><td><code>"+(userCode(u)||"—")+"</code></td><td>"+(used===ROOT_CODE?"ROOT":(used||"—"))+"</td></tr>"});document.getElementById("memTable").innerHTML=h+"</tbody></table>"}
 function depAct(id,uid,action){api("/api/admin/deposits/action","POST",{id:id,user_id:uid,action:action}).then(function(){toast("Deposit updated");refreshAll()}).catch(function(e){toast(e.message)})}
 function wdAct(id,action){api("/api/admin/withdrawals/action","POST",{id:id,action:action}).then(function(){toast("Withdrawal updated");refreshAll()}).catch(function(e){toast(e.message)})}

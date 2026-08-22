@@ -1,1 +1,1 @@
-REDEPLOY 2026-08-22-17-55 pool-100m-usd
+REDEPLOY 2026-08-22-17-58 transaction-log-details
