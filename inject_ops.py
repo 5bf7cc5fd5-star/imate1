@@ -1,4 +1,4 @@
-"""Patch server.py: company pool, credits, VIP withdraw caps, member IDs."""
+"""Patch server.py: pool, credits, VIP rules, member IDs, staff positions."""
 from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 SP = ROOT / "server.py"
@@ -10,6 +10,11 @@ try:
 except Exception as _e:
     _ops = None
     print("ops_api not loaded:", _e)
+try:
+    import staff_roles as _roles
+except Exception as _re:
+    _roles = None
+    print("staff_roles not loaded:", _re)
 
 def _pool_on_deposit_confirm(user, dep):
     if not _ops: return
@@ -46,6 +51,8 @@ NEW_PUB = '''def public_user(u):
         "id": u["id"],
         "name": u["name"],
         "member_no": u.get("member_no") or "",
+        "position": u.get("position") or ("owner" if u.get("is_admin") else ("support" if u.get("is_support") else "")),
+        "position_label": u.get("position_label") or "",
 '''
 
 OLD_REG = '''            "id": "u_" + uuid.uuid4().hex[:12],
@@ -57,145 +64,114 @@ NEW_REG = '''            "id": "u_" + uuid.uuid4().hex[:12],
             "name": name,
 '''
 
-OLD_DEP = '''    if action == "confirm":
-        dep["status"] = "confirmed"
-        user["balance"] = round(user.get("balance", 0) + float(dep["amount"]), 2)
-        user.setdefault("transactions", []).insert(0, {
-            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "type": f"Deposit confirmed — {dep['method']}",
-            "amount": dep["amount"],
-        })
-'''
+STAFF_MARKER = "# === STAFF POSITIONS ==="
+STAFF_BLOCK = r'''
+# === STAFF POSITIONS ===
+def _staff_set(body):
+    if not _roles:
+        raise RuntimeError("staff_roles missing")
+    uid = body.get("id") or body.get("user_id")
+    user = find_user(uid=uid) or find_user(email=body.get("email"))
+    if not user:
+        raise ValueError("Staff not found")
+    _roles.apply_position(user, body.get("position"))
+    if body.get("name"):
+        user["name"] = body.get("name").strip()
+    update_user(user)
+    return public_user(user)
 
-NEW_DEP = '''    if action == "confirm":
-        dep["status"] = "confirmed"
-        user["balance"] = round(user.get("balance", 0) + float(dep["amount"]), 2)
-        user.setdefault("transactions", []).insert(0, {
-            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "type": f"Deposit confirmed — {dep.get('method', 'deposit')}",
-            "amount": dep["amount"],
-        })
-        try:
-            _pool_on_deposit_confirm(user, dep)
-        except Exception as _pe:
-            print("pool dep", _pe)
-'''
-
-OLD_WD_OK = '''    wd["status"] = "approved" if action == "approve" else "rejected"
-    wd["processed_at"] = datetime.now(timezone.utc).isoformat()
-    wd["admin_note"] = note
-    if action == "reject":
-'''
-
-NEW_WD_OK = '''    if action in ("approve", "disburse"):
-        wd["status"] = "disbursed" if action == "disburse" else "approved"
-        try:
-            _pool_on_withdraw_disburse(wd)
-        except Exception as _pe:
-            print("pool wd", _pe)
-    else:
-        wd["status"] = "rejected"
-    wd["processed_at"] = datetime.now(timezone.utc).isoformat()
-    wd["admin_note"] = note
-    if action == "reject":
-'''
-
-OLD_WD_ACT = '''    if action not in ("approve", "reject"):
-        return self._json(400, {"error": "action must be approve or reject"})
-'''
-
-NEW_WD_ACT = '''    if action not in ("approve", "reject", "disburse", "review"):
-        return self._json(400, {"error": "action must be approve, review, disburse or reject"})
-    if action == "review":
-        items = get_withdrawals()
-        wd = next((w for w in items if w["id"] == body.get("id")), None)
-        if not wd:
-            return self._json(404, {"error": "Withdrawal not found"})
-        wd["status"] = "reviewed"
-        wd["processed_at"] = datetime.now(timezone.utc).isoformat()
-        save_withdrawals(items)
-        return self._json(200, {"message": "Withdrawal reviewed", "withdrawal": wd})
-'''
-
-OLD_WD_BAL = '''    if amount > user.get("balance", 0):
-        return self._json(400, {"error": "Insufficient balance"})
-
-    fee = round(amount * 0.05, 2)
-'''
-
-NEW_WD_BAL = '''    if amount > user.get("balance", 0):
-        return self._json(400, {"error": "Insufficient balance"})
-
+def _staff_create(body):
+    if not _roles:
+        raise RuntimeError("staff_roles missing")
+    email = (body.get("email") or "").strip().lower()
+    name = (body.get("name") or "").strip()
+    phone = (body.get("phone") or "").strip()
+    password = body.get("password") or ""
+    if not email or not name or not password:
+        raise ValueError("Name, email and password required")
+    if find_user(email=email):
+        raise ValueError("Email already registered")
+    user = {
+        "id": "st_" + uuid.uuid4().hex[:10],
+        "name": name,
+        "phone": phone,
+        "email": email,
+        "password_hash": hash_password(password),
+        "invite_code": gen_invite_code(),
+        "balance": 0,
+        "machines": [],
+        "transactions": [],
+        "deposits": [],
+        "is_admin": False,
+        "is_support": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
     try:
-        if _ops:
-            rules = _ops.withdraw_rules_payload(user)
-            mem = rules.get("member") or {}
-            cap = float(mem.get("daily_cap") or 5000)
-            used = float(mem.get("withdrawn_today") or 0)
-            if amount + used > cap + 1e-6:
-                return self._json(400, {"error": f"Daily withdraw limit VIP-{mem.get('vip',1)} is {cap:,.0f}. Used today {used:,.0f}. Remaining {max(0,cap-used):,.0f}.", "rules": rules})
-    except Exception as _ve:
-        print("vip check", _ve)
-
-    fee = round(amount * 0.05, 2)
+        user["member_no"] = __import__("member_ids").alloc(get_users())
+    except Exception:
+        user["member_no"] = ""
+    _roles.apply_position(user, body.get("position") or "support")
+    users = get_users()
+    users.append(user)
+    save_users(users)
+    return public_user(user)
 '''
 
 OLD_ADMIN_ROUTES = '''    if path == "/api/admin/withdrawals/action":
         return self._admin_withdrawal_action(body)
     if path == "/api/admin/deposits/action":
         return self._admin_deposit_action(body)
-
-    self._json(404, {"error": "Not found"})
 '''
 
-NEW_ADMIN_ROUTES = '''    if path == "/api/admin/withdrawals/action":
+STAFF_ROUTES = '''    if path == "/api/admin/withdrawals/action":
         return self._admin_withdrawal_action(body)
     if path == "/api/admin/deposits/action":
         return self._admin_deposit_action(body)
-    if path == "/api/admin/pool":
-        if not _ops: return self._json(500, {"error": "ops_api missing"})
-        return self._json(200, _ops.get_pool())
-    if path == "/api/admin/pool/set":
-        if not _ops: return self._json(500, {"error": "ops_api missing"})
+    if path == "/api/admin/staff/set":
         try:
-            return self._json(200, _ops.set_pool_balance(float(body.get("balance")), body.get("note") or "Admin set pool"))
+            return self._json(200, {"user": _staff_set(body)})
         except Exception as e:
             return self._json(400, {"error": str(e)})
-    if path == "/api/admin/pool/adjust":
-        if not _ops: return self._json(500, {"error": "ops_api missing"})
+    if path == "/api/admin/staff/create":
         try:
-            return self._json(200, _ops.pool_ledger(body.get("type") or "adjust", float(body.get("amount") or 0), body.get("note") or "adjust", body.get("meta") or {}))
+            return self._json(200, {"user": _staff_create(body)})
         except Exception as e:
             return self._json(400, {"error": str(e)})
-    if path == "/api/admin/credit":
-        try:
-            u = _ops.credit_user(find_user, update_user, public_user, body.get("identifier") or body.get("email") or body.get("phone") or body.get("id"), float(body.get("amount") or 0), body.get("note") or "")
-            return self._json(200, {"message": "Credited", "user": u})
-        except Exception as e:
-            return self._json(400, {"error": str(e)})
-    if path == "/api/admin/credit/bulk":
-        lines = body.get("lines") or body.get("items") or []
-        if isinstance(lines, str):
-            lines = [ln.strip() for ln in lines.splitlines() if ln.strip()]
-        try:
-            return self._json(200, {"results": _ops.bulk_credit(find_user, update_user, public_user, lines)})
-        except Exception as e:
-            return self._json(400, {"error": str(e)})
-    if path == "/api/admin/withdraw-rules":
-        uid = body.get("user_id") if body else None
-        u = find_user(uid=uid) if uid else None
-        return self._json(200, _ops.withdraw_rules_payload(u) if _ops else {})
-
-    self._json(404, {"error": "Not found"})
 '''
 
 def apply_member_ids(t):
     if '"member_no": u.get("member_no")' not in t and OLD_PUB in t:
         t = t.replace(OLD_PUB, NEW_PUB, 1)
-        print("patched public_user member_no")
+        print("patched public_user")
     if '"member_no": __import__("member_ids")' not in t and OLD_REG in t:
         t = t.replace(OLD_REG, NEW_REG, 1)
-        print("patched register member_no")
+        print("patched register")
+    return t
+
+def apply_staff(t):
+    if STAFF_MARKER not in t:
+        anchor = "DATA_DIR.mkdir(exist_ok=True)"
+        if anchor in t:
+            t = t.replace(anchor, anchor + "\n" + STAFF_BLOCK, 1)
+        else:
+            t = STAFF_BLOCK + "\n" + t
+        print("staff helpers")
+    if "/api/admin/staff/set" not in t and OLD_ADMIN_ROUTES in t:
+        t = t.replace(OLD_ADMIN_ROUTES, STAFF_ROUTES, 1)
+        print("staff routes")
+    get_anchor = 'if path == "/api/admin/users":'
+    extra = '''if path == "/api/admin/positions":
+            try:
+                import staff_roles as _sr
+                return self._json(200, {"positions": _sr.list_positions()})
+            except Exception as e:
+                return self._json(500, {"error": str(e)})
+        if path == "/api/admin/staff":
+            return self._json(200, {"staff": [public_user(u) for u in get_users()]})
+        '''
+    if get_anchor in t and "/api/admin/positions" not in t:
+        t = t.replace(get_anchor, extra + get_anchor, 1)
+        print("staff GET")
     return t
 
 def main():
@@ -208,23 +184,11 @@ def main():
             t = t.replace(anchor, anchor + "\n" + PATCH_HELPERS, 1)
         else:
             t = PATCH_HELPERS + "\n" + t
-        if OLD_DEP in t:
-            t = t.replace(OLD_DEP, NEW_DEP, 1); print("patched deposit")
-        if OLD_WD_ACT in t:
-            t = t.replace(OLD_WD_ACT, NEW_WD_ACT, 1); print("patched wd act")
-        if OLD_WD_OK in t:
-            t = t.replace(OLD_WD_OK, NEW_WD_OK, 1); print("patched wd ok")
-        if OLD_WD_BAL in t:
-            t = t.replace(OLD_WD_BAL, NEW_WD_BAL, 1); print("patched vip")
-        if OLD_ADMIN_ROUTES in t:
-            t = t.replace(OLD_ADMIN_ROUTES, NEW_ADMIN_ROUTES, 1); print("patched routes")
-        get_anchor = 'if path == "/api/admin/users":'
-        if get_anchor in t and 'path == "/api/admin/pool"' not in t:
-            t = t.replace(get_anchor, 'if path == "/api/admin/pool":\n            try:\n                import ops_api as _ops2\n                return self._json(200, _ops2.get_pool())\n            except Exception as e:\n                return self._json(500, {"error": str(e)})\n        if path == "/api/admin/withdraw-rules":\n            try:\n                import ops_api as _ops2\n                return self._json(200, _ops2.withdraw_rules_payload())\n            except Exception as e:\n                return self._json(500, {"error": str(e)})\n        ' + get_anchor, 1)
-            print("patched GET")
+        print("ops helpers")
     else:
         print("ops patch already present")
     t = apply_member_ids(t)
+    t = apply_staff(t)
     SP.write_text(t, encoding="utf-8")
     print("done", SP.stat().st_size)
 
