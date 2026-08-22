@@ -1,4 +1,4 @@
-/* Own Club live market — always fills #marketList */
+/* Own Club live market — Solara-style list + home cards */
 (function(){
   var CLUBS = [
     {id:1,code:"Manchester City",league:"Premier League",mv:5.0e9,photo:"https://crests.football-data.org/65.png"},
@@ -52,11 +52,11 @@
   function spark(hist,up){
     if(!hist||hist.length<2) return "";
     var min=Math.min.apply(null,hist), max=Math.max.apply(null,hist), range=(max-min)||1;
-    var w=72,h=28,pad=2,pts=[];
+    var w=78,h=32,pad=2,pts=[];
     for(var i=0;i<hist.length;i++){
       pts.push((pad+(i/(hist.length-1))*(w-pad*2)).toFixed(1)+","+(h-pad-((hist[i]-min)/range)*(h-pad*2)).toFixed(1));
     }
-    return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none"><polyline fill="none" stroke="'+(up?"#00c853":"#ff5252")+'" stroke-width="1.8" stroke-linejoin="round" points="'+pts.join(" ")+'"/></svg>';
+    return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none"><polyline fill="none" stroke="'+(up?"#2ee56a":"#ff5b5b")+'" stroke-width="1.8" stroke-linejoin="round" points="'+pts.join(" ")+'"/></svg>';
   }
   function paint(){
     var box=document.getElementById("marketList");
@@ -73,16 +73,37 @@
       rows.push({c:c,s:s});
     }
     rows.sort(function(a,b){ return Math.abs(b.s.chg)-Math.abs(a.s.chg); });
-    var html='<div class="mkt-live"><i></i> LIVE · '+rows.length+' clubs · updates every 2s</div>';
+    var html='<div class="mkt-live">LIVE · '+rows.length+' clubs · updates every 2s</div>';
     for(var r=0;r<rows.length;r++){
       var c=rows[r].c, s=rows[r].s, up=s.chg>=0;
-      html+='<div class="mkt-row" onclick="(window.openBuyFromMarket&&openBuyFromMarket('+c.id+'))||(window.goPage&&goPage(\'machines\'))">'+
-        '<img class="mkt-badge" src="'+c.photo+'" alt="" onerror="this.style.visibility=\'hidden\'">'+
+      html+='<div class="mkt-row" onclick="(window.openBuyFromMarket&&openBuyFromMarket('+c.id+'))">'+
+        '<img class="mkt-badge" src="'+c.photo+'" alt="">'+
         '<div><div class="mkt-name">'+c.code+'</div><div class="mkt-sub">'+c.league+'</div></div>'+
         '<div class="mkt-spark">'+spark(s.hist,up)+'</div>'+
         '<div><div class="mkt-price">'+fmt(s.price)+'</div><div class="mkt-chg '+(up?"up":"down")+'">'+(up?"+":"")+s.chg.toFixed(2)+'%</div></div></div>';
     }
-    if(!rows.length) html+='<div class="empty">No clubs match</div>';
+    box.innerHTML=html;
+  }
+  function paintHome(){
+    var home=document.getElementById("home");
+    if(!home) return;
+    var box=document.getElementById("homeMarkets");
+    if(!box){
+      box=document.createElement("div");
+      box.id="homeMarkets";
+      home.appendChild(box);
+    }
+    seed();
+    var picks=CLUBS.slice(0,8);
+    var html='<div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 8px"><h3 style="margin:0;color:#fff;font-size:18px">Markets</h3><button type="button" onclick="window.goPage&&goPage(\'market\')" style="background:none;border:0;color:#2ee56a;font-weight:700">View All →</button></div><div class="mkt-cards">';
+    for(var i=0;i<picks.length;i++){
+      var c=picks[i], s=st[c.id], up=s.chg>=0;
+      html+='<div class="mkt-card" onclick="(window.openBuyFromMarket&&openBuyFromMarket('+c.id+'))">'+
+        '<div class="nm">'+c.code+'</div><div class="mkt-sub">'+c.league+'</div>'+
+        '<div class="mkt-spark">'+spark(s.hist,up)+'</div>'+
+        '<div class="px">'+fmt(s.price)+'</div><div class="mkt-chg '+(up?"up":"down")+'">'+(up?"+":"")+s.chg.toFixed(2)+'%</div></div>';
+    }
+    html+='</div>';
     box.innerHTML=html;
   }
   function tick(){
@@ -96,9 +117,10 @@
       s.chg=((s.price-s.open)/s.open)*100;
     });
     paint();
+    try{paintHome();}catch(e){}
   }
   function start(){
-    seed(); paint();
+    seed(); paint(); try{paintHome();}catch(e){}
     if(window.__ocMkt) clearInterval(window.__ocMkt);
     window.__ocMkt=setInterval(tick, 2000);
   }
@@ -107,7 +129,6 @@
   window.CLUB_MARKET_SEED=CLUBS;
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", start);
   else start();
-  setTimeout(start, 300);
-  setTimeout(start, 1200);
-  setTimeout(start, 2500);
+  setTimeout(start, 400);
+  setTimeout(start, 1500);
 })();

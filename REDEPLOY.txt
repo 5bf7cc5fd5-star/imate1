@@ -1,1 +1,1 @@
-REDEPLOY 2026-08-22-16-08 market-live-32
+REDEPLOY 2026-08-22-16-22 solara-fullbleed
