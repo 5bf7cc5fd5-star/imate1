@@ -6,20 +6,25 @@ import runpy
 root = Path(__file__).resolve().parent
 (root / "static").mkdir(exist_ok=True)
 
-# Copy market feed into static if needed
 src = root / "static" / "market-data.js"
 alt = root / "market-data.js"
 if (not src.exists() or src.stat().st_size < 200) and alt.exists() and alt.stat().st_size > 200:
     src.write_bytes(alt.read_bytes())
     print("copied market-data.js -> static/")
 
-# Inject live market clubs into the Wiyak HTML
 try:
     pm = root / "patch_market.py"
     if pm.exists():
         runpy.run_path(str(pm), run_name="__market_patch__")
 except Exception as e:
     print("patch_market failed", e)
+
+try:
+    pn = root / "patch_nav.py"
+    if pn.exists():
+        runpy.run_path(str(pn), run_name="__nav_patch__")
+except Exception as e:
+    print("patch_nav failed", e)
 
 for name in ("index.html", "frontend.html"):
     p = root / name
@@ -36,5 +41,5 @@ for name in ("index.html", "frontend.html"):
         p.write_bytes(data)
         print("injected tags into", name)
 
-print("boot: serving Wiyak index, no part-assemble")
+print("boot: Wiyak index + nav aligned, no part-assemble")
 runpy.run_path(str(root / "server.py"), run_name="__main__")
