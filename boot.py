@@ -2,15 +2,25 @@
 from pathlib import Path
 import runpy
 import re
+import subprocess
+import sys
 
 root = Path(__file__).resolve().parent
 (root / "static").mkdir(exist_ok=True)
+(root / "data").mkdir(exist_ok=True)
+
+inj = root / "inject_ops.py"
+if inj.exists():
+    try:
+        subprocess.check_call([sys.executable, str(inj)], cwd=str(root))
+    except Exception as e:
+        print("inject_ops failed", e)
 
 INJECT = """
-<link rel=\"stylesheet\" href=\"/static/edge-fix.css?v=13\">
-<script src=\"/static/market-data.js?v=13\"></script>
-<script src=\"/static/lock-nav.js?v=13\"></script>
-<style id=\"fullbleed-13\">
+<link rel=\"stylesheet\" href=\"/static/edge-fix.css?v=14\">
+<script src=\"/static/market-data.js?v=14\"></script>
+<script src=\"/static/lock-nav.js?v=14\"></script>
+<style id=\"fullbleed-14\">
 html,body,#mainApp,.app,.app-shell,.space-bg,.page,.content{
   width:100%!important;max-width:none!important;min-width:0!important;
   margin:0!important;left:0!important;right:0!important;
@@ -32,16 +42,8 @@ def fix_html(text):
     text = text.replace("nav.bottom,.nav{", "nav.bottom{")
     text = text.replace("top:-14px;", "top:0!important;")
     text = text.replace("max-width:430px", "max-width:none")
-    text = text.replace("max-width: 430px", "max-width: none")
     text = text.replace("width:430px", "width:100%")
-    text = text.replace("width: 430px", "width: 100%")
-    text = re.sub(
-        r"@media\s*\(min-width:\s*768px\)\s*\{[^}]*nav\\.bottom[^}]*\}[^}]*\}",
-        "@media (min-width:768px){.app,#mainApp,nav.bottom{max-width:none!important;width:100%!important;margin:0!important;left:0!important;transform:none!important;}}",
-        text,
-        flags=re.I,
-    )
-    if "fullbleed-13" not in text:
+    if "fullbleed-14" not in text:
         if "</body>" in text:
             text = text.replace("</body>", INJECT + "\n</body>", 1)
         elif "</head>" in text:
