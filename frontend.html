@@ -14,7 +14,7 @@ button,input,select{font:inherit}button{cursor:pointer}
 .app{
   position:relative;
   z-index:1;
-  width:min(100%,520px);
+  width:100%;
   min-height:100vh;
   margin:auto;
   background:transparent;
@@ -41,11 +41,11 @@ header{padding:16px 16px 8px;display:flex;align-items:center;justify-content:spa
 .btn:disabled{opacity:.55}
 .progress{height:7px;background:#0b1a28;border-radius:20px;overflow:hidden;margin:8px 0}.progress i{display:block;height:100%;background:linear-gradient(90deg,#007cff,#2ee2ff)}
 .empty{text-align:center;padding:28px 10px;color:var(--muted);font-size:14px}
-.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,520px);height:76px;background:rgba(2,7,13,.88);border-top:1px solid #12344a;display:grid;grid-template-columns:repeat(5,1fr);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;height:76px;background:rgba(2,7,13,.88);border-top:1px solid #12344a;display:grid;grid-template-columns:repeat(5,1fr);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
 .nav{border:0;background:none;color:#73879b;font-size:10px}.nav b{display:block;font-size:20px;line-height:24px}.nav.active{color:#1ebcff}
 .page{display:none;background:transparent}.page.active{display:block;background:transparent}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:50;display:none;align-items:flex-end;justify-content:center}
-.modal.open{display:flex}.sheet{width:min(100%,520px);background:#07111c;border:1px solid #075d92;border-radius:22px 22px 0 0;padding:18px 16px 28px;max-height:92vh;overflow-y:auto}
+.modal.open{display:flex}.sheet{width:100%;background:#07111c;border:1px solid #075d92;border-radius:22px 22px 0 0;padding:18px 16px 28px;max-height:92vh;overflow-y:auto}
 .field{margin:11px 0}.field label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-weight:600}
 .field input,.field select{width:100%;background:#030912;border:1px solid #18374e;color:#fff;border-radius:10px;padding:12px;outline:none}
 .close{float:right;background:none;border:0;color:#9fb2c6;font-size:24px}
@@ -153,7 +153,7 @@ body{
 .app{
   position:relative;
   z-index:1;
-  width:min(100%,520px);
+  width:100%;
   min-height:100vh;
   margin:auto;
   background:rgba(2,6,11,0.55);
@@ -176,7 +176,7 @@ body{
 }
 .app{
   position:relative; z-index:1;
-  width:min(100%,520px); min-height:100vh; margin:auto;
+  width:100%; min-height:100vh; margin:auto;
   background:transparent; padding-bottom:90px;
 }
 .wallet-bar{
@@ -389,7 +389,7 @@ main {
   z-index: 1;
 }
 .app {
-  width: min(100%, 520px);
+  width:100%;
   min-height: 100vh;
   margin: auto;
   padding-bottom: 90px;
@@ -420,7 +420,7 @@ main {
 }
 .raffle-grid{
   display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
-  max-width:360px;margin:0 auto;padding:10px 0 20px;
+  max-width:100%;margin:0 auto;padding:10px 0 20px;
 }
 .raffle-card{
   aspect-ratio:2/3;border-radius:12px;position:relative;
@@ -1100,7 +1100,7 @@ body.auth-open #leagueFx {
   position: relative;
   z-index: 5;
   width: 100%;
-  max-width: 360px;
+  max-width:100%;
   margin: 0 auto;
   padding: 28px 20px 24px;
   border-radius: 22px;
@@ -1491,7 +1491,7 @@ body.auth-open #leagueFx {
 
 .modal{position:fixed!important;inset:0!important;background:rgba(0,0,0,.88)!important;z-index:5000!important;display:none;align-items:flex-end;justify-content:center}
 .modal.open{display:flex!important}
-.modal .sheet{width:min(100%,520px);background:#07111c;border:1px solid #075d92;border-radius:22px 22px 0 0;padding:18px 16px 28px;max-height:92vh;overflow-y:auto;position:relative;z-index:5001}
+.modal .sheet{width:100%;background:#07111c;border:1px solid #075d92;border-radius:22px 22px 0 0;padding:18px 16px 28px;max-height:92vh;overflow-y:auto;position:relative;z-index:5001}
 #aboutModal{z-index:6000!important}
 
 
@@ -1673,6 +1673,267 @@ body.ucl-on .space-bg { opacity: 0.05; }
 }
 
 </style>
+
+<style id="wiyak-fill">
+/* WIYAK-style full-bleed mobile shell — edge to edge, no side gaps */
+html,body{
+  width:100%!important; max-width:100%!important;
+  margin:0!important; padding:0!important;
+  overflow-x:hidden!important;
+  min-height:100%!important; min-height:100dvh!important;
+  background:#0a0a0c!important;
+}
+.app,#mainApp,#authScreen,#auth,.app-shell{
+  width:100%!important; max-width:100%!important;
+  margin:0!important; left:0!important; right:0!important;
+  min-height:100dvh!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+#authScreen,#auth{
+  position:fixed!important; inset:0!important;
+  width:100vw!important; height:100dvh!important;
+  display:flex!important; flex-direction:column!important;
+  justify-content:stretch!important; align-items:stretch!important;
+  padding:0!important;
+}
+#authScreen .auth-box,.auth-box,#auth .card, #authScreen > div{
+  width:100%!important; max-width:100%!important;
+  margin:0!important; border-radius:0!important;
+  min-height:100dvh!important;
+  padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(20px + env(safe-area-inset-bottom,0px))!important;
+}
+.content,header,.page{width:100%!important; max-width:100%!important; padding-left:14px!important; padding-right:14px!important}
+nav.bottom,.nav, .bottom-nav{
+  left:0!important; right:0!important; width:100%!important; max-width:100%!important;
+  transform:none!important;
+  padding-bottom:env(safe-area-inset-bottom,0px)!important;
+  border-radius:16px 16px 0 0!important;
+}
+input,select,textarea,button.btn,.btn{
+  min-height:48px!important; border-radius:14px!important; font-size:16px!important;
+}
+/* Wiyak-like accent polish */
+:root{ --blue:#3d7aab; --wiyak:#3d7aab; }
+.btn, button.btn{ border-radius:14px!important; font-weight:700!important; }
+.stat,.card,.product-card{ border-radius:18px!important; }
+@media (min-width:768px){
+  .app,#mainApp{ max-width:430px!important; margin:0 auto!important; }
+  nav.bottom,.nav{ left:50%!important; width:430px!important; max-width:430px!important; transform:translateX(-50%)!important; }
+}
+</style>
+
+
+<style id="wiyak-auth-css">
+/* Soft Wiyak-style login — muted blues, full-bleed, OWN CLUB bold */
+html,body{background:#eef2f6!important}
+#authScreen.wiyak-auth,#authScreen{
+  position:fixed!important;inset:0!important;
+  width:100vw!important;height:100dvh!important;max-width:100%!important;
+  margin:0!important;padding:0!important;
+  background:#eef2f6!important;
+  display:flex!important;flex-direction:column!important;
+  overflow:auto!important;z-index:50!important;
+  border-radius:0!important;
+  color:#1e5a8a!important;
+}
+#authScreen .auth-bg,#authScreen .space-bg,#authScreen::before,#authScreen::after,
+#authScreen .auth-vignette,#authScreen .auth-card{display:none!important}
+.wiyak-auth .wy-top{
+  position:relative;width:100%;padding:calc(12px + env(safe-area-inset-top,0px)) 0 0;
+  background:linear-gradient(180deg,#f7f9fb 0%,#eef2f6 100%);
+  text-align:center;flex-shrink:0;
+}
+.wiyak-auth .wy-skyline{width:100%;height:100px;display:block;opacity:.55}
+.wiyak-auth .wy-skyline path{fill:#9bb4c9!important}
+.wiyak-auth .wy-brand{margin-top:-24px;position:relative;z-index:2;padding-bottom:6px}
+.wiyak-auth .wy-logo{
+  font-size:32px;font-weight:900;letter-spacing:1px;
+  color:#1a4f7a!important;
+  background:none!important;
+  -webkit-text-fill-color:#1a4f7a!important;
+  line-height:1.15;
+  text-transform:uppercase;
+}
+.wiyak-auth .wy-sub{
+  font-size:11px;font-weight:700;letter-spacing:3px;
+  color:#3d7aab!important;margin-top:4px;
+}
+.wiyak-auth .wy-body{
+  flex:1;width:100%;max-width:100%;
+  padding:8px 22px calc(24px + env(safe-area-inset-bottom,0px));
+  display:flex;flex-direction:column;
+  color:#1e5a8a!important;
+}
+.wiyak-auth .wy-tabs{
+  display:flex;justify-content:center;gap:36px;margin:8px 0 18px;
+  border-bottom:1px solid #c5d6e6;padding-bottom:0;
+}
+.wiyak-auth .wy-tabs button{
+  background:none;border:0;border-bottom:3px solid transparent;
+  padding:10px 4px;font-size:15px;font-weight:700;
+  color:#5a8ab0!important;margin-bottom:-1px;
+}
+.wiyak-auth .wy-tabs button.active{
+  color:#1a4f7a!important;border-bottom-color:#3d7aab;
+}
+.wiyak-auth .wy-form{width:100%;max-width:100%;color:#1e5a8a!important}
+.wiyak-auth .wy-field{
+  display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid #b7c9da;padding:6px 0;margin:10px 0;
+}
+.wiyak-auth .wy-ico{
+  font-size:15px;min-width:28px;font-weight:700;
+  color:#3d7aab!important;opacity:1;
+}
+.wiyak-auth .wy-field input,
+.wiyak-auth .wy-field select{
+  flex:1;border:0!important;background:transparent!important;
+  padding:12px 0!important;font-size:16px!important;min-height:44px!important;
+  color:#1a4f7a!important;border-radius:0!important;outline:none!important;
+  box-shadow:none!important;font-weight:600;
+}
+.wiyak-auth .wy-field input::placeholder{
+  color:#7a9db8!important;font-weight:500;
+}
+.wiyak-auth .wy-login-btn{
+  width:100%;margin-top:28px;border:0;border-radius:28px;
+  padding:16px;font-size:17px;font-weight:800;color:#fff!important;cursor:pointer;
+  background:linear-gradient(90deg,#2a6f9e,#3d8ec4 50%,#2a6f9e);
+  box-shadow:0 6px 16px rgba(42,111,158,.22);
+  min-height:54px;
+}
+.wiyak-auth .wy-muted{
+  text-align:center;margin:14px 0 0;font-size:13px;
+  color:#3d7aab!important;
+}
+.wiyak-auth .wy-link{
+  background:none;border:0;
+  color:#1a4f7a!important;font-weight:700;font-size:13px;cursor:pointer;padding:4px;
+}
+.wiyak-auth .wy-foot{
+  text-align:center;margin-top:18px;font-size:10px;
+  color:#5a8ab0!important;letter-spacing:1px;font-weight:600;
+}
+.wiyak-auth .hidden{display:none!important}
+.wiyak-auth p,.wiyak-auth label,.wiyak-auth span,.wiyak-auth button:not(.wy-login-btn){
+  color:#1e5a8a!important;
+}
+body.auth-open .space-bg, body.auth-open #particleCanvas{opacity:0!important;pointer-events:none!important}
+@media(min-width:768px){
+  #authScreen.wiyak-auth{
+    max-width:430px!important;left:50%!important;transform:translateX(-50%)!important;
+    right:auto!important;box-shadow:0 0 0 1px #d0dde8;
+  }
+}
+</style>
+
+
+<style id="nav-icons-css">
+nav.bottom{
+  display:flex!important;align-items:flex-end;justify-content:space-around;
+  padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px))!important;
+  background:#05070c!important;border-top:1px solid #16324a;
+}
+nav.bottom .nav{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;color:#8aa0b4!important;font-size:10px;font-weight:700;letter-spacing:.2px;
+  min-width:0;padding:4px 2px!important;background:none!important;border:0!important;
+}
+nav.bottom .nav .nav-ico{
+  width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+}
+nav.bottom .nav .nav-ico svg{width:24px;height:24px;display:block}
+nav.bottom .nav.active{color:#1ebcff!important}
+nav.bottom .nav b{display:none}
+</style>
+
+
+<style id="wy-exact-icons">
+.wiyak-auth .wy-ico.wy-svg{
+  width:22px;height:22px;min-width:22px;display:flex;align-items:center;justify-content:center;
+  color:#00B4E6;font-size:0;
+}
+.wiyak-auth .wy-ico.wy-svg svg{width:22px;height:22px;display:block}
+.wiyak-auth .wy-eye{
+  background:none;border:0;padding:4px;margin:0;cursor:pointer;
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  color:#9aa0a6!important;
+}
+.wiyak-auth .wy-eye svg{width:22px;height:22px;display:block}
+.wiyak-auth .wy-field{position:relative}
+.wiyak-auth .wy-tabs button{color:#9aa0a6!important;font-weight:800;font-size:16px}
+.wiyak-auth .wy-tabs button.active{color:#111!important;border-bottom-color:#00B4E6}
+.wiyak-auth .wy-field input::placeholder{color:#b0b4b8!important;font-weight:500}
+</style>
+
+
+<style id="market-tab-css">
+/* Center Shares button (Trade-style) */
+nav.bottom .nav.nav-center{
+  position:relative; top:-14px;
+}
+nav.bottom .nav-center-btn{
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(145deg,#00c853,#009624);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 18px rgba(0,200,83,.4);
+}
+nav.bottom .nav-center-btn svg{width:26px;height:26px}
+nav.bottom .nav.nav-center.active{color:#00c853!important}
+nav.bottom .nav.nav-center.active .nav-center-btn{box-shadow:0 6px 22px rgba(0,200,83,.55)}
+
+/* Market list — Solara-style */
+.mkt-search{
+  display:flex;align-items:center;gap:8px;
+  background:#12151c;border:1px solid #1e2a38;border-radius:12px;
+  padding:10px 14px;margin-bottom:12px;
+}
+.mkt-search-ico{color:#6b7c8f;font-size:16px}
+.mkt-search input{
+  flex:1;border:0;background:transparent;color:#e8eef5;font-size:15px;outline:none;min-height:28px!important;
+  padding:0!important;border-radius:0!important;
+}
+.mkt-tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.mkt-tabs button{
+  border:0;border-radius:20px;padding:8px 14px;font-size:12px;font-weight:700;
+  background:#1a222e;color:#8aa0b4;cursor:pointer;
+}
+.mkt-tabs button.active{background:#00c853;color:#04120a}
+.mkt-list{display:flex;flex-direction:column;gap:0}
+.mkt-row{
+  display:grid;grid-template-columns:40px 1fr 72px 88px;gap:10px;align-items:center;
+  padding:12px 4px;border-bottom:1px solid #15202b;cursor:pointer;
+}
+.mkt-row:active{background:rgba(255,255,255,.03)}
+.mkt-badge{
+  width:36px;height:36px;border-radius:50%;object-fit:contain;background:#0d121a;
+  border:1px solid #1e2a38;
+}
+.mkt-name{font-weight:700;font-size:14px;color:#e8eef5;line-height:1.2}
+.mkt-sub{font-size:11px;color:#6b7c8f;margin-top:2px}
+.mkt-spark{width:72px;height:28px}
+.mkt-spark svg{width:100%;height:100%;display:block}
+.mkt-price{text-align:right;font-weight:700;font-size:13px;color:#e8eef5}
+.mkt-chg{text-align:right;font-size:12px;font-weight:700;margin-top:2px}
+.mkt-chg.up{color:#00c853}
+.mkt-chg.down{color:#ff5252}
+.mkt-live{
+  display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#00c853;font-weight:700;
+  margin-bottom:8px;
+}
+.mkt-live i{
+  width:7px;height:7px;border-radius:50%;background:#00c853;
+  box-shadow:0 0 0 0 rgba(0,200,83,.6);
+  animation:mktPulse 1.6s infinite;
+}
+@keyframes mktPulse{
+  0%{box-shadow:0 0 0 0 rgba(0,200,83,.55)}
+  70%{box-shadow:0 0 0 8px rgba(0,200,83,0)}
+  100%{box-shadow:0 0 0 0 rgba(0,200,83,0)}
+}
+</style>
+
 </head>
 <body>
 <div id="leagueFx" class="league-fx" aria-hidden="true">
@@ -1696,46 +1957,57 @@ body.ucl-on .space-bg { opacity: 0.05; }
 
 <div class="app">
 
-<div id="authScreen" class="auth-screen">
-  <div class="auth-bg" aria-hidden="true"></div>
-  <div class="auth-center">
-    <div class="auth-logo"><h1>Own Club</h1><p>Share Market</p></div>
-    <p style="text-align:center;margin:0 0 12px;position:relative;z-index:3">
-      <button type="button" onclick="openAboutUs();return false;" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:600;backdrop-filter:blur(6px)">About Us</button>
-    </p>
-    <div class="tabs">
-      <button type="button" class="active" id="tabLogin" onclick="switchAuth('login')">LOG IN</button>
-      <button type="button" id="tabSignup" onclick="switchAuth('signup')">SIGN UP</button>
+<div id="authScreen" class="auth-screen wiyak-auth">
+  <div class="wy-top">
+    <svg class="wy-skyline" viewBox="0 0 400 120" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+      <path fill="#c5c9ce" d="M0 120 L0 85 L18 85 L18 55 L28 45 L38 55 L38 70 L55 70 L55 40 L70 25 L85 40 L85 70 L100 70 L100 50 L112 50 L112 30 L125 15 L138 30 L138 50 L150 50 L150 65 L165 65 L165 45 L180 45 L180 20 L190 8 L200 20 L200 45 L215 45 L215 60 L230 60 L230 35 L245 35 L245 55 L260 55 L260 28 L275 28 L275 50 L290 50 L290 70 L305 70 L305 42 L320 42 L320 18 L330 5 L340 18 L340 42 L355 42 L355 65 L370 65 L370 80 L400 80 L400 120 Z"/>
+    </svg>
+    <div class="wy-brand">
+      <div class="wy-logo">OWN CLUB</div>
+      <div class="wy-sub">SHARE MARKET</div>
     </div>
-    <div id="loginForm">
-      <div class="field"><label>EMAIL OR PHONE</label><input id="loginId" placeholder="k_hmed@yahoo.com" autocomplete="username"></div>
-      <div class="field"><label>PASSWORD</label><input id="loginPass" type="password" placeholder="Password" autocomplete="current-password"></div>
-      <button type="button" class="btn" onclick="doLogin()">LOG IN</button>
-      <p style="text-align:center;margin-top:10px"><button type="button" class="btn secondary" style="margin:0" onclick="openForgotPassword()">Forgot password?</button></p>
-      <p class="muted" style="text-align:center;margin-top:10px;font-size:12px">Log in with email or mobile number + password</p>
-      <p style="text-align:center;margin:14px 0 0;color:rgba(255,255,255,0.55);font-size:9px;letter-spacing:1px;text-shadow:0 1px 4px rgba(0,0,0,0.5)">KMK ™ · Est 2018</p>
+  </div>
+  <div class="wy-body">
+    <div class="wy-tabs">
+      <button type="button" class="active" id="tabLogin" onclick="switchAuth('login')">Email</button>
+      <button type="button" id="tabMobile" onclick="switchLoginMode('mobile')">Mobile</button>
     </div>
-    <div id="signupForm" class="hidden">
-      <div class="field"><label>FULL NAME</label><input id="suName" placeholder="Your full name" autocomplete="name"></div>
-      <div class="field"><label>COUNTRY</label>
-        <select id="suCountry" onchange="onSignupCountryChange()"></select>
+    <p class="wy-muted" style="margin:-6px 0 10px"><button type="button" class="wy-link" onclick="switchAuth('signup')">Need an account? Sign up</button></p>
+    <div id="loginForm" class="wy-form">
+      <div class="wy-field">
+        <span class="wy-ico wy-svg" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path fill="#00B4E6" d="M12 12c2.7 0 4.9-2.2 4.9-4.9S14.7 2.2 12 2.2 7.1 4.4 7.1 7.1 9.3 12 12 12zm0 2.2c-3.3 0-9.8 1.7-9.8 5v2.6h19.6V19.2c0-3.3-6.5-5-9.8-5z"/></svg>
+        </span>
+        <input id="loginId" placeholder="Email" autocomplete="username">
       </div>
-      <div class="field"><label>MOBILE NUMBER</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <span id="suDialCode" style="background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.25);border-radius:10px;padding:12px 10px;font-weight:700;color:#7ec8ff;white-space:nowrap">+256</span>
-          <input id="suPhoneLocal" placeholder="7XXXXXXXX" inputmode="tel" style="flex:1" autocomplete="tel-national" oninput="updatePhonePreview()">
-        </div>
-        <div class="muted" style="font-size:11px;margin-top:6px">Full number: <b id="suPhonePreview">+256</b></div>
+      <div class="wy-field">
+        <span class="wy-ico wy-svg" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path fill="#00B4E6" d="M17 8h-1V6.2C16 3.9 14.2 2 12 2S8 3.9 8 6.2V8H7c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-7-1.8C10 5 10.9 4 12 4s2 1 2 2.2V8h-4V6.2zM12 17.2c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+        </span>
+        <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
+        <button type="button" class="wy-eye" id="loginEye" onclick="toggleLoginPass()" aria-label="Show password">
+          <svg class="eye-off" viewBox="0 0 24 24"><path fill="#9aa0a6" d="M12 6.5c3.8 0 7.1 2.2 8.6 5.5-1 2.2-2.8 3.9-5 4.8l1.5 1.5c2.8-1.2 5-3.5 6.3-6.3C21.1 8.2 16.8 4.5 12 4.5c-1.3 0-2.6.2-3.8.7l1.6 1.6c.7-.2 1.4-.3 2.2-.3zm-9.1-2.1L1.5 5.8l3.2 3.2C3.2 10.5 1.8 12.3 1 14c2.3 4.8 6.6 8.5 11 8.5 1.7 0 3.3-.4 4.8-1.1l3.4 3.4 1.4-1.4L2.9 4.4zM12 19.5c-3.8 0-7.1-2.2-8.6-5.5.9-1.9 2.4-3.5 4.3-4.4l2.1 2.1c-.2.4-.3.8-.3 1.3 0 1.7 1.3 3 3 3 .5 0 .9-.1 1.3-.3l1.6 1.6c-.7.2-1.4.2-2.1.2h-.3zm3.1-5.2l2.2 2.2c.5-.6.8-1.3.8-2.1 0-1.7-1.3-3-3-3-.8 0-1.5.3-2.1.8l2.1 2.1z"/></svg>
+          <svg class="eye-on hidden" viewBox="0 0 24 24"><path fill="#9aa0a6" d="M12 5C7.2 5 2.9 8.2.6 12.8c2.3 4.6 6.6 7.8 11.4 7.8s9.1-3.2 11.4-7.8C21.1 8.2 16.8 5 12 5zm0 12.6c-2.6 0-4.8-2.2-4.8-4.8S9.4 8 12 8s4.8 2.2 4.8 4.8-2.2 4.8-4.8 4.8zm0-7.7c-1.6 0-2.9 1.3-2.9 2.9s1.3 2.9 2.9 2.9 2.9-1.3 2.9-2.9-1.3-2.9-2.9-2.9z"/></svg>
+        </button>
       </div>
-      <div class="field"><label>EMAIL</label><input id="suEmail" type="email" placeholder="you@email.com" autocomplete="email"></div>
-      <div class="field"><label>PASSWORD</label><input id="suPass" type="password" placeholder="Create password" autocomplete="new-password"></div>
-      <div class="field"><label>CONFIRM PASSWORD</label><input id="suPass2" type="password" placeholder="Re-enter password" autocomplete="new-password"></div>
-      <div class="field"><label>INVITATION CODE</label><input id="suInvite" value="IMXT2Y0M8D"></div>
-      <button type="button" class="btn" onclick="doSignup()">CREATE ACCOUNT</button>
+      <button type="button" class="wy-login-btn" onclick="doLogin()">Login</button>
+      <p class="wy-muted"><button type="button" class="wy-link" onclick="openForgotPassword()">Forgot password?</button></p>
+      <p class="wy-muted"><button type="button" class="wy-link" onclick="openAboutUs()">About Us</button></p>
+      <p class="wy-foot">KMK ™ · Est 2018</p>
+    </div>
+    <div id="signupForm" class="wy-form hidden">
+      <div class="wy-field"><span class="wy-ico wy-svg"><svg viewBox="0 0 24 24"><path fill="#00B4E6" d="M12 12c2.7 0 4.9-2.2 4.9-4.9S14.7 2.2 12 2.2 7.1 4.4 7.1 7.1 9.3 12 12 12zm0 2.2c-3.3 0-9.8 1.7-9.8 5v2.6h19.6V19.2c0-3.3-6.5-5-9.8-5z"/></svg></span><input id="suName" placeholder="Full name" autocomplete="name"></div>
+      <div class="wy-field"><span class="wy-ico">🌍</span><select id="suCountry" onchange="onSignupCountryChange()" style="border:0;background:transparent;width:100%;padding:12px 0;font-size:16px"></select></div>
+      <div class="wy-field"><span class="wy-ico" id="suDialCode">+256</span><input id="suPhoneLocal" placeholder="Mobile number" inputmode="tel" autocomplete="tel-national" oninput="updatePhonePreview()"></div>
+      <div class="wy-field"><span class="wy-ico">✉️</span><input id="suEmail" placeholder="Email" autocomplete="email"></div>
+      <div class="wy-field"><span class="wy-ico wy-svg"><svg viewBox="0 0 24 24"><path fill="#00B4E6" d="M17 8h-1V6.2C16 3.9 14.2 2 12 2S8 3.9 8 6.2V8H7c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-7-1.8C10 5 10.9 4 12 4s2 1 2 2.2V8h-4V6.2zM12 17.2c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg></span><input id="suPass" type="password" placeholder="Password" autocomplete="new-password"></div>
+      <div class="wy-field"><span class="wy-ico wy-svg"><svg viewBox="0 0 24 24"><path fill="#00B4E6" d="M17 8h-1V6.2C16 3.9 14.2 2 12 2S8 3.9 8 6.2V8H7c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-7-1.8C10 5 10.9 4 12 4s2 1 2 2.2V8h-4V6.2zM12 17.2c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg></span><input id="suPass2" type="password" placeholder="Confirm password" autocomplete="new-password"></div>
+      <div class="wy-field"><span class="wy-ico">🎫</span><input id="suInvite" placeholder="Invite code IMXT2Y0M8D" autocomplete="off"></div>
+      <button type="button" class="wy-login-btn" onclick="doSignup()">Create account</button>
+      <p class="wy-muted"><button type="button" class="wy-link" onclick="switchAuth('login')">Already have an account? Login</button></p>
     </div>
   </div>
 </div>
-
 <div id="mainApp" class="hidden">
   <header>
     <div class="logo">Own Club<small>Share Market</small> <span id="adminBadgeHdr" class="admin-badge hidden">ADMIN</span></div>
@@ -1851,6 +2123,22 @@ body.ucl-on .space-bg { opacity: 0.05; }
       </div>
       <div id="machineList"></div>
     </section>
+    
+    <section id="market" class="page">
+      <h2 style="margin:8px 0 4px">Club Markets</h2>
+      <p class="muted" style="margin:0 0 12px">Live share pricing with sparkline movement</p>
+      <div class="mkt-search">
+        <span class="mkt-search-ico">⌕</span>
+        <input id="mktSearch" type="search" placeholder="Search clubs..." oninput="renderMarketList()" autocomplete="off">
+      </div>
+      <div class="mkt-tabs" id="mktTabs">
+        <button type="button" class="active" data-mkt="all" onclick="setMktFilter('all',this)">All Clubs</button>
+        <button type="button" data-mkt="gainers" onclick="setMktFilter('gainers',this)">Gainers</button>
+        <button type="button" data-mkt="losers" onclick="setMktFilter('losers',this)">Losers</button>
+      </div>
+      <div id="marketList" class="mkt-list"></div>
+    </section>
+
     <section id="income" class="page">
       <h2 style="margin:8px 0 12px">Income</h2>
       <div class="card">
@@ -1973,11 +2261,21 @@ body.ucl-on .space-bg { opacity: 0.05; }
 
   </main>
   <nav class="bottom">
-    <button type="button" class="nav active" data-page="home"><b>&#8962;</b>Home</button>
-    <button type="button" class="nav" data-page="machines"><b>&#9968;</b>Shares</button>
-    <button type="button" class="nav" data-page="income"><b>&#8383;</b>Income</button>
-    <button type="button" class="nav" data-page="team"><b>&#128101;</b>Team</button>
-    <button type="button" class="nav" data-page="my"><b>&#9817;</b>My</button>
+    <button type="button" class="nav active" data-page="home">
+      <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>Home
+    </button>
+    <button type="button" class="nav" data-page="market">
+      <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M3.5 18.5l6-6 4 4L22 6.92 20.59 5.5l-7.09 7.97-4-4L2 17l1.5 1.5z"/></svg></span>Market
+    </button>
+    <button type="button" class="nav nav-center" data-page="machines">
+      <span class="nav-center-btn" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M7 10l5-5 5 5"/><path d="M7 14l5 5 5-5"/></svg></span>Shares
+    </button>
+    <button type="button" class="nav" data-page="team">
+      <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span>Team
+    </button>
+    <button type="button" class="nav" data-page="my">
+      <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M21 7H3c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm0 9H3V9h18v7zm-2-5h-6v2h6v-2zM3 4h18v2H3z"/></svg></span>Account
+    </button>
   </nav>
 </div>
 </div>
@@ -1985,7 +2283,7 @@ body.ucl-on .space-bg { opacity: 0.05; }
 <div class="modal" id="accountModal" onclick="if(event.target===this)closeModal('accountModal')"><div class="sheet">
   <button type="button" class="close" onclick="closeModal('accountModal')">×</button>
   <h2 style="margin-top:0">Settings</h2>
-  <p class="muted" style="margin-top:0">Manage security, payout accounts, and login password.</p>
+  <p class="muted" style="margin-top:0">Manage security, mobile money / USDT, and login password.</p>
 
   <div class="card" style="margin:10px 0">
     <h3 style="margin:0 0 8px;font-size:14px">Withdraw fund password</h3>
@@ -1996,9 +2294,7 @@ body.ucl-on .space-bg { opacity: 0.05; }
   </div>
 
   <div class="card" style="margin:10px 0">
-    <h3 style="margin:0 0 8px;font-size:14px">Payout accounts</h3>
-    <div class="field"><label>BANK NAME / ACCOUNT NAME</label><input id="setBankName" placeholder="Bank or account name"></div>
-    <div class="field"><label>BANK ACCOUNT NUMBER</label><input id="setBankNumber" placeholder="Account number"></div>
+    <h3 style="margin:0 0 8px;font-size:14px">Payout methods</h3>
     <div class="field"><label>MTN UGANDA (MOBILE MONEY)</label><input id="setMtn" placeholder="07xxxxxxxx" inputmode="tel"></div>
     <div class="field"><label>AIRTEL MONEY</label><input id="setAirtel" placeholder="07xxxxxxxx" inputmode="tel"></div>
     <div class="field"><label>BINANCE / USDT TRC20 WALLET</label><input id="setTrc20" placeholder="T..." style="font-size:12px"></div>
@@ -2054,7 +2350,8 @@ body.ucl-on .space-bg { opacity: 0.05; }
   <button type="button" class="close" onclick="closeModal('withdrawModal')">×</button>
   <h2 style="margin-top:0">Withdraw</h2>
   <div class="notice" id="withdrawLockNote"></div>
-  <div class="field"><label>AMOUNT</label><input id="withdrawAmount" type="number" min="1" placeholder="10000"></div>
+  <div class="notice" id="withdrawDailyNote" style="margin-top:8px"></div>
+  <div class="field"><label>AMOUNT (UGX)</label><input id="withdrawAmount" type="number" min="1" placeholder="5000"></div>
   <div id="withdrawCalc" class="notice">5% fee</div>
   <button type="button" class="btn" onclick="doWithdraw()">SUBMIT</button>
 </div></div>
@@ -2699,6 +2996,31 @@ function fillCountrySelect(){
   try{onSignupCountryChange();}catch(e){}
 }
 
+
+function toggleLoginPass(){
+  var inp = document.getElementById("loginPass");
+  var btn = document.getElementById("loginEye");
+  if(!inp || !btn) return;
+  var show = inp.type === "password";
+  inp.type = show ? "text" : "password";
+  var off = btn.querySelector(".eye-off");
+  var on = btn.querySelector(".eye-on");
+  if(off) off.classList.toggle("hidden", show);
+  if(on) on.classList.toggle("hidden", !show);
+}
+function switchLoginMode(mode){
+  var tabE = document.getElementById("tabLogin");
+  var tabM = document.getElementById("tabMobile");
+  if(tabE) tabE.classList.toggle("active", mode!=="mobile");
+  if(tabM) tabM.classList.toggle("active", mode==="mobile");
+  switchAuth("login");
+  var inp = document.getElementById("loginId");
+  if(inp){
+    inp.placeholder = mode==="mobile" ? "Mobile" : "Email";
+    inp.focus();
+  }
+}
+
 function switchAuth(mode){
   if(mode==='signup'){ setTimeout(function(){ try{fillCountrySelect(); onSignupCountryChange();}catch(e){} }, 0); }
 
@@ -3110,8 +3432,141 @@ function setHomeUclBackground(page){
 }
 
 
+
+/* ===== Live Club Market ===== */
+var mktFilter = "all";
+var mktState = {}; // id -> {base, price, chg, hist:[...]}
+var mktTimer = null;
+
+function parseMarketValueUSD(mv){
+  if(!mv) return 1e9;
+  var s = String(mv).replace(/[^0-9.BMKbm]/g,"").toUpperCase();
+  var n = parseFloat(s);
+  if(isNaN(n)) return 1e9;
+  if(s.indexOf("B")>=0) return n * 1e9;
+  if(s.indexOf("M")>=0) return n * 1e6;
+  if(s.indexOf("K")>=0) return n * 1e3;
+  return n;
+}
+function fmtUSD(n){
+  if(n >= 1e9) return "$"+(n/1e9).toFixed(2)+"B";
+  if(n >= 1e6) return "$"+(n/1e6).toFixed(2)+"M";
+  if(n >= 1e3) return "$"+(n/1e3).toFixed(1)+"K";
+  return "$"+n.toFixed(2);
+}
+function ensureMktState(){
+  if(!window.machines) return;
+  for(var i=0;i<machines.length;i++){
+    var m = machines[i];
+    if(mktState[m.id]) continue;
+    var base = parseMarketValueUSD(m.marketValue);
+    var hist = [];
+    var p = base;
+    for(var h=0;h<24;h++){
+      p = p * (1 + (Math.random()-0.48)*0.012);
+      hist.push(p);
+    }
+    mktState[m.id] = {base:base, price:p, open:base, hist:hist};
+  }
+}
+function tickMarket(){
+  ensureMktState();
+  var ids = Object.keys(mktState);
+  for(var i=0;i<ids.length;i++){
+    var s = mktState[ids[i]];
+    // mean-reverting random walk
+    var drift = (s.base - s.price) / s.base * 0.08;
+    var shock = (Math.random()-0.5) * 0.018;
+    s.price = Math.max(s.base*0.82, Math.min(s.base*1.22, s.price * (1 + drift + shock)));
+    s.hist.push(s.price);
+    if(s.hist.length > 28) s.hist.shift();
+    s.chg = ((s.price - s.open) / s.open) * 100;
+  }
+  if(document.getElementById("market") && document.getElementById("market").classList.contains("active")){
+    renderMarketList();
+  }
+}
+function startMarketFeed(){
+  ensureMktState();
+  if(mktTimer) clearInterval(mktTimer);
+  mktTimer = setInterval(tickMarket, 2200);
+  tickMarket();
+}
+function setMktFilter(f, btn){
+  mktFilter = f || "all";
+  var tabs = document.querySelectorAll("#mktTabs button");
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle("active", tabs[i].getAttribute("data-mkt")===mktFilter);
+  renderMarketList();
+}
+function sparklineSVG(hist, up){
+  if(!hist || hist.length<2) return "";
+  var min = Math.min.apply(null, hist), max = Math.max.apply(null, hist);
+  var w=72, h=28, pad=2;
+  var range = (max-min) || 1;
+  var pts = [];
+  for(var i=0;i<hist.length;i++){
+    var x = pad + (i/(hist.length-1))*(w-pad*2);
+    var y = h-pad - ((hist[i]-min)/range)*(h-pad*2);
+    pts.push(x.toFixed(1)+","+y.toFixed(1));
+  }
+  var color = up ? "#00c853" : "#ff5252";
+  return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none"><polyline fill="none" stroke="'+color+'" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" points="'+pts.join(" ")+'"/></svg>';
+}
+function renderMarketList(){
+  ensureMktState();
+  var box = document.getElementById("marketList");
+  if(!box) return;
+  var q = ((document.getElementById("mktSearch")||{}).value || "").trim().toLowerCase();
+  var rows = [];
+  for(var i=0;i<machines.length;i++){
+    var m = machines[i];
+    var s = mktState[m.id];
+    if(!s) continue;
+    if(q && (m.code+" "+m.name+" "+m.league).toLowerCase().indexOf(q)<0) continue;
+    if(mktFilter==="gainers" && s.chg < 0) continue;
+    if(mktFilter==="losers" && s.chg > 0) continue;
+    rows.push({m:m, s:s});
+  }
+  rows.sort(function(a,b){ return Math.abs(b.s.chg) - Math.abs(a.s.chg); });
+  var html = '<div class="mkt-live"><i></i> LIVE · updates every 2s</div>';
+  if(!rows.length) html += '<div class="empty">No clubs match</div>';
+  for(var r=0;r<rows.length;r++){
+    var m = rows[r].m, s = rows[r].s;
+    var up = s.chg >= 0;
+    var chgStr = (up?"+":"")+s.chg.toFixed(2)+"%";
+    var photo = m.photo || m.photoFb || "";
+    html += '<div class="mkt-row" onclick="openBuyFromMarket('+m.id+')">'+
+      '<img class="mkt-badge" src="'+photo+'" alt="" onerror="this.src=\''+(m.photoFb||'')+'\'">'+
+      '<div><div class="mkt-name">'+m.code+'</div><div class="mkt-sub">'+(m.league||'')+'</div></div>'+
+      '<div class="mkt-spark">'+sparklineSVG(s.hist, up)+'</div>'+
+      '<div><div class="mkt-price">'+fmtUSD(s.price)+'</div><div class="mkt-chg '+(up?"up":"down")+'">'+chgStr+'</div></div>'+
+    '</div>';
+  }
+  box.innerHTML = html;
+}
+function openBuyFromMarket(id){
+  try{
+    if(typeof openBuy==="function"){ openBuy(id); return; }
+  }catch(e){}
+  try{
+    if(typeof selectMachine==="function"){ selectMachine(id); return; }
+  }catch(e){}
+  goPage("machines");
+  setTimeout(function(){
+    try{
+      for(var i=0;i<machines.length;i++) if(machines[i].id===id){
+        if(typeof openBuyModal==="function") openBuyModal(machines[i]);
+        else if(typeof buyMachine==="function") buyMachine(id);
+      }
+    }catch(e){}
+  }, 200);
+}
+
+
 function goPage(p){
   try{ setHomeUclBackground(p); }catch(e){}
+  if(p==="market"){ try{ renderMarketList(); }catch(e){} }
+  if(p==="income"){ /* still available via Account / home */ }
 
   if(p==='raffle'){ try{renderRaffle();}catch(e){} }
 
@@ -4021,8 +4476,7 @@ function fillSettingsForm(){
   var user = currentUser(); if(!user) return;
   var p = user.payout || {};
   var el;
-  el = document.getElementById("setBankName"); if(el) el.value = p.bankName || "";
-  el = document.getElementById("setBankNumber"); if(el) el.value = p.bankNumber || "";
+  /* bank name/number removed from UI */
   el = document.getElementById("setMtn"); if(el) el.value = p.mtn || "";
   el = document.getElementById("setAirtel"); if(el) el.value = p.airtel || "";
   el = document.getElementById("setTrc20"); if(el) el.value = p.trc20 || "";
@@ -4118,8 +4572,8 @@ function saveWithdrawPassword(){
 function savePayoutAccounts(){
   var user = currentUser(); if(!user) return;
   user.payout = {
-    bankName: ((document.getElementById("setBankName")||{}).value || "").trim(),
-    bankNumber: ((document.getElementById("setBankNumber")||{}).value || "").trim(),
+    bankName: (user.payout && user.payout.bankName) || "",
+    bankNumber: (user.payout && user.payout.bankNumber) || "",
     mtn: ((document.getElementById("setMtn")||{}).value || "").trim(),
     airtel: ((document.getElementById("setAirtel")||{}).value || "").trim(),
     trc20: ((document.getElementById("setTrc20")||{}).value || "").trim()
@@ -4147,11 +4601,66 @@ function changeLoginPassword(){
   document.getElementById("setNewPass2").value = "";
 }
 
+
+function userVipLevel(user){
+  user = user || currentUser() || {};
+  var inv = 0;
+  var maxLock = 0;
+  var ms = user.machines || user.shares || [];
+  for(var i=0;i<ms.length;i++){
+    inv += Number(ms[i].price || ms[i].amount || 0);
+    maxLock = Math.max(maxLock, Number(ms[i].lockDays || ms[i].days || 0));
+  }
+  /* Highest pack wins: 140k/28d VIP-4, 105k/21d VIP-3, 70k/14d VIP-2, 35k/7d VIP-1 */
+  if(inv >= 140000 || maxLock >= 28) return 4;
+  if(inv >= 105000 || maxLock >= 21) return 3;
+  if(inv >= 70000 || maxLock >= 14) return 2;
+  return 1;
+}
+function vipRules(){
+  return {
+    1: {deposit:35000, days:7,  daily:5000},
+    2: {deposit:70000, days:14, daily:7500},
+    3: {deposit:105000,days:21, daily:10000},
+    4: {deposit:140000,days:28, daily:12500}
+  };
+}
+function dailyWithdrawCap(user){
+  var r = vipRules()[userVipLevel(user)] || vipRules()[1];
+  return r.daily;
+}
+function todayWithdrawn(user){
+  user = user || {};
+  var list = user.withdrawals || [];
+  var today = new Date();
+  var key = today.getFullYear()+"-"+(today.getMonth()+1)+"-"+today.getDate();
+  var sum = 0;
+  for(var i=0;i<list.length;i++){
+    var w = list[i];
+    if(!w) continue;
+    var st = String(w.status||"").toLowerCase();
+    if(st==="rejected" || st==="reject") continue;
+    var d = new Date(w.date || w.createdAt || 0);
+    var k = d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+    if(k===key) sum += Number(w.amount||0);
+  }
+  return sum;
+}
+
 function openWithdraw(){
   var user=currentUser(); if(!user) return;
   var bals=calcBalances(user);
+  var cap = dailyWithdrawCap(user);
+  var used = todayWithdrawn(user);
+  var left = Math.max(0, cap - used);
+  var vip = userVipLevel(user);
   document.getElementById("withdrawLockNote").innerHTML =
-    "Available: <b class=\"green\">"+money(bals.available)+"</b><br>Locked (5-day wait): <b>"+money(bals.locked)+"</b>";
+    "Available: <b class=\"green\">"+money(bals.available)+"</b><br>Locked (7-day wait): <b>"+money(bals.locked)+"</b>";
+  var note = document.getElementById("withdrawDailyNote");
+  if(note){
+    var r = vipRules()[vip] || vipRules()[1];
+    note.innerHTML = "VIP-"+vip+" · lock "+r.days+" days · pack "+money(r.deposit)+"<br>Daily withdraw limit: <b>"+money(cap)+"</b><br>Used today: "+money(used)+" · Remaining today: <b class=\"green\">"+money(left)+"</b><br>VIP-1 35,000 / 7d = 5,000 · VIP-2 70,000 / 14d = 7,500<br>VIP-3 105,000 / 21d = 10,000 · VIP-4 140,000 / 28d = 12,500";
+  }
   document.getElementById("withdrawAmount").value = "";
   openModal("withdrawModal");
 }
@@ -4171,7 +4680,14 @@ function doWithdraw(){
   var bals=calcBalances(user);
   var amount=Number(document.getElementById("withdrawAmount").value||0);
   if(amount<=0){ alert("Enter amount"); return; }
-  if(amount>bals.available){ alert("Not enough available balance.\nMachine earnings move to Balance only after the 5-day cycle completes."); return; }
+  if(amount>bals.available){ alert("Not enough available balance.\nShare earnings move to Balance only after the 7-day cycle completes."); return; }
+  var cap = dailyWithdrawCap(user);
+  var used = todayWithdrawn(user);
+  var left = Math.max(0, cap - used);
+  if(amount > left){
+    alert("Daily withdraw limit reached.\nVIP-"+userVipLevel(user)+" max today: "+money(cap)+"\nAlready requested today: "+money(used)+"\nYou can still withdraw "+money(left)+" today.");
+    return;
+  }
   user.withdrawals = user.withdrawals || [];
   var fee=Math.round(amount*0.05*100)/100;
   /* Hold funds as pending — do NOT remove from balance until admin approves */
