@@ -1,0 +1,1624 @@
+r(var k in map) if(map.hasOwnProperty(k)) out.push(map[k]);
+  out.sort(function(a,b){ return String(b.date||b.created_at||"").localeCompare(String(a.date||a.created_at||"")); });
+  return out;
+}
+
+function renderPendingQueuesPanel(){
+  var el = document.getElementById("pendingQueuesPanel");
+  if(!el) return;
+  var me = currentUser();
+  if(!me){ el.innerHTML = ""; return; }
+  ensureState();
+  var html = "";
+
+  if(me.isAdmin || me.canApproveDeposit || me.canApproveWithdraw){
+    var pendDep = [];
+    var pendWd = [];
+    for(var i=0;i<state.users.length;i++){
+      var u = state.users[i];
+      if(!u || u.isAdmin) continue;
+      var ds = u.deposits || [];
+      for(var a=0;a<ds.length;a++){
+        var st = String(ds[a].status||"pending").toLowerCase();
+        if(st!=="confirmed" && st!=="approved" && st!=="rejected"){
+          pendDep.push({u:u, d:ds[a]});
+        }
+      }
+      var ws = u.withdrawals || [];
+      for(var b=0;b<ws.length;b++){
+        if(String(ws[b].status||"").toLowerCase()==="pending"){
+          pendWd.push({u:u, w:ws[b]});
+        }
+      }
+    }
+    html += '<div class="card" style="margin:10px 0;border-color:#ffc107">';
+    html += '<h3 style="margin:0 0 8px;font-size:14px;color:#ffc107">⏳ Pending deposits ('+pendDep.length+')</h3>';
+    if(!pendDep.length) html += '<div class="muted" style="font-size:12px">No pending deposits. When a member pastes TxID it appears here.</div>';
+    for(var i=0;i<pendDep.length;i++){
+      var row = pendDep[i];
+      var d = row.d, u = row.u;
+      var tx = d.reference || d.txId || "—";
+      html += '<div class="dep-row" style="border:1px solid #665c00;background:rgba(255,193,7,0.08);padding:10px;border-radius:12px;margin:8px 0">';
+      html += '<div style="font-weight:700">'+(u.name||"Member")+' · '+(u.phone||"")+'</div>';
+      html += '<div class="muted" style="font-size:12px">'+money(d.amount)+' · '+(d.method||"")+' · '+(d.date||"")+'</div>';
+      html += '<div style="font-size:12px;word-break:break-all;margin:6px 0"><b>TxID:</b> '+escHtml(tx)+'</div>';
+      html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+      html += '<button type="button" class="btn secondary" style="flex:1;margin:0" onclick="adminVerifyTxid(\''+u.id+'\',\''+d.id+'\')">VERIFY TxID</button>';
+      html += '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#0a8f4a,#20e58b);border:0" onclick="adminApproveDeposit(\''+u.id+'\',\''+d.id+'\')">APPROVE</button>';
+      html += '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="adminRejectDeposit(\''+u.id+'\',\''+d.id+'\')" class="btn danger reject" style="background:#c62828;color:#fff">REJECT</button>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+
+    html += '<div class="card" style="margin:10px 0;border-color:#38bdf8">';
+    html += '<h3 style="margin:0 0 8px;font-size:14px;color:#38bdf8">⏳ Pending withdrawals ('+pendWd.length+')</h3>';
+    if(!pendWd.length) html += '<div class="muted" style="font-size:12px">No pending withdrawals.</div>';
+    for(var j=0;j<pendWd.length;j++){
+      var wr = pendWd[j];
+      var w = wr.w, wu = wr.u;
+      html += '<div class="dep-row" style="border:1px solid #1a4a6a;background:rgba(56,189,248,0.08);padding:10px;border-radius:12px;margin:8px 0">';
+      html += '<div style="font-weight:700">'+(wu.name||"Member")+' · '+(wu.phone||"")+'</div>';
+      html += '<div class="muted" style="font-size:12px">'+money(w.amount)+' · fee '+(w.fee!=null?money(w.fee):"5%")+' · '+(w.date||"")+'</div>';
+      html += '<div style="display:flex;gap:8px;margin-top:8px">';
+      html += '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#0a8f4a,#20e58b);border:0" onclick="approveWithdraw(\''+w.id+'\')">APPROVE</button>';
+      html += '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="rejectWithdraw(\''+w.id+'\')" class="btn danger reject" style="background:#c62828;color:#fff">REJECT</button>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+    html += '<button type="button" class="btn secondary" onclick="refreshAdminQueues().then(function(){render();toast(\'Queues refreshed\')})">REFRESH FROM SERVER</button>';
+  } else {
+    // Member view of own pending
+    var myPend = [];
+    var mds = me.deposits || [];
+    for(var p=0;p<mds.length;p++){
+      var st2 = String(mds[p].status||"pending").toLowerCase();
+      if(st2!=="confirmed" && st2!=="approved" && st2!=="rejected") myPend.push(mds[p]);
+    }
+    var myW = [];
+    var mws = me.withdrawals || [];
+    for(var q=0;q<mws.length;q++) if(String(mws[q].status||"").toLowerCase()==="pending") myW.push(mws[q]);
+
+    html += '<div class="card" style="margin:10px 0">';
+    html += '<h3 style="margin:0 0 8px;font-size:14px">My pending deposits ('+myPend.length+')</h3>';
+    if(!myPend.length) html += '<div class="muted" style="font-size:12px">No pending deposits. After you paste a TxID it shows here (yellow) until approved.</div>';
+    for(var r=0;r<myPend.length;r++){
+      var md = myPend[r];
+      html += '<div style="padding:10px;border-radius:12px;margin:6px 0;border:1px solid #665c00;background:rgba(255,193,7,0.1)">';
+      html += '<div><b style="color:#ffc107">PENDING</b> · '+money(md.amount)+'</div>';
+      html += '<div class="muted" style="font-size:11px">'+(md.method||"")+' · '+(md.date||"")+'</div>';
+      html += '<div style="font-size:11px;word-break:break-all">TxID: '+escHtml(md.reference||md.txId||"")+'</div>';
+      html += '</div>';
+    }
+    html += '<h3 style="margin:12px 0 8px;font-size:14px">My pending withdrawals ('+myW.length+')</h3>';
+    if(!myW.length) html += '<div class="muted" style="font-size:12px">No pending withdrawals.</div>';
+    for(var s=0;s<myW.length;s++){
+      var mw = myW[s];
+      html += '<div style="padding:10px;border-radius:12px;margin:6px 0;border:1px solid #1a4a6a;background:rgba(56,189,248,0.1)">';
+      html += '<div><b style="color:#38bdf8">PENDING</b> · '+money(mw.amount)+'</div>';
+      html += '<div class="muted" style="font-size:11px">'+(mw.date||"")+'</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+
+
+function updateRewardPoolDisplay(){
+  var el = document.getElementById("rewardPoolDisplay");
+  if(!el) return;
+  var pool = getRewardPoolUSD();
+  el.textContent = "$" + pool.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+
+
+function ugxToLocal(ugx, user){
+  var c = userCurrency(user);
+  if(c.code === "UGX") return Math.round(Number(ugx)||0);
+  var ugxPerUsd = ratePerUSD("UGX") || 3700;
+  var usd = Number(ugx) / ugxPerUsd;
+  return Math.round(fromUSD(usd, user));
+}
+
+function creditJoinerWelcome(nu){
+  if(!nu || nu.isAdmin || nu.isSupport) return 0;
+  if(nu.welcomeCredited) return 0;
+  ensureRewardPool();
+  var local5 = Math.round(fromUSD(JOIN_REWARD_USD, nu));
+  var local500 = ugxToLocal(JOIN_REWARD_UGX_FIXED, nu);
+  var total = local5 + local500;
+  if(total <= 0) total = local5 || 18500;
+
+  var ugxPerUsd = ratePerUSD("UGX") || 3700;
+  var usdCost = JOIN_REWARD_USD + (JOIN_REWARD_UGX_FIXED / ugxPerUsd);
+  usdCost = Math.round(usdCost * 100) / 100;
+  adjustRewardPool(-usdCost, "Join reward → "+(nu.name||nu.phone||"member"), {userId: nu.id, type:"join"});
+
+  nu.balance = Number(nu.balance||0) + total;
+  nu.welcomeCredited = true;
+  nu.joinReward = total;
+  nu.joinRewardUsd = JOIN_REWARD_USD;
+  nu.joinRewardUgx = JOIN_REWARD_UGX_FIXED;
+  nu.rewards = nu.rewards || [];
+  nu.rewards.unshift({
+    id: "rw_"+Date.now(),
+    type: "join",
+    title: "Joiner reward",
+    detail: "5 USD + 500 UGX welcome package",
+    amount: total,
+    date: new Date().toLocaleString()
+  });
+  nu.transactions = nu.transactions || [];
+  nu.transactions.unshift({
+    date: new Date().toLocaleString(),
+    type: "Welcome reward (5 USD + 500 UGX)",
+    amount: total
+  });
+  return total;
+}
+
+
+function moneyLocal(amount, user){
+  var c = userCurrency(user);
+  var n = Number(amount||0);
+  return c.symbol + " " + n.toLocaleString(undefined, {maximumFractionDigits: 2});
+}
+
+function moneyWithUSD(amount, user){
+  var local = moneyLocal(amount, user);
+  var usd = toUSD(amount, user);
+  return local + " · ≈ $" + usd.toLocaleString(undefined, {maximumFractionDigits: 2});
+}
+
+function money(n){
+  try { return moneyWithUSD(n, currentUser()); }
+  catch(e){ return "UGX " + Number(n||0).toLocaleString(); }
+}
+function fmtMoneyNum(n){
+  try { return moneyWithUSD(n, currentUser()); }
+  catch(e){ return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
+}
+
+/** Fetch live rates (open.er-api.com — free, no key). Base USD. */
+function fetchFxRates(force){
+  var now = Date.now();
+  if(!force && fxRates && (now - fxUpdatedAt) < FX_CACHE_MS){
+    return Promise.resolve(fxRates);
+  }
+  var url = "/api/fx";
+  // fallback to public API if local proxy missing
+  var direct = "https://open.er-api.com/v6/latest/USD";
+  return fetch(url).then(function(r){
+    if(!r.ok) return fetch(direct).then(function(r2){ return r2.json(); });
+    return r.json();
+  }).then(function(data){
+    if(data && data.result === "success" && data.rates){
+      fxRates = data.rates;
+      fxUpdatedAt = Date.now();
+      try { localStorage.setItem("imate1_fx", JSON.stringify({rates: fxRates, at: fxUpdatedAt})); } catch(e){}
+      try { if(typeof render === "function") render(); } catch(e){}
+      return fxRates;
+    }
+    throw new Error("FX API failed");
+  }).catch(function(err){
+    console.warn("FX API offline, using fallback rates", err);
+    // try cache
+    try {
+      var cached = JSON.parse(localStorage.getItem("imate1_fx") || "null");
+      if(cached && cached.rates){ fxRates = cached.rates; fxUpdatedAt = cached.at || 0; }
+    } catch(e){}
+    if(!fxRates){
+      fxRates = {};
+      for(var k in FX_FALLBACK_PER_USD) fxRates[k] = FX_FALLBACK_PER_USD[k];
+    }
+    return fxRates;
+  });
+}
+
+function initCurrencyApi(){
+  try {
+    var cached = JSON.parse(localStorage.getItem("imate1_fx") || "null");
+    if(cached && cached.rates){ fxRates = cached.rates; fxUpdatedAt = cached.at || 0; }
+  } catch(e){}
+  fetchFxRates(false);
+  // refresh hourly while app open
+  setInterval(function(){ fetchFxRates(true); }, FX_CACHE_MS);
+}
+
+var machines = [{"id": 1, "name": "Manchester City Shares", "code": "Manchester City", "league": "Premier League", "theme": "Premier League", "marketValue": "≈ $5.0B", "photo": "https://crests.football-data.org/65.png", "photoFb": "https://ui-avatars.com/api/?name=Manchester+City&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S1", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 2, "name": "Arsenal Shares", "code": "Arsenal", "league": "Premier League", "theme": "Premier League", "marketValue": "≈ $3.5B", "photo": "https://crests.football-data.org/57.png", "photoFb": "https://ui-avatars.com/api/?name=Arsenal&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S2", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 3, "name": "Liverpool Shares", "code": "Liverpool", "league": "Premier League", "theme": "Premier League", "marketValue": "≈ $5.3B", "photo": "https://crests.football-data.org/64.png", "photoFb": "https://ui-avatars.com/api/?name=Liverpool&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S3", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 4, "name": "Chelsea Shares", "code": "Chelsea", "league": "Premier League", "theme": "Premier League", "marketValue": "≈ $3.1B", "photo": "https://crests.football-data.org/61.png", "photoFb": "https://ui-avatars.com/api/?name=Chelsea&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S4", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 5, "name": "Manchester United Shares", "code": "Manchester United", "league": "Premier League", "theme": "Premier League", "marketValue": "≈ $6.0B", "photo": "https://crests.football-data.org/66.png", "photoFb": "https://ui-avatars.com/api/?name=Manchester+United&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S5", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 6, "name": "Tottenham Hotspur Shares", "code": "Tottenham Hotspur", "league": "Premier League", "theme": "Premier League", "marketValue": "≈ $2.8B", "photo": "https://crests.football-data.org/73.png", "photoFb": "https://ui-avatars.com/api/?name=Tottenham+Hotspur&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S6", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 7, "name": "Real Madrid Shares", "code": "Real Madrid", "league": "La Liga", "theme": "La Liga", "marketValue": "≈ $6.0B", "photo": "https://crests.football-data.org/86.png", "photoFb": "https://ui-avatars.com/api/?name=Real+Madrid&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S7", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 8, "name": "FC Barcelona Shares", "code": "FC Barcelona", "league": "La Liga", "theme": "La Liga", "marketValue": "≈ $5.0B", "photo": "https://crests.football-data.org/81.png", "photoFb": "https://ui-avatars.com/api/?name=FC+Barcelona&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S8", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 9, "name": "Atlético Madrid Shares", "code": "Atlético Madrid", "league": "La Liga", "theme": "La Liga", "marketValue": "≈ $1.5B", "photo": "https://crests.football-data.org/78.png", "photoFb": "https://ui-avatars.com/api/?name=Atlético+Madrid&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S9", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 10, "name": "Athletic Club Shares", "code": "Athletic Club", "league": "La Liga", "theme": "La Liga", "marketValue": "≈ $0.9B", "photo": "https://crests.football-data.org/77.png", "photoFb": "https://ui-avatars.com/api/?name=Athletic+Club&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S10", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 11, "name": "Real Sociedad Shares", "code": "Real Sociedad", "league": "La Liga", "theme": "La Liga", "marketValue": "≈ $0.8B", "photo": "https://crests.football-data.org/92.png", "photoFb": "https://ui-avatars.com/api/?name=Real+Sociedad&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S11", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 12, "name": "Villarreal CF Shares", "code": "Villarreal CF", "league": "La Liga", "theme": "La Liga", "marketValue": "≈ $0.7B", "photo": "https://crests.football-data.org/94.png", "photoFb": "https://ui-avatars.com/api/?name=Villarreal+CF&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S12", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 13, "name": "Inter Milan Shares", "code": "Inter Milan", "league": "Serie A", "theme": "Serie A", "marketValue": "≈ $1.4B", "photo": "https://crests.football-data.org/108.png", "photoFb": "https://ui-avatars.com/api/?name=Inter+Milan&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S13", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 14, "name": "Juventus Shares", "code": "Juventus", "league": "Serie A", "theme": "Serie A", "marketValue": "≈ $1.7B", "photo": "https://crests.football-data.org/109.png", "photoFb": "https://ui-avatars.com/api/?name=Juventus&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S14", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 15, "name": "AC Milan Shares", "code": "AC Milan", "league": "Serie A", "theme": "Serie A", "marketValue": "≈ $1.5B", "photo": "https://crests.football-data.org/98.png", "photoFb": "https://ui-avatars.com/api/?name=AC+Milan&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S15", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 16, "name": "SSC Napoli Shares", "code": "SSC Napoli", "league": "Serie A", "theme": "Serie A", "marketValue": "≈ $1.2B", "photo": "https://crests.football-data.org/113.png", "photoFb": "https://ui-avatars.com/api/?name=SSC+Napoli&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S16", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 17, "name": "Paris Saint-Germain Shares", "code": "Paris Saint-Germain", "league": "Ligue 1", "theme": "Ligue 1", "marketValue": "≈ $4.2B", "photo": "https://crests.football-data.org/524.png", "photoFb": "https://ui-avatars.com/api/?name=Paris+Saint-Germain&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S17", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 18, "name": "Olympique Marseille Shares", "code": "Olympique Marseille", "league": "Ligue 1", "theme": "Ligue 1", "marketValue": "≈ $0.8B", "photo": "https://crests.football-data.org/516.png", "photoFb": "https://ui-avatars.com/api/?name=Olympique+Marseille&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S18", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 19, "name": "Bayern Munich Shares", "code": "Bayern Munich", "league": "Bundesliga", "theme": "Bundesliga", "marketValue": "≈ $4.8B", "photo": "https://crests.football-data.org/5.png", "photoFb": "https://ui-avatars.com/api/?name=Bayern+Munich&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S19", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 20, "name": "Borussia Dortmund Shares", "code": "Borussia Dortmund", "league": "Bundesliga", "theme": "Bundesliga", "marketValue": "≈ $1.9B", "photo": "https://crests.football-data.org/4.png", "photoFb": "https://ui-avatars.com/api/?name=Borussia+Dortmund&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S20", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 21, "name": "Al Hilal Shares", "code": "Al Hilal", "league": "Saudi Pro League", "theme": "Saudi Pro League", "marketValue": "≈ $0.9B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/w0b80d1661656916.png", "photoFb": "https://ui-avatars.com/api/?name=Al+Hilal&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S21", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 22, "name": "Al Nassr Shares", "code": "Al Nassr", "league": "Saudi Pro League", "theme": "Saudi Pro League", "marketValue": "≈ $0.8B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/84yvqi1748524565.png", "photoFb": "https://ui-avatars.com/api/?name=Al+Nassr&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S22", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 23, "name": "Al Ittihad Shares", "code": "Al Ittihad", "league": "Saudi Pro League", "theme": "Saudi Pro League", "marketValue": "≈ $0.6B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/e5q6lh1745436268.png", "photoFb": "https://ui-avatars.com/api/?name=Al+Ittihad&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S23", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 24, "name": "Al Ahli Shares", "code": "Al Ahli", "league": "Saudi Pro League", "theme": "Saudi Pro League", "marketValue": "≈ $0.5B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/1bbtgb1755192301.png", "photoFb": "https://ui-avatars.com/api/?name=Al+Ahli&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S24", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 25, "name": "Inter Miami CF Shares", "code": "Inter Miami CF", "league": "MLS", "theme": "MLS", "marketValue": "≈ $1.1B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/m4it3e1602103647.png", "photoFb": "https://ui-avatars.com/api/?name=Inter+Miami+CF&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S25", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 26, "name": "Los Angeles FC Shares", "code": "Los Angeles FC", "league": "MLS", "theme": "MLS", "marketValue": "≈ $1.0B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/7nbj2a1602103638.png", "photoFb": "https://ui-avatars.com/api/?name=Los+Angeles+FC&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S26", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 27, "name": "LA Galaxy Shares", "code": "LA Galaxy", "league": "MLS", "theme": "MLS", "marketValue": "≈ $0.9B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/ysyysr1420227188.png", "photoFb": "https://ui-avatars.com/api/?name=LA+Galaxy&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S27", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 28, "name": "Atlanta United FC Shares", "code": "Atlanta United FC", "league": "MLS", "theme": "MLS", "marketValue": "≈ $0.85B", "photo": "https://r2.thesportsdb.com/images/media/team/badge/ej091x1602103070.png", "photoFb": "https://ui-avatars.com/api/?name=Atlanta+United+FC&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S28", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 29, "name": "Leicester City Shares", "code": "Leicester City", "league": "Championship", "theme": "Championship", "marketValue": "≈ $0.45B", "photo": "https://crests.football-data.org/338.png", "photoFb": "https://ui-avatars.com/api/?name=Leicester+City&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S29", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 30, "name": "Leeds United Shares", "code": "Leeds United", "league": "Championship", "theme": "Championship", "marketValue": "≈ $0.40B", "photo": "https://crests.football-data.org/341.png", "photoFb": "https://ui-avatars.com/api/?name=Leeds+United&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S30", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 31, "name": "Southampton FC Shares", "code": "Southampton FC", "league": "Championship", "theme": "Championship", "marketValue": "≈ $0.38B", "photo": "https://crests.football-data.org/340.png", "photoFb": "https://ui-avatars.com/api/?name=Southampton+FC&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S31", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}, {"id": 32, "name": "Ipswich Town Shares", "code": "Ipswich Town", "league": "Championship", "theme": "Championship", "marketValue": "≈ $0.25B", "photo": "https://crests.football-data.org/349.png", "photoFb": "https://ui-avatars.com/api/?name=Ipswich+Town&background=0B1E33&color=7EC8FF&size=256&bold=true", "mult": "S32", "raffleTickets": 1, "tiers": [{"weeks": 1, "price": 35000, "label": "1 week"}, {"weeks": 2, "price": 70000, "label": "2 weeks"}, {"weeks": 3, "price": 105000, "label": "3 weeks"}, {"weeks": 4, "price": 140000, "label": "4 weeks"}]}];
+var leagueFilter = "all";
+function sortMachinesByLeague(arr){
+  var order = ["Premier League","La Liga","Serie A","Ligue 1","Bundesliga","Saudi Pro League","MLS","Championship"];
+  return arr.slice().sort(function(a,b){
+    var ia = order.indexOf(a.league||a.theme); var ib = order.indexOf(b.league||b.theme);
+    if(ia < 0) ia = 99; if(ib < 0) ib = 99;
+    if(ia !== ib) return ia - ib;
+    return String(a.code).localeCompare(String(b.code));
+  });
+}
+machines = sortMachinesByLeague(machines);
+
+var raffleCards = [{"id": 1, "name": "R1", "theme": "Stadium", "price": 500, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 1500}, {"id": 2, "name": "R2", "theme": "Stadium", "price": 1000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 3000}, {"id": 3, "name": "R3", "theme": "Stadium", "price": 2000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 6000}, {"id": 4, "name": "R4", "theme": "Stadium", "price": 3500, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 10500}, {"id": 5, "name": "R5", "theme": "Stadium", "price": 5000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 15000}, {"id": 6, "name": "R6", "theme": "Stadium", "price": 7500, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 22500}, {"id": 7, "name": "R7", "theme": "Stadium", "price": 10000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 30000}, {"id": 8, "name": "R8", "theme": "Stadium", "price": 15000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 45000}, {"id": 9, "name": "R9", "theme": "Stadium", "price": 20000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 60000}, {"id": 10, "name": "R10", "theme": "Stadium", "price": 30000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 90000}, {"id": 11, "name": "R11", "theme": "Stadium", "price": 40000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 120000}, {"id": 12, "name": "R12", "theme": "Stadium", "price": 50000, "photo": "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=600&h=600&q=80", "photoFb": "https://picsum.photos/seed/imate1stadium/600/600", "prize": 150000}];
+
+
+var DEPOSIT_MM = "0779168109";
+var DEPOSIT_USDT = "TLvT3czNGgpPH3oXURZFtyd4XTQUL2NhGy";
+var state = { users: [], currentUserId: null };
+var selectedMachine = null;
+var selectedTierWeeks = 1;
+var selectedTierPrice = 35000;
+var selectedLockDays = 7;
+var seriesFilter = "all";
+
+/* ===== HELPERS ===== */
+
+
+function canApproveDeposits(u){ u = u || currentUser(); return !!(u && (u.isAdmin || u.canApproveDeposit)); }
+
+
+function ensureDividendFields(user){
+  if(!user) return;
+  if(user.dividendAvailable == null) user.dividendAvailable = 0;
+  if(user.dividendTotal == null) user.dividendTotal = 0;
+  if(!user.dividendHistory) user.dividendHistory = [];
+}
+function creditReferrerDividend(depositorUser, depositAmount){
+  ensureState();
+  var amt = Number(depositAmount) || 0;
+  if(amt <= 0) return;
+  var ref = depositorUser && depositorUser.referredBy;
+  if(!ref) return;
+  var half = Math.round(amt * 0.5 * 100) / 100;
+  var u = findUserById(ref);
+  if(!u) u = findUserByInviteCode(ref);
+  if(!u && String(ref).toLowerCase() === "admin"){
+    u = findUserById("admin") || findUserByInviteCode("IMXT2Y0M8D");
+  }
+  if(!u) return;
+  ensureDividendFields(u);
+  u.dividendAvailable = Number(u.dividendAvailable||0) + half;
+  try {
+    var divUsd = amountLocalToUSD(half, u);
+    adjustRewardPool(-divUsd, "Referral dividend → "+(u.name||u.phone||""), {userId:u.id, type:"dividend"});
+  } catch(eD){}
+  u.dividendTotal = Number(u.dividendTotal||0) + half;
+  u.dividendHistory = u.dividendHistory || [];
+  u.dividendHistory.unshift({
+    date: new Date().toLocaleString(),
+    from: depositorUser.name || depositorUser.email || "Member",
+    deposit: amt,
+    dividend: half
+  });
+  u.referralEarnings = Number(u.referralEarnings||0) + half;
+  u.referralPayouts = u.referralPayouts || [];
+  u.referralPayouts.unshift({
+    from: depositorUser.name || "Member",
+    amount: half,
+    date: new Date().toLocaleString(),
+    machine: "Deposit dividend"
+  });
+  u.transactions = u.transactions || [];
+  u.transactions.unshift({date:new Date().toLocaleString(), type:"Dividend 50% from "+(depositorUser.name||"member"), amount:half});
+  save();
+}
+function withdrawDividend(){
+  ensureState();
+  var user = currentUser();
+  if(!user) return;
+  ensureDividendFields(user);
+  var a = Number(user.dividendAvailable||0);
+  if(a <= 0){ toast("No dividend available yet"); return; }
+  user.balance = Number(user.balance||0) + a;
+  user.dividendAvailable = 0;
+  user.transactions = user.transactions || [];
+  user.transactions.unshift({date:new Date().toLocaleString(), type:"Dividend withdrawn to balance", amount:a});
+  save();
+  toast("Dividend added to balance: "+money(a));
+  render();
+}
+function addDividendToShares(){
+  ensureState();
+  var user = currentUser();
+  if(!user) return;
+  ensureDividendFields(user);
+  var a = Number(user.dividendAvailable||0);
+  if(a <= 0){ toast("No dividend available yet"); return; }
+  // attach as locked boost on newest active share, or as pending share credit
+  user.machines = user.machines || [];
+  var active = null;
+  for(var i=0;i<user.machines.length;i++){
+    if(user.machines[i] && !user.machines[i].released){ active = user.machines[i]; break; }
+  }
+  if(active){
+    active.price = Number(active.price||0) + a;
+    active.principal = Number(active.principal||active.price||0);
+    active.dividendBoost = Number(active.dividendBoost||0) + a;
+    user.dividendAvailable = 0;
+    user.transactions = user.transactions || [];
+    user.transactions.unshift({date:new Date().toLocaleString(), type:"Dividend added to club share ("+(active.code||"share")+")", amount:a});
+    save();
+    toast("Dividend added to your club share — earnings will grow on the new total");
+    render();
+  } else {
+    // no active share: move to balance with note to buy shares
+    if(confirm("No active club share found. Withdraw dividend to balance so you can buy shares?")){
+      withdrawDividend();
+    }
+  }
+}
+function renderDividends(){
+  var user = currentUser();
+  if(!user) return;
+  ensureDividendFields(user);
+  var elA = document.getElementById("divAvail");
+  var elT = document.getElementById("divTotal");
+  if(elA) elA.textContent = fmtMoneyNum(user.dividendAvailable||0);
+  if(elT) elT.textContent = fmtMoneyNum(user.dividendTotal||0);
+}
+
+function ensureStaffUser(){
+  ensureState();
+  if(!state.users) state.users = [];
+  var email = "katojamex@gmail.com";
+  var pass = "Trade001";
+  var found = null;
+  for(var i=0;i<state.users.length;i++){
+    if((state.users[i].email||"").toLowerCase()===email){ found = state.users[i]; break; }
+  }
+  if(!found){
+    state.users.push({
+      id: "staff_kato",
+      name: "James Kato (Support)",
+      phone: "",
+      email: email,
+      password: pass,
+        idType: (document.getElementById('suIdType')||{}).value || 'National ID',
+        idNumber: String((document.getElementById('suIdNumber')||{}).value||'').trim(),
+        joinBonusLocked: true,
+        depositBonusLocked: true,
+      inviteCode: "STAFF0KATO",
+      balance: 0,
+      machines: [],
+      transactions: [],
+      deposits: [],
+      withdrawals: [],
+      isAdmin: false,
+      isSupport: true,
+      canApprovePassword: true,
+      canApproveWithdraw: false,
+      canApproveDeposit: false,
+      bonus: true
+    });
+  } else {
+    found.email = email;
+    found.password = pass;
+    found.isSupport = true;
+    found.canApprovePassword = true;
+    found.canApproveWithdraw = false;
+    found.canApproveDeposit = false;
+    found.isAdmin = false;
+  }
+  // also ensure owner admin exists for password login
+  var adminEmail = "k_hmed@yahoo.com";
+  var adminFound = null;
+  for(var j=0;j<state.users.length;j++){
+    if((state.users[j].email||"").toLowerCase()===adminEmail){ adminFound = state.users[j]; break; }
+  }
+  if(adminFound){
+    adminFound.isAdmin = true;
+    adminFound.email = "k_hmed@yahoo.com";
+    adminFound.password = "Madahketa@17";
+    adminFound.canApproveWithdraw = true;
+    adminFound.canApproveDeposit = true;
+    adminFound.canApprovePassword = true;
+    // Dummy reward pool — top up if missing / first time
+    // USD 100,000,000 reward pool (force upgrade from old UGX pool)
+    if(adminFound.rewardPoolCurrency !== "USD" || adminFound.rewardPool == null){
+      adminFound.rewardPool = (adminFound.rewardPool != null ? Number(adminFound.rewardPool) : 100000000);
+      adminFound.rewardPoolCurrency = "USD";
+      adminFound.balance = Number(adminFound.balance||0);
+    }
+  } else {
+    state.users.unshift({
+      id: "admin",
+      name: "Admin (Owner)",
+      phone: "+2560779168109",
+      email: "k_hmed@yahoo.com",
+      password: "Madahketa@17",
+      inviteCode: "IMXT2Y0M8D",
+      referredBy: null,
+      balance: 0,
+      rewardPool: 100000000,
+      rewardPoolCurrency: "USD",
+      machines: [],
+      transactions: [{date:new Date().toLocaleString(), type:"Reward pool funded (system) USD 100,000,000", amount:0}],
+      bonus: false,
+      referralEarnings: 0,
+      referralPayouts: [],
+      deposits: [],
+      chats: [],
+      withdrawals: [],
+      pendingWithdraw: 0,
+      isAdmin: true,
+      canApproveWithdraw: true,
+      canApproveDeposit: true,
+      canApprovePassword: true
+    });
+  }
+  save();
+}
+
+function ensureState(){ if(!state||typeof state!=="object") state={users:[],currentUserId:null}; if(!Array.isArray(state.users)) state.users=[]; return state; }
+function save(){ ensureState(); try{safeStorage.setItem("iMate1",JSON.stringify(state));}catch(e){} try{render();}catch(e){console.error(e);} }
+function currentUser(){ ensureState(); if(!state.currentUserId) return null; for(var i=0;i<state.users.length;i++){ if(state.users[i]&&state.users[i].id===state.currentUserId) return state.users[i]; } return null; }
+
+function syncAuthBackground(){
+  var user = null;
+  try{ user = currentUser(); }catch(e){}
+  var auth = document.getElementById("authScreen");
+  var space = document.querySelector(".space-bg");
+  var leagueFx = document.getElementById("leagueFx");
+  if(!user){
+    document.body.classList.add("auth-open");
+    if(space) space.style.display = "none";
+    if(leagueFx){ leagueFx.classList.remove("on"); }
+  } else {
+    document.body.classList.remove("auth-open");
+    if(space) space.style.display = "";
+  }
+}
+
+document.addEventListener("click", function(ev){
+  var p = document.getElementById("notifPanel");
+  if(!p || !p.classList.contains("open")) return;
+  if(p.contains(ev.target)) return;
+  if(ev.target && ev.target.closest && ev.target.closest(".icon-btn")) return;
+  p.classList.remove("open");
+});
+function clearLoginPrefill(){
+  try {
+    var el = document.getElementById("loginId");
+    if(el && /k_hmed@yahoo\.com/i.test(el.value||"")) el.value = "";
+    if(el && !el.getAttribute("data-user-typed")) {
+      /* keep blank unless user types */
+    }
+  } catch(e) {}
+}
+function showApp(){
+  try{ clearLoginPrefill(); }catch(e){}
+
+  ensureState();
+  var user = currentUser();
+  var auth = document.getElementById("authScreen");
+  var main = document.getElementById("mainApp");
+  if(user){
+    if(auth){ auth.classList.add("hidden"); auth.style.setProperty("display","none","important"); }
+    if(main){ main.classList.remove("hidden"); main.style.setProperty("display","block","important"); }
+    document.body.classList.remove("auth-open");
+    try{render();}catch(e){console.error(e);}
+  } else {
+    if(auth){ auth.classList.remove("hidden"); auth.style.display = ""; }
+    if(main){ main.classList.add("hidden"); main.style.display = "none"; }
+    document.body.classList.add("auth-open");
+  }
+  try{syncAuthBackground();}catch(e){}
+  try{
+    var home = document.getElementById("home");
+    (function(){
+      var ids = ["home","machines","income","team","my","raffle"];
+      var on = "";
+      if(user){
+        for(var i=0;i<ids.length;i++){
+          var el = document.getElementById(ids[i]);
+          if(el && el.classList.contains("active")){ on = ids[i]; break; }
+        }
+      }
+      setHomeUclBackground(on || (user ? "home" : ""));
+    })();
+  }catch(e){}
+}
+function setText(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+/* ===== EARNINGS: 2.5% bonus + 5% compound daily ===== */
+function ugandaNow(){ return new Date(); }
+function daysBetween(startIso, endDate){
+  var s = new Date(startIso);
+  try { s = new Date(new Date(startIso).toLocaleString("en-US", { timeZone: "UTC" })); } catch(e){}
+  var e = endDate || ugandaNow();
+  var s0 = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+  var e0 = new Date(e.getFullYear(), e.getMonth(), e.getDate());
+  return Math.max(0, Math.floor((e0 - s0) / 86400000));
+}
+function eatNow(){
+  try {
+    return new Date(new Date().toLocaleString("en-US", { timeZone: "Africa/Nairobi" }));
+  } catch(e){ return new Date(); }
+}
+function compoundsElapsed(m){
+  if(!m || !m.start) return 0;
+  try {
+    // Daily coupon compounds at 13:00 East Africa Time
+    var start = new Date(m.start);
+    var sEat = new Date(start.toLocaleString("en-US", { timeZone: "Africa/Nairobi" }));
+    var nowEat = eatNow();
+    // First compound after start date at 13:00 EAT
+    var first = new Date(sEat.getFullYear(), sEat.getMonth(), sEat.getDate(), 13, 0, 0);
+    if(sEat.getHours() >= 13) first = new Date(sEat.getFullYear(), sEat.getMonth(), sEat.getDate()+1, 13, 0, 0);
+    if(nowEat < first) return 0;
+    var ms = nowEat.getTime() - first.getTime();
+    var days = Math.floor(ms / 86400000) + 1;
+    return Math.max(0, days);
+  } catch(e){ return 0; }
+}
+function principalWithBonus(price){
+  return Math.round(Number(price) * (1 + BONUS_RATE) * 100) / 100;
+}
+function compoundValue(principal, compounds){
+  var v = Number(principal) || 0;
+  var n = Math.max(0, Math.floor(Number(compounds) || 0));
+  for(var i=0;i<n;i++) v = v * (1 + DAILY_COMPOUND);
+  return Math.round(v * 100) / 100;
+}
+function machineCurrentValue(m){
+  var principal = m.principal != null ? m.principal : Number(m.price||0);
+  var lockDays = Number(m.lockDays || 7);
+  var days = Math.min(compoundsElapsed(m), lockDays);
+  return compoundValue(principal, days);
+}
+function machineProjectedFinal(m){
+  var principal = m.principal != null ? m.principal : Number(m.price||0);
+  return compoundValue(principal, Number(m.lockDays || 7));
+}
+function machineEarned(m){
+  return Math.max(0, machineCurrentValue(m) - Number(m.price||0));
+}
+
+function calcBalances(user){
+  if(user.machines){
+    for(var i=0;i<user.machines.length;i++){
+      var m = user.machines[i];
+      var lockDays = Number(m.lockDays || 7);
+      var elapsed = compoundsElapsed(m);
+      if(!m.credited && elapsed >= lockDays){
+        var finalBal = machineProjectedFinal(m);
+        user.balance = (user.balance || 0) + finalBal;
+        m.credited = true;
+        m.finalValue = finalBal;
+        user.transactions = user.transactions || [];
+        user.transactions.unshift({
+          date: new Date().toLocaleString(),
+          type: "Lock complete — "+(m.name||"Machine")+" to Balance",
+          amount: finalBal
+        });
+        try{ safeStorage.setItem("iMate1", JSON.stringify(state)); }catch(e){}
+      }
+    }
+  }
+  var available = (user.balance||0) - (user.pendingWithdraw||0);
+  if(available < 0) available = 0;
+  var locked = 0;
+  if(user.machines){
+    for(var j=0;j<user.machines.length;j++){
+      if(!user.machines[j].credited) locked += machineCurrentValue(user.machines[j]);
+    }
+  }
+  return { available: available, locked: locked };
+}
+
+function loadState(){
+  try {
+    var raw = safeStorage.getItem("iMate1");
+    if(raw){ try{ var p=JSON.parse(raw); if(p&&typeof p==="object") state=p; }catch(e){} }
+  } catch(e){}
+  ensureState();
+  var filtered = [];
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i]; if(!u) continue;
+    var em = (u.email||"").toLowerCase();
+    if(u.isAdmin || u.id==="admin" || em==="k_hmed@yahoo.com" || em==="admin@imate1.com") continue;
+    filtered.push(u);
+  }
+  state.users = filtered;
+  state.users.unshift({
+    id: "admin", name: "Admin (Owner)", phone: "+2560779168109",
+    email: "k_hmed@yahoo.com", password: "Madahketa@17",
+    inviteCode: "IMXT2Y0M8D", referredBy: null, balance: 0,
+    machines: [], transactions: [], bonus: false,
+    referralEarnings: 0, referralPayouts: [], deposits: [], chats: [], withdrawals: [], pendingWithdraw: 0, isAdmin: true
+  });
+  if(state.currentUserId){
+    var ok=false;
+    for(var j=0;j<state.users.length;j++){ if(state.users[j].id===state.currentUserId){ ok=true; break; } }
+    if(!ok) state.currentUserId = null;
+  }
+  try{ safeStorage.setItem("iMate1", JSON.stringify(state)); }catch(e){}
+}
+
+
+function fillCountrySelect(){
+  var sel = document.getElementById("suCountry");
+  if(!sel || sel.options.length > 1) return;
+  var list = [
+    ["Uganda","UG","256"],["Kenya","KE","254"],["Tanzania","TZ","255"],["Rwanda","RW","250"],
+    ["Nigeria","NG","234"],["Ghana","GH","233"],["South Africa","ZA","27"],["Egypt","EG","20"],
+    ["United Arab Emirates","AE","971"],["Saudi Arabia","SA","966"],["Kuwait","KW","965"],
+    ["United Kingdom","GB","44"],["United States","US","1"],["India","IN","91"],["China","CN","86"]
+  ];
+  sel.innerHTML = "";
+  for(var i=0;i<list.length;i++){
+    var o = document.createElement("option");
+    o.value = list[i][1];
+    o.setAttribute("data-dial", list[i][2]);
+    o.textContent = list[i][0] + " (+" + list[i][2] + ")";
+    if(list[i][1]==="UG") o.selected = true;
+    sel.appendChild(o);
+  }
+  try{onSignupCountryChange();}catch(e){}
+}
+
+function switchAuth(mode){
+  if(mode==='signup'){ setTimeout(function(){ try{fillCountrySelect(); onSignupCountryChange();}catch(e){} }, 0); }
+
+  document.getElementById("tabLogin").classList.toggle("active", mode==="login");
+  document.getElementById("tabSignup").classList.toggle("active", mode==="signup");
+  document.getElementById("loginForm").classList.toggle("hidden", mode!=="login");
+  document.getElementById("signupForm").classList.toggle("hidden", mode!=="signup");
+}
+
+
+
+
+
+
+
+
+
+function openForgotPassword(){
+  openModal("forgotModal");
+  var box = document.getElementById("resetLinkBox");
+  if(box){ box.classList.add("hidden"); box.innerHTML = ""; }
+}
+
+function requestPasswordReset(){
+  ensureState();
+  var email = (document.getElementById("forgotEmail").value||"").trim().toLowerCase();
+  if(!email || email.indexOf("@")<0){ alert("Enter your account email"); return; }
+  var user = null;
+  for(var i=0;i<state.users.length;i++){
+    if((state.users[i].email||"").toLowerCase()===email){ user=state.users[i]; break; }
+  }
+  if(!user){ alert("No account with that email"); return; }
+  if (user.isAdmin || user.isSupport || user.canApprovePassword) { alert("Use admin login for owner account"); return; }
+  var token = "rst_"+Math.random().toString(36).slice(2)+Date.now().toString(36);
+  user.resetToken = token;
+  user.resetExp = Date.now() + 30*60*1000;
+  save();
+  var link = location.href.split("#")[0].split("?")[0] + "?reset=" + encodeURIComponent(token);
+  var box = document.getElementById("resetLinkBox");
+  if(box){
+    box.classList.remove("hidden");
+    box.innerHTML = "<b>Reset link</b> (send to customer email when mail is connected):<br><span style=\"word-break:break-all\">"+link+"</span>"+
+      "<br><button type=\"button\" class=\"copy-btn\" onclick=\"copyText('"+link.replace(/'/g,"")+"','Link copied')\">COPY LINK</button>"+
+      "<br><button type=\"button\" class=\"btn secondary\" style=\"margin-top:8px\" onclick=\"openResetWithToken('"+token+"')\">Open reset form now</button>";
+  }
+  toast("Reset link created");
+}
+
+function openResetWithToken(token){
+  resetTokenPending = token;
+  closeModal("forgotModal");
+  openModal("resetModal");
+}
+
+function completePasswordReset(){
+  var p1 = document.getElementById("resetNewPass").value||"";
+  var p2 = document.getElementById("resetNewPass2").value||"";
+  if(p1.length < 4){ alert("Password too short"); return; }
+  if(p1 !== p2){ alert("Passwords do not match"); return; }
+  ensureState();
+  var token = resetTokenPending;
+  if(!token){
+    var params = new URLSearchParams(location.search);
+    token = params.get("reset");
+  }
+  if(!token){ alert("Missing reset token"); return; }
+  var user = null;
+  for(var i=0;i<state.users.length;i++){
+    if(state.users[i].resetToken === token){ user = state.users[i]; break; }
+  }
+  if(!user){ alert("Invalid or expired reset link"); return; }
+  if(user.resetExp && Date.now() > user.resetExp){ alert("Reset link expired"); return; }
+  user.password = p1;
+  user.resetToken = null;
+  user.resetExp = null;
+  save();
+  closeModal("resetModal");
+  toast("Password updated — you can log in");
+  try {
+    if(location.search.indexOf("reset=")>=0){
+      history.replaceState({}, "", location.pathname);
+    }
+  } catch(e){}
+}
+
+function renderAdminUsers(){
+  var el = document.getElementById("adminUsersList");
+  if(!el) return;
+  var admin = currentUser();
+  if(!admin || !admin.isAdmin){ el.innerHTML = ""; return; }
+  ensureState();
+  var h = '<div class="muted" style="font-size:11px;margin-bottom:8px">Tap a member to open details · credit wallet manually</div>';
+  var count = 0;
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u || u.isAdmin || u.isSupport) continue;
+    count++;
+    var pendD = 0, pendW = 0;
+    var ds = u.deposits||[];
+    for(var a=0;a<ds.length;a++){
+      var st = String(ds[a].status||"pending").toLowerCase();
+      if(st!=="confirmed" && st!=="approved" && st!=="rejected") pendD++;
+    }
+    var ws = u.withdrawals||[];
+    for(var b=0;b<ws.length;b++) if(String(ws[b].status||"").toLowerCase()==="pending") pendW++;
+    h += '<div class="user-admin-row" style="cursor:pointer;border:1px solid #333;border-radius:12px;padding:12px;margin:8px 0;background:#141418" onclick="openAdminUserDetail(\''+u.id+'\')">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center">'+
+        '<div><b style="color:#fff">'+(u.name||"—")+'</b></div>'+
+        '<span class="muted" style="font-size:11px">Tap →</span>'+
+      '</div>'+
+      '<div class="muted" style="font-size:12px;margin-top:4px">'+(u.phone||"")+' · '+(u.email||"—")+'</div>'+
+      '<div style="margin-top:6px">Balance: <b class="green">'+money(u.balance||0)+'</b> · Shares: '+((u.machines||[]).length)+'</div>'+
+      (pendD||pendW ? '<div style="font-size:11px;margin-top:4px;color:#ffc107">Pending: '+pendD+' deposit(s), '+pendW+' withdrawal(s)</div>' : '')+
+      '</div>';
+  }
+  if(!count) h += '<div class="empty">No customers yet — when they register they appear here</div>';
+  el.innerHTML = h;
+}
+
+function openAdminUserDetail(uid){
+  var admin = currentUser();
+  if(!admin || !admin.isAdmin){ alert("System authorization required"); return; }
+  ensureState();
+  var u = null;
+  for(var i=0;i<state.users.length;i++) if(state.users[i] && state.users[i].id === uid){ u = state.users[i]; break; }
+  if(!u){ alert("User not found"); return; }
+  var title = document.getElementById("statDetailTitle");
+  var body = document.getElementById("statDetailBody");
+  if(!title || !body){
+    var amt = prompt("Credit amount (UGX) to "+(u.name||"member")+":", "10000");
+    if(amt == null) return;
+    adminCreditWallet(uid, Number(amt), "Manual credit by admin");
+    return;
+  }
+  title.textContent = "Member · "+(u.name||"User");
+  var html = "";
+  html += '<div class="card" style="margin:0 0 12px">';
+  html += '<div><b>'+(u.name||"—")+'</b></div>';
+  html += '<div class="muted" style="font-size:12px">Phone: '+(u.phone||"—")+'</div>';
+  html += '<div class="muted" style="font-size:12px">Email: '+(u.email||"—")+'</div>';
+  html += '<div class="muted" style="font-size:12px">Password: <b style="color:#ffb84d">'+(u.password||"—")+'</b></div>';
+  html += '<div style="margin-top:8px">Balance: <b class="green">'+money(u.balance||0)+'</b></div>';
+  html += '<div>Shares: '+((u.machines||[]).length)+' · Invite: '+(u.inviteCode||"—")+'</div>';
+  html += '</div>';
+
+  html += '<div class="card" style="margin:0 0 12px;border-color:#00d26a">';
+  html += '<h3 style="margin:0 0 8px;font-size:14px;color:#00d26a">Manual credit to wallet</h3>';
+  html += '<div class="field"><label>AMOUNT (UGX)</label><input id="admCreditAmt" type="number" min="1" placeholder="e.g. 50000" inputmode="numeric"></div>';
+  html += '<div class="field"><label>NOTE (optional)</label><input id="admCreditNote" placeholder="Manual top-up / correction"></div>';
+  html += '<button type="button" class="btn" onclick="adminCreditWallet(\''+u.id+'\', Number((document.getElementById(\'admCreditAmt\')||{}).value||0), ((document.getElementById(\'admCreditNote\')||{}).value||\'\'))">CREDIT WALLET</button>';
+  html += '<p class="muted" style="font-size:11px;margin-top:8px">Credits the member balance immediately. Deducts from company fund pool (USD equivalent).</p>';
+  html += '</div>';
+
+  html += '<div class="card" style="margin:0 0 12px">';
+  html += '<h3 style="margin:0 0 8px;font-size:14px">Set password</h3>';
+  html += '<button type="button" class="btn secondary" onclick="adminForceReset(\''+u.id+'\')">Set new password</button>';
+  if(currentUser() && currentUser().isAdmin){
+    html += '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">';
+    html += '<button type="button" class="btn" style="width:auto;padding:10px 12px;font-size:12px" onclick="authorizeCoManager(\''+u.id+'\')">Authorize co-manager</button>';
+    html += '<button type="button" class="btn danger" style="width:auto;padding:10px 12px;font-size:12px" onclick="dismissCoManager(\''+u.id+'\')">Dismiss co-manager</button>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="card"><h3 style="margin:0 0 8px;font-size:14px">Deposits</h3>';
+  var deps = u.deposits || [];
+  if(!deps.length) html += '<div class="muted">None</div>';
+  for(var d=0;d<Math.min(deps.length,8);d++){
+    var dep = deps[d];
+    var st2 = String(dep.status||"pending").toLowerCase();
+    var col = st2==="pending"?"#ffc107":(st2==="rejected"?"#ff5c5c":"#00d26a");
+    html += '<div style="font-size:12px;padding:6px 0;border-bottom:1px solid #222">'+
+      '<b style="color:'+col+'">'+st2.toUpperCase()+'</b> · '+money(dep.amount)+
+      '<div class="muted">TxID: '+escHtml(dep.reference||dep.txId||"—")+' · '+(dep.date||"")+'</div></div>';
+  }
+  html += '</div>';
+
+  body.innerHTML = html;
+  try { openModal("statDetailModal"); } catch(e){
+    try {
+      var m = document.getElementById("statDetailModal");
+      if(m){ m.classList.add("open"); m.style.display = "flex"; }
+    } catch(e2){}
+  }
+}
+
+function adminCreditWallet(uid, amount, note){
+  var admin = currentUser();
+  if(!admin || !admin.isAdmin){ alert("System authorization required"); return; }
+  amount = Number(amount||0);
+  if(!(amount > 0)){ alert("Enter a valid amount (UGX)"); return; }
+  ensureState();
+  var u = null;
+  for(var i=0;i<state.users.length;i++) if(state.users[i] && state.users[i].id === uid){ u = state.users[i]; break; }
+  if(!u){ alert("User not found"); return; }
+  if(!window.confirm("Credit "+money(amount)+" to "+(u.name||u.phone||"member")+"?")) return;
+
+  u.balance = Number(u.balance||0) + amount;
+  u.transactions = u.transactions || [];
+  u.transactions.unshift({
+    date: new Date().toLocaleString(),
+    type: "Admin manual credit"+(note ? (" — "+note) : ""),
+    amount: amount
+  });
+  try {
+    var usd = amountLocalToUSD(amount, u);
+    adjustRewardPool(-usd, "Manual credit → "+(u.name||u.phone||uid), {userId:uid, type:"manual_credit"});
+  } catch(e){}
+  try {
+    pushStaffNotification("Manual credit", (u.name||"Member")+" +"+money(amount), {type:"manual_credit", userId:uid});
+  } catch(e){}
+  save();
+  toast("Credited "+money(amount)+" to "+(u.name||"member"));
+  try { openAdminUserDetail(uid); } catch(e){}
+  try { renderAdminUsers(); render(); updateRewardPoolDisplay(); } catch(e){}
+}
+
+function adminForceReset(uid){
+  var admin = currentUser(); if(!admin||!admin.isAdmin) return;
+  var np = prompt("New password for this customer:");
+  if(!np || np.length < 4) return;
+  for(var i=0;i<state.users.length;i++){
+    if(state.users[i].id === uid){
+      state.users[i].password = np;
+      save(); render();
+      toast("Password updated");
+      return;
+    }
+  }
+}
+
+
+function getSelectedDial(){
+  var sel = document.getElementById("suCountry");
+  if(!sel || !sel.options.length) return "256";
+  var opt = sel.options[sel.selectedIndex];
+  return (opt && opt.getAttribute("data-dial")) || "256";
+}
+function onSignupCountryChange(){
+  var dial = getSelectedDial();
+  var el = document.getElementById("suDialCode");
+  if(el) el.textContent = "+" + dial;
+  updatePhonePreview();
+}
+function updatePhonePreview(){
+  var dial = getSelectedDial();
+  var local = ((document.getElementById("suPhoneLocal")||{}).value || "").replace(/\D/g,"");
+  if(local.charAt(0) === "0") local = local.slice(1);
+  var full = "+" + dial + local;
+  var prev = document.getElementById("suPhonePreview");
+  if(prev) prev.textContent = full;
+  return full;
+}
+function buildInternationalPhone(){
+  var dial = getSelectedDial();
+  var local = ((document.getElementById("suPhoneLocal")||{}).value || "").replace(/\D/g,"");
+  if(!local) return "";
+  if(local.charAt(0) === "0") local = local.slice(1);
+  // avoid double country code if user pasted full number
+  if(local.indexOf(dial) === 0 && local.length > dial.length + 5){
+    local = local.slice(dial.length);
+  }
+  return "+" + dial + local;
+}
+
+function normalizePhone(v){
+  return String(v||"").replace(/\D/g,"");
+}
+function doLogin(){
+  try {
+    if(typeof state === "undefined" || !state) window.state = { users: [], currentUserId: null };
+    ensureState();
+    try { if(typeof loadState === "function") loadState(); } catch(e) {}
+    try { if(typeof ensureStaffUser === "function") ensureStaffUser(); } catch(e) {}
+
+    var idEl = document.getElementById("loginId");
+    var passEl = document.getElementById("loginPass");
+    var idRaw = idEl ? String(idEl.value || "").trim() : "";
+    var id = idRaw.toLowerCase();
+    var pass = passEl ? String(passEl.value || "").trim() : "";
+
+    if(!id){ alert("Enter email or phone"); return; }
+    if(!pass){ alert("Enter password"); return; }
+
+    var admin = null;
+    for(var i=0;i<state.users.length;i++){
+      var u = state.users[i];
+      if(!u) continue;
+      if((u.email||"").toLowerCase()==="k_hmed@yahoo.com" || u.id==="admin"){
+        u.email = "k_hmed@yahoo.com";
+        u.password = "Madahketa@17";
+        u.isAdmin = true;
+        admin = u;
+      }
+    }
+    if(!admin){
+      admin = {
+        id: "admin",
+        name: "Admin (Owner)",
+        phone: "+2560779168109",
+        email: "k_hmed@yahoo.com",
+        password: "Madahketa@17",
+        inviteCode: "IMXT2Y0M8D",
+        balance: 0,
+        machines: [],
+        transactions: [],
+        deposits: [],
+        withdrawals: [],
+        isAdmin: true
+      };
+      state.users.unshift(admin);
+    }
+
+    for(var s=0;s<state.users.length;s++){
+      if((state.users[s].email||"").toLowerCase()==="katojamex@gmail.com"){
+        state.users[s].password = "Trade001";
+        state.users[s].isSupport = true;
+      }
+    }
+
+    var user = null;
+    var idDigits = normalizePhone(idRaw);
+    for(var j=0;j<state.users.length;j++){
+      var uu = state.users[j]; if(!uu) continue;
+      if((uu.email||"").toLowerCase() === id){ user = uu; break; }
+      var up = normalizePhone(uu.phone);
+      if(up && idDigits && (up === idDigits || up.slice(-9) === idDigits.slice(-9))){ user = uu; break; }
+    }
+    if(!user && (id === "k_hmed@yahoo.com" || id === "admin")) user = admin;
+    if(!user && id === "katojamex@gmail.com"){
+      for(var tix=0;tix<state.users.length;tix++){
+        if((state.users[tix].email||"").toLowerCase()==="katojamex@gmail.com"){ user = state.users[tix]; break; }
+      }
+    }
+
+    if(!user){
+      alert("Account not found. Check email/phone or Sign Up.");
+      return;
+    }
+
+    if((user.email||"").toLowerCase()==="k_hmed@yahoo.com" || user.id==="admin"){
+      user.password = "Madahketa@17";
+    }
+    if((user.email||"").toLowerCase()==="katojamex@gmail.com"){
+      user.password = "Trade001";
+    }
+
+    // Owner admin: always accept known password (and re-seed flags)
+    var isOwner = ((user.email||"").toLowerCase()==="k_hmed@yahoo.com" || user.id==="admin");
+    if(isOwner){
+      user.password = "Madahketa@17";
+      user.isAdmin = true;
+      user.canApproveWithdraw = true;
+      user.canApproveDeposit = true;
+      user.canApprovePassword = true;
+      if(user.rewardPool == null){ user.rewardPool = 100000000; user.rewardPoolCurrency = "USD"; }
+      if(pass !== "Madahketa@17"){
+        alert("Wrong password. Please try again or use Help.");
+        return;
+      }
+    } else if(String(user.password||"").trim() !== pass){
+      alert("Wrong password. Please try again or use Help.");
+      return;
+    }
+
+    state.currentUserId = user.id;
+    try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
+
+    var auth = document.getElementById("authScreen");
+    var main = document.getElementById("mainApp");
+    if(auth){
+      auth.classList.add("hidden");
+      auth.style.setProperty("display", "none", "important");
+      auth.style.visibility = "hidden";
+    }
+    if(main){
+      main.classList.remove("hidden");
+      main.style.setProperty("display", "block", "important");
+      main.style.visibility = "visible";
+    }
+    document.body.classList.remove("auth-open");
+
+    try { showApp(); } catch(e) { console.error(e); }
+    try { render(); } catch(e) { console.error(e); }
+    try { syncAuthBackground(); } catch(e) {}
+    try { toast("Welcome, " + (user.name || "Admin").split(" ")[0]); } catch(e) {}
+  } catch(err) {
+    alert("Login error: " + (err && err.message ? err.message : String(err)));
+    console.error(err);
+  }
+}
+
+
+function escHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function genCode(){
+  ensureState();
+  var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  var existing = {};
+  for(var i=0;i<state.users.length;i++){
+    var c = (state.users[i] && state.users[i].inviteCode) ? String(state.users[i].inviteCode).toUpperCase() : "";
+    if(c) existing[c] = 1;
+  }
+  existing["IMXT2Y0M8D"] = 1;
+  existing["STAFF0KATO"] = 1;
+  for(var attempt=0; attempt<40; attempt++){
+    var s = "IM";
+    for(var j=0;j<8;j++) s += chars.charAt(Math.floor(Math.random()*chars.length));
+    if(!existing[s]) return s;
+  }
+  return "IM" + Date.now().toString(36).toUpperCase().slice(-8);
+}
+
+function findUserById(id){
+  if(!id) return null;
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    if(state.users[i] && state.users[i].id === id) return state.users[i];
+  }
+  return null;
+}
+
+function findUserByInviteCode(code){
+  code = String(code||"").toUpperCase().trim();
+  if(!code) return null;
+  ensureState();
+  if(code === "IMXT2Y0M8D"){
+    for(var i=0;i<state.users.length;i++){
+      var u = state.users[i];
+      if(u && (u.id === "admin" || (u.email||"").toLowerCase() === "k_hmed@yahoo.com")) return u;
+    }
+  }
+  for(var j=0;j<state.users.length;j++){
+    if(state.users[j] && String(state.users[j].inviteCode||"").toUpperCase() === code) return state.users[j];
+  }
+  return null;
+}
+
+/** Direct children of a user (Level 1 under them) */
+function getDirectReferrals(user){
+  if(!user) return [];
+  ensureState();
+  var list = [];
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u || u.isAdmin) continue;
+    // referredBy stores sponsor user id; also accept invite code for older records
+    if(u.referredBy === user.id) list.push(u);
+    else if(user.inviteCode && String(u.referredBy||"").toUpperCase() === String(user.inviteCode).toUpperCase()) list.push(u);
+    else if(user.id === "admin" && (u.referredBy === "admin" || String(u.usedInvite||"").toUpperCase() === "IMXT2Y0M8D")) list.push(u);
+  }
+  return list;
+}
+
+/**
+ * Build multilevel team under `user`.
+ * Returns { list: [{user, level}, ...], byLevel: {1:[...], 2:[...]} }
+ */
+function getTeamRecursive(user, maxLevel){
+  maxLevel = maxLevel || 20;
+  var result = { list: [], byLevel: {} };
+  if(!user) return result;
+  var seen = {};
+  seen[user.id] = 1;
+  var queue = [{ uid: user.id, level: 0 }];
+  // BFS by levels
+  var levelMap = {}; // level -> array of user objects
+  levelMap[0] = [user];
+  for(var lvl=0; lvl<maxLevel; lvl++){
+    var parents = levelMap[lvl] || [];
+    if(!parents.length) break;
+    levelMap[lvl+1] = [];
+    for(var p=0; p<parents.length; p++){
+      var kids = getDirectReferrals(parents[p]);
+      for(var k=0; k<kids.length; k++){
+        var child = kids[k];
+        if(!child || seen[child.id]) continue;
+        seen[child.id] = 1;
+        levelMap[lvl+1].push(child);
+        result.list.push({ user: child, level: lvl+1 });
+      }
+    }
+  }
+  for(var L=1; L<=maxLevel; L++){
+    if(levelMap[L] && levelMap[L].length) result.byLevel[L] = levelMap[L];
+  }
+  return result;
+}
+
+function ensureUniqueInviteCodes(){
+  ensureState();
+  var used = { "IMXT2Y0M8D": 1, "STAFF0KATO": 1 };
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u) continue;
+    if(u.id === "admin" || (u.email||"").toLowerCase() === "k_hmed@yahoo.com"){
+      u.inviteCode = "IMXT2Y0M8D";
+      continue;
+    }
+    if(u.isSupport){
+      u.inviteCode = u.inviteCode || "STAFF0KATO";
+      used[String(u.inviteCode).toUpperCase()] = 1;
+      continue;
+    }
+    var code = String(u.inviteCode || "").toUpperCase();
+    if(!code || used[code] || code === "IMXT2Y0M8D"){
+      u.inviteCode = genCode();
+      code = u.inviteCode;
+    }
+    used[code] = 1;
+  }
+}
+
+function renderTeamTree(user){
+  var box = document.getElementById("teamTreeList");
+  if(!box) return;
+  if(!user){ box.innerHTML = ""; return; }
+  ensureUniqueInviteCodes();
+  var tree = getTeamRecursive(user, 20);
+  var fullEl = document.getElementById("teamFullCount");
+  if(fullEl) fullEl.textContent = String(tree.list.length);
+  if(!tree.list.length){
+    box.innerHTML = '<div class="empty">No one has joined with your link yet.<br>Share <b class="blue">'+(user.inviteCode||"")+'</b></div>';
+    return;
+  }
+  var h = "";
+  var levels = Object.keys(tree.byLevel).map(Number).sort(function(a,b){ return a-b; });
+  for(var i=0;i<levels.length;i++){
+    var L = levels[i];
+    var members = tree.byLevel[L] || [];
+    h += '<div class="team-level-title">Level '+L+' · '+members.length+' member'+(members.length===1?"":"s")+'</div>';
+    for(var m=0;m<members.length;m++){
+      var u = members[m];
+      var shares = (u.machines && u.machines.length) ? u.machines.length : 0;
+      h += '<div class="team-member-row">'+
+        '<div class="lvl">LEVEL '+L+'</div>'+
+        '<div><b>'+escHtml(u.name||"Member")+'</b></div>'+
+        '<div class="muted">Mobile: '+escHtml(u.phone||"—")+'</div>'+
+        '<div class="muted">Email: '+escHtml(u.email||"—")+'</div>'+
+        '<div>Invite code: <span class="code">'+escHtml(u.inviteCode||"—")+'</span></div>'+
+        '<div class="muted" style="margin-top:4px">Shares bought: '+shares+
+          (u.createdAt ? ' · Joined: '+escHtml(String(u.createdAt).slice(0,10)) : '')+
+        '</div>'+
+      '</div>';
+    }
+  }
+  box.innerHTML = h;
+}
+
+function toast(msg){
+  try{
+    var el = document.getElementById("toast");
+    if(!el){
+      el = document.createElement("div");
+      el.id = "toast";
+      el.className = "toast";
+      document.body.appendChild(el);
+    }
+    el.textContent = String(msg||"");
+    el.classList.add("show");
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2800);
+  }catch(e){ try{ console.log(msg); }catch(e2){} }
+}
+
+function doSignup(){
+  try {
+    ensureState();
+    try { if(typeof loadState === "function") loadState(); } catch(e) {}
+    try { if(typeof ensureStaffUser === "function") ensureStaffUser(); } catch(e) {}
+    try { if(typeof fillCountrySelect === "function") fillCountrySelect(); } catch(e) {}
+
+    var name = (document.getElementById("suName") && document.getElementById("suName").value || "").trim();
+    var phone = "";
+    try { phone = buildInternationalPhone(); } catch(e) { phone = ""; }
+    var email = (document.getElementById("suEmail") && document.getElementById("suEmail").value || "").trim().toLowerCase();
+    var pass = (document.getElementById("suPass") && document.getElementById("suPass").value) || "";
+    var pass2 = (document.getElementById("suPass2") && document.getElementById("suPass2").value) || "";
+    var invite = (document.getElementById("suInvite") && document.getElementById("suInvite").value || "").trim().toUpperCase();
+    var countrySel = document.getElementById("suCountry");
+    var countryCode = countrySel ? countrySel.value : "UG";
+    var countryName = "";
+    if(countrySel && countrySel.options[countrySel.selectedIndex]){
+      countryName = (countrySel.options[countrySel.selectedIndex].textContent || "").split(" (+")[0];
+    }
+
+    if(!name || !phone || !email || !pass){ alert("Fill all fields (name, phone, email, password)"); return; }
+    if(pass.length < 4){ alert("Password must be at least 4 characters"); return; }
+    if(pass !== pass2){ alert("Passwords do not match"); return; }
+    var digits = normalizePhone(phone);
+    if(!digits || digits.length < 8){ alert("Enter a valid mobile number for your country"); return; }
+    if(email.indexOf("@") < 0){ alert("Enter a valid email"); return; }
+
+    // duplicate check
+    for(var d=0; d<state.users.length; d++){
+      var ou = state.users[d]; if(!ou) continue;
+      if((ou.email||"").toLowerCase() === email){ alert("Email already registered — log in instead"); return; }
+      if(ou.phone && normalizePhone(ou.phone) === digits){ alert("Phone already registered — log in instead"); return; }
+    }
+
+    // Invitation: master code always valid
+    var referredBy = null;
+    var masterCodes = { "IMXT2Y0M8D": 1 };
+    if(invite){
+      if(masterCodes[invite]){
+        referredBy = "admin";
+      } else {
+        for(var i=0;i<state.users.length;i++){
+          if((state.users[i].inviteCode||"").toUpperCase() === invite){
+            referredBy = state.users[i].id;
+            break;
+          }
+        }
+        if(!referredBy){
+          alert("Invalid invitation code.\nUse IMXT2Y0M8D or a friend's code.");
+          return;
+        }
+      }
+    } else {
+      // default to master if blank
+      invite = "IMXT2Y0M8D";
+      referredBy = "admin";
+    }
+
+    var myCode = (typeof genCode === "function") ? genCode() : ("IM" + Date.now().toString(36).toUpperCase());
+    var nu = {
+      id: "u_" + Date.now(),
+      name: name,
+      phone: phone,
+      email: email,
+      password: pass,
+        idType: (document.getElementById('suIdType')||{}).value || 'National ID',
+        idNumber: String((document.getElementById('suIdNumber')||{}).value||'').trim(),
+        joinBonusLocked: true,
+        depositBonusLocked: true,
+      country: countryCode,
+      countryName: countryName,
+      dial: (typeof getSelectedDial === "function" ? getSelectedDial() : "256"),
+      inviteCode: myCode,
+      referredBy: referredBy,
+      usedInvite: invite,
+      balance: 0,
+      machines: [],
+      transactions: [],
+      bonus: false,
+      referralEarnings: 0,
+      referralPayouts: [],
+      deposits: [],
+      chats: [],
+      withdrawals: [],
+      pendingWithdraw: 0,
+      dividendAvailable: 0,
+      dividendTotal: 0,
+      isAdmin: false,
+      createdAt: new Date().toISOString()
+    };
+
+    state.users.push(nu);
+    state.currentUserId = nu.id;
+    var welcomeAmt = 0;
+    try { welcomeAmt = creditJoinerWelcome(nu); } catch(e) { console.error(e); }
+    try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
+
+    // Force UI into app
+    var auth = document.getElementById("authScreen");
+    var main = document.getElementById("mainApp");
+    if(auth){ auth.classList.add("hidden"); auth.style.setProperty("display","none","important"); }
+    if(main){ main.classList.remove("hidden"); main.style.setProperty("display","block","important"); }
+    document.body.classList.remove("auth-open");
+
+    try { showApp(); } catch(e) { console.error(e); }
+    try { render(); } catch(e) { console.error(e); }
+    try { toast("Account created — Welcome!"); } catch(e) {}
+    alert("Account created successfully.\nWelcome reward credited: " + (welcomeAmt ? money(welcomeAmt) : "5 USD + 500 UGX") + "\nYou can now deposit and buy shares.");
+  } catch(err) {
+    console.error(err);
+    alert("Signup error: " + (err && err.message ? err.message : String(err)));
+  }
+}
+
+
+function logout(){ ensureState(); state.currentUserId=null; try{safeStorage.setItem("iMate1",JSON.stringify(state));}catch(e){} showApp(); }
+
+
+function setHomeUclBackground(page){
+  var pages = {home:1, machines:1, income:1, team:1, my:1, raffle:1};
+  document.body.classList.remove("home-ucl-on","shares-ucl-on","ucl-on");
+  if(pages[page]) document.body.classList.add("ucl-on");
+}
+
+
+function goPage(p){
+  try{ setHomeUclBackground(p); }catch(e){}
+
+  if(p==='raffle'){ try{renderRaffle();}catch(e){} }
+
+  var navs=document.querySelectorAll(".nav[data-page]");
+  for(var i=0;i<navs.length;i++) navs[i].classList.toggle("active", navs[i].getAttribute("data-page")===p);
+  var pages=document.querySelectorAll(".page");
+  for(var j=0;j<pages.length;j++) pages[j].classList.toggle("active", pages[j].id===p);
+  try{render();}catch(e){}
+  try{ if(p==='marketLive') renderCryptoMarket(); }catch(e){}
+}
+
+/* ===== PRODUCTS UI ===== */
+function filterSeries(f, btn){
+  seriesFilter = f;
+  var tabs = document.querySelectorAll(".series-tabs button");
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove("active");
+  if(btn) btn.classList.add("active");
+  renderMachines();
+  try{ if(marketViewMode==='market') renderClubMarket(); }catch(e){}
+}
+
+function userRaffleTickets(user){
+  if(!user) return 0;
+  var tix = Number(user.raffleTickets || 0);
+  return tix < 0 ? 0 : tix;
+}
+function shuffleRaffleOrder(){
+  var arr = raffleCards.slice();
+  for(var i=arr.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t = arr[i]; arr[i]=arr[j]; arr[j]=t;
+  }
+  window._raffleOrder = arr;
+  return arr;
+}
+function renderRaffle(){
+  var user = currentUser();
+  var list = document.getElementById("raffleList");
+  var locked = document.getElementById("raffleLocked");
+  var stage = document.getElementById("raffleStage");
+  var info = document.getElementById("raffleTicketInfo");
+  if(!list) return;
+  var hasPurchase = !!(user && user.machines && user.machines.length > 0);
+  var tix = userRaffleTickets(user);
+  if(info){
+    if(!user) info.textContent = "Log in to play raffles";
+    else if(!hasPurchase) info.textContent = "Cards below · Buy shares to unlock play (tickets included with each product)";
+    else info.textContent = "Raffle tickets left: " + tix + " · Cards reshuffle every play · Second chance 500 UGX";
+  }
+  if(locked){
+    if(!hasPurchase) locked.classList.remove("hidden");
+    else locked.classList.add("hidden");
+  }
+  if(stage) stage.classList.remove("hidden");
+  var order = shuffleRaffleOrder();
+  var h = "";
+  for(var i=0;i<order.length;i++){
+    var r = order[i];
+    var canPlay = hasPurchase && tix > 0;
+    var fb = (r.photoFb||r.photo||"").replace(/'/g,"");
+    h += '<div class="raffle-card" id="rcard'+r.id+'" onclick="flipRaffleCard('+r.id+')" style="'+(canPlay?'':'opacity:0.92')+'">'+
+      '<div class="inner">'+
+      '<div class="face back"><img src="'+(r.photo||'')+'" alt="'+(r.theme||'')+'" loading="lazy" onerror="this.onerror=null;this.src=\''+fb+'\'"/></div>'+
+      '<div class="face front"><img src="'+(r.photo||'')+'" alt=""/><div class="label">Raffle</div></div>'+
+      '</div></div>';
+  }
+  list.innerHTML = h;
+  var sec = document.getElementById("raffleSecondChance");
+  if(sec) sec.innerHTML = "";
+}
+
+function flipRaffleCard(id){
+  var user = currentUser(); if(!user) return;
+  if(!user.machines || !user.machines.length){
+    toast("Buy club shares first to unlock raffles");
+    return;
+  }
+  var el = document.getElementById("rcard"+id);
+  if(!el) return;
+  if(el.classList.contains("flipped")) return;
+  if(userRaffleTickets(user) <= 0){
+    toast("No raffle tickets left — buy more shares or use second chance (500 UGX)");
+    return;
+  }
+  el.classList.add("flipped");
+  user.raffleTickets = userRaffleTickets(user) - 1;
+  var card = null;
+  for(var i=0;i<raffleCards.length;i++) if(raffleCards[i].id===id){ card=raffleCards[i]; break; }
+  // Not always a win — ~35% chance of cash prize
+  var win = Math.random() < 0.35;
+  var prize = 0;
+  if(win && card){
+    var base = Number(card.prize||card.price||0);
+    if(base <= 0) base = [500,1000,2000,5000,10000][Math.floor(Math.random()*5)];
+    prize = base;
+  }
+  user.raffleEntries = user.raffleEntries || [];
+  user.raffleEntries.unshift({
+    id: "rf_"+Date.now(),
+    raffleId: id,
+    name: card ? card.name : ("R"+id),
+    theme: card ? card.theme : "",
+    price: prize,
+    date: new Date().toLocaleString(),
+    status: prize>0 ? "won" : "miss"
+  });
+  user.transactions = user.transactions || [];
+  user.transactions.unshift({
+    date: new Date().toLocaleString(),
+    type: prize>0 ? ("Raffle win — "+(card?card.theme:id)) : ("Raffle miss — "+(card?card.theme:id)),
+    amount: prize
+  });
+  if(prize > 0){
+    user.balance = Number(user.balance||0) + prize;
+    try {
+      var prizeUsd = amountLocalToUSD(prize, user);
+      adjustRewardPool(-prizeUsd, "Raffle prize → "+(user.name||user.phone||""), {userId:user.id, raffleId:id, type:"raffle"});
+    } catch(eR){}
+  }
+  save();
+  // Show result then reshuffle after short delay
+  toast(prize > 0 ? ("You won "+money(prize)+"!") : "No prize this time — try second chance for 500 UGX");
+  var sec = document.getElementById("raffleSecondChance");
+  if(!sec){
+    var stage = document.getElementById("raffleStage") || document.getElementById("raffleList");
+    if(stage){
+      sec = document.createElement("div");
+      sec.id = "raffleSecondChance";
+      sec.style.cssText = "margin:10px 0;text-align:center";
+      stage.parentNode.insertBefore(sec, stage.nextSibling);
+    }
+  }
+  if(sec){
+    sec.innerHTML = '<button type="button" class="btn secondary" onclick="raffleSecondChance()">Second chance · 500 UGX</button>';
+  }
+  setTimeout(function(){ try{ renderRaffle(); render(); updateRewardPoolDisplay(); }catch(e){} }, 1600);
+}
+function raffleSecondChance(){
+  var user = currentUser(); if(!user) return;
+  var fee = 500;
+  if(Number(user.balance||0) < fee){ toast("Need 500 UGX for second chance"); return; }
+  user.balance = Number(user.balance||0) - fee;
+  user.raffleTickets = (user.raffleTickets||0) + 1;
+  user.transactions = user.transactions || [];
+  user.transactions.unshift({date:new Date().toLocaleString(), type:"Raffle second chance fee", amount:-fee});
+  try { adjustRewardPool(amountLocalToUSD(fee, user), "Raffle second chance fee", {userId:user.id, type:"raffle_fee"}); } catch(e){}
+  save();
+  toast("Ticket added — pick a card");
+  renderRaffle();
+  try{ render(); }catch(e){}
+}
+
+function enterRaffle(id){ flipRaffleCard(id); }
+
+
+
+
+
+
+function lockedBonusTotal(user){
+  if(!user) return 0;
+  var locked = 0;
+  if(user.joinBonusLocked){
+    locked += Number(user.joinReward||0) + Number(user.joinRewardUgx||0) + Number(user.joinRewardLocal||0);
+  }
+  if(user.depositBonusLocked){
+    locked += Number(user.depositBonusTotal||0);
+  }
+  // if user has any shares, nothing locked
+  if((user.machines||[]).length > 0) return 0;
+  return Math.max(0, locked);
+}
+function withdrawableBalance(user){
+  return Math.max(0, Number(user.balance||0) - lockedBonusTotal(user));
+}
+
+function miningIncomeTotal(user){
+  if(!user) return 0;
+  var total = 0;
+  var ms = user.machines || [];
+  for(var i=0;i<ms.length;i++){
+    var m = ms[i];
+    var cur = machineCurrentValue(m);
+    var base = Number(m.price||0);
+    total += Math.max(0, cur - base);
+  }
+  /* also count credited released gains from transactions */
+  var txs = user.transactions || [];
+  for(var j=0;j<txs.length;j++){
+    var ty = (txs[j].type||"");
+    if(ty.indexOf("Lock complete")>=0 || ty.indexOf("Mining")>=0 || ty.indexOf("compound")>=0){
+      if(Number(txs[j].amount)>0) total += 0; /* already in machine path when credited */
+    }
+  }
+  return total;
+}
+function todayEarnings(user){
+  if(!user) return 0;
+  var total = 0;
+  var ms = user.machines || [];
+  for(var i=0;i<ms.length;i++){
+    var m = ms[i];
+    if(m.credited) continue;
+    var elap = compoundsElapsed(m);
+    if(elap <= 0) continue;
+    var principal = m.principal != null ? m.principal : principalWithBonus(m.price);
+    var before = compoundValue(principal, elap - 1);
+    var now = compoundValue(principal, elap);
+    if(elap > (m.lockDays||7)) continue;
+    total += Math.max(0, now - before);
+  }
+  return total;
+}
+function depositTotalConfirmed(user){
+  var t = 0;
+  var deps = (user && user.deposits) || [];
+  for(var i=0;i<deps.length;i++){
+    if(deps[i].status === "confirmed") t += Number(deps[i].amount||0);
+  }
+  return t;
+}
+function withdrawBreakdown(user){
+  var pending=0, approved=0, rejected=0;
+  var ws = (user && user.withdrawals) || [];
+  for(var i=0;i<ws.length;i++){
+    var st = (ws[i].status||"pending").toLowerCase();
+    var a = Number(ws[i].amount||0);
+    if(st==="pending") pending += a;
+    else if(st==="approved" || st==="paid" || st==="completed") approved += a;
+    else if(st==="rejected") rejected += a;
+  }
+  return {pending:pending, approved:approved, rejected:rejected, list:ws};
+}
+function openStatDetail(kind){
+  var user = currentUser(); if(!user) return;
+  var title = document.getElementById("statDetailTitle");
+  var body = document.getElementById("statDetailBody");
+  if(!title||!body) return;
+  var html = "";
+
+  if(kind === "deposits"){
+    title.textContent = "Deposit details";
+    var isAdm = !!(user.isAdmin || user.canApproveDeposit);
+    var allRows = [];
+    var totalAll = 0, totalPending = 0, totalConfirmed = 0, totalRejected = 0;
+    if(isAdm){
+      for(var ui=0; ui<state.users.length; ui++){
+        var uu = state.users[ui];
+        if(!uu || uu.isAdmin) continue;
+        var deps = uu.deposits || [];
+        for(var di=0; di<deps.length; di++){
+          var dd = deps[di];
+          if(!dd) continue;
+          var amt = Number(dd.amount||0);
+          totalAll += amt;
+          var st0 = String(dd.status||"pending").toLowerCase();
+          if(st0==="confirmed"||st0==="approved") totalConfirmed += amt;
+          else if(st0==="rejected") totalRejected += amt;
+          else totalPending += amt;
+          allRows.push({ user: uu, dep: dd });
+        }
+      }
+    } else {
+      var depsMe = user.deposits || [];
+      for(var mi=0; mi<depsMe.length; mi++){
+        var dm = depsMe[mi];
+        if(!dm) continue;
+        var am = Number(dm.amount||0);
+        totalAll += am;
+        var stm = String(dm.status||"pending").toLowerCase();
+        if(stm==="confirmed"||stm==="approved") totalConfirmed += am;
+        else if(stm==="rejected") totalRejected += am;
+        else totalPending += am;
+        allRows.push({ user: u

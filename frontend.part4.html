@@ -1,0 +1,1996 @@
+ser, dep: dm });
+      }
+    }
+    allRows.sort(function(a,b){
+      return String(b.dep.date||b.dep.created_at||"").localeCompare(String(a.dep.date||a.dep.created_at||""));
+    });
+    html += '<div class="notice" style="margin-bottom:10px">'+
+      '<div>Total deposits: <b class="blue">'+money(totalAll)+'</b></div>'+
+      '<div>Pending: <b style="color:#ffc107">'+money(totalPending)+'</b> · Approved: <b class="green">'+money(totalConfirmed)+'</b> · Rejected: <b style="color:#ff5c5c">'+money(totalRejected)+'</b></div>'+
+      (isAdm?'<div class="muted" style="font-size:11px;margin-top:4px">Admin view — all members. Tap Approve (green) or Reject (red).</div>':'')+
+    '</div>';
+    if(!allRows.length) html += '<div class="empty">No deposits yet</div>';
+    for(var i=0;i<allRows.length;i++){
+      var row = allRows[i];
+      var d = row.dep;
+      var ou = row.user;
+      var st = String(d.status||"pending").toLowerCase();
+      var stClass = (st==="confirmed"||st==="approved")?"confirmed":(st==="rejected"?"rejected":"pending");
+      var label = (st==="confirmed"||st==="approved")?"APPROVED":(st==="rejected"?"REJECTED":"PENDING");
+      var tx = d.reference || d.txId || d.provider_ref || "—";
+      html += '<div class="dep-row '+stClass+'">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'+
+          '<b>'+money(d.amount||0)+'</b>'+
+          '<span class="dep-status '+stClass+'">'+label+'</span>'+
+        '</div>';
+      if(isAdm){
+        html += '<div style="margin-top:6px;font-size:12px"><b>'+escHtml(ou.name||"Member")+'</b></div>'+
+          '<div class="muted" style="font-size:11px">'+escHtml(ou.phone||"")+' · '+escHtml(ou.email||"")+'</div>';
+      }
+      html += '<div class="muted" style="margin-top:6px;font-size:12px">'+(d.method||d.network||"Deposit")+'</div>'+
+        '<div style="font-size:12px">TxID: <b class="blue" style="word-break:break-all">'+escHtml(tx)+'</b></div>'+
+        '<div class="muted" style="font-size:11px;margin-top:4px">'+(d.date||"—")+'</div>';
+      if(isAdm && stClass==="pending"){
+        var verified = !!d.txidAdminVerified;
+        html += '<div class="muted" style="font-size:11px;margin-top:6px">'+(verified
+          ? '<span style="color:#20e58b">TxID verified ✓</span>'
+          : '<span style="color:#ffc107">TxID needs verification</span>')+'</div>';
+        html += '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">';
+        if(!verified){
+          html += '<button type="button" class="btn secondary" style="flex:1;margin:0;min-width:40%" onclick="adminVerifyTxid(\''+ou.id+'\',\''+d.id+'\')">VERIFY TxID</button>';
+        }
+        html += '<button type="button" class="btn" style="flex:1;margin:0;min-width:40%;background:linear-gradient(90deg,#0a8f4a,#20e58b);border:0" onclick="adminApproveDeposit(\''+ou.id+'\',\''+d.id+'\');setTimeout(function(){openStatDetail(\'deposits\');},120)">APPROVE</button>'+
+          '<button type="button" class="btn" style="flex:1;margin:0;min-width:40%;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="adminRejectDeposit(\''+ou.id+'\',\''+d.id+'\');setTimeout(function(){openStatDetail(\'deposits\');},120)" class="btn danger reject" style="background:#c62828;color:#fff">REJECT</button>'+
+        '</div>';
+      }
+    }
+  }
+  else if(kind === "withdrawals"){
+    title.textContent = "Withdraw details";
+    var isAdmW = !!(user.isAdmin || user.canApproveWithdraw);
+    var wRows = [];
+    var wTotal = 0, wPend = 0, wOk = 0, wRej = 0;
+    if(isAdmW || user.isAdmin){
+      for(var wi=0; wi<state.users.length; wi++){
+        var wu = state.users[wi];
+        if(!wu || wu.isAdmin) continue;
+        var wlist = wu.withdrawals || [];
+        for(var wj=0; wj<wlist.length; wj++){
+          var ww = wlist[wj];
+          if(!ww) continue;
+          var wa = Number(ww.amount||0);
+          wTotal += wa;
+          var wst = String(ww.status||"pending").toLowerCase();
+          if(wst==="pending") wPend += wa;
+          else if(wst==="rejected") wRej += wa;
+          else wOk += wa;
+          wRows.push({ user: wu, w: ww });
+        }
+      }
+    } else {
+      var myW = user.withdrawals || [];
+      for(var mj=0; mj<myW.length; mj++){
+        var mw = myW[mj];
+        if(!mw) continue;
+        var ma = Number(mw.amount||0);
+        wTotal += ma;
+        var mst = String(mw.status||"pending").toLowerCase();
+        if(mst==="pending") wPend += ma;
+        else if(mst==="rejected") wRej += ma;
+        else wOk += ma;
+        wRows.push({ user: user, w: mw });
+      }
+    }
+    wRows.sort(function(a,b){
+      return String(b.w.date||"").localeCompare(String(a.w.date||""));
+    });
+    html += '<div class="notice" style="margin-bottom:10px">'+
+      '<div>Total withdrawals: <b class="blue">'+money(wTotal)+'</b></div>'+
+      '<div>Pending: <b style="color:#ffc107">'+money(wPend)+'</b> · Approved: <b class="green">'+money(wOk)+'</b> · Rejected: <b style="color:#ff5c5c">'+money(wRej)+'</b></div>'+
+      (user.isAdmin?'<div class="muted" style="font-size:11px;margin-top:4px">Admin view — Approve (green) or Reject (red).</div>':'')+
+    '</div>';
+    if(!wRows.length) html += '<div class="empty">No withdrawals yet</div>';
+    for(var wr=0; wr<wRows.length; wr++){
+      var item = wRows[wr];
+      var x = item.w;
+      var ou2 = item.user;
+      var stw = String(x.status||"pending").toLowerCase();
+      var stc = stw==="pending"?"pending":(stw==="rejected"?"rejected":"confirmed");
+      var lab = stw==="pending"?"PENDING":(stw==="rejected"?"REJECTED":"APPROVED");
+      html += '<div class="dep-row '+stc+'">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center">'+
+          '<b>'+money(x.amount||0)+'</b>'+
+          '<span class="dep-status '+stc+'">'+lab+'</span>'+
+        '</div>';
+      if(user.isAdmin){
+        html += '<div style="margin-top:6px;font-size:12px"><b>'+escHtml(ou2.name||"Member")+'</b></div>'+
+          '<div class="muted" style="font-size:11px">'+escHtml(ou2.phone||"")+' · '+escHtml(ou2.email||"")+'</div>';
+      }
+      html += '<div class="muted" style="margin-top:6px;font-size:12px">Fee 5%: '+money(x.fee||(Number(x.amount||0)*0.05))+
+        (x.net?(' · Net: '+money(x.net)):'')+'</div>'+
+        '<div class="muted" style="font-size:11px">'+(x.date||"—")+'</div>';
+      if(user.isAdmin && stc==="pending"){
+        html += '<div style="display:flex;gap:8px;margin-top:10px">'+
+          '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#0a8f4a,#20e58b);border:0" onclick="approveWithdraw(\''+x.id+'\');setTimeout(function(){openStatDetail(\'withdrawals\');},100)">APPROVE</button>'+
+          '<button type="button" class="btn" style="flex:1;margin:0;background:linear-gradient(90deg,#a01020,#e33);border:0" onclick="rejectWithdraw(\''+x.id+'\');setTimeout(function(){openStatDetail(\'withdrawals\');},100)" class="btn danger reject" style="background:#c62828;color:#fff">REJECT</button>'+
+        '</div>';
+      }
+      html += '</div>';
+    }
+  }
+  else if(kind === "mining"){
+    title.textContent = "Share Income";
+    var mi = miningIncomeTotal(user);
+    html += '<div class="notice">Total mining gain so far: <b class="green">'+money(mi)+'</b></div>';
+    var ms = user.machines || [];
+    if(!ms.length) html += '<div class="empty">No shares yet</div>';
+    for(var m=0;m<ms.length;m++){
+      var mm = ms[m];
+      var cur = machineCurrentValue(mm);
+      var gain = Math.max(0, cur - Number(mm.price||0));
+      var elap = compoundsElapsed(mm);
+      html += '<div class="detail-row"><div><b>'+(mm.name||"Machine")+'</b> · day '+elap+'/'+(mm.lockDays||7)+
+        (mm.credited?' · <span class="badge-ok">released</span>':' · <span class="badge-pend">locked</span>')+'</div>'+
+        '<div class="amt green">+'+money(gain)+' gain</div>'+
+        '<div class="when">Started '+(mm.start?new Date(mm.start).toLocaleString():"—")+' · Now '+money(cur)+'</div></div>';
+    }
+  }
+  else if(kind === "today"){
+    title.textContent = "Today's earnings";
+    var te = todayEarnings(user);
+    html += '<div class="notice">Earned today (compound growth): <b class="green">'+money(te)+'</b></div>';
+    html += '<div class="muted">Updates each day as locked balances grow by 5% compound.</div>';
+    var ms2 = user.machines || [];
+    for(var k=0;k<ms2.length;k++){
+      var mx = ms2[k];
+      if(mx.credited) continue;
+      var el = compoundsElapsed(mx);
+      if(el <= 0){
+        html += '<div class="detail-row"><div><b>'+(mx.name||"Machine")+'</b></div><div class="when">Starts compounding from next day</div></div>';
+        continue;
+      }
+      var pr = mx.principal != null ? mx.principal : principalWithBonus(mx.price);
+      var before = compoundValue(pr, el-1);
+      var nowv = compoundValue(pr, el);
+      html += '<div class="detail-row"><div><b>'+(mx.name||"Machine")+'</b> · day '+el+'</div>'+
+        '<div class="amt green">+'+money(Math.max(0,nowv-before))+'</div>'+
+        '<div class="when">'+money(before)+' → '+money(nowv)+'</div></div>';
+    }
+    if(!ms2.length) html += '<div class="empty">No active shares</div>';
+  }
+  else if(kind === "invites"){
+    title.textContent = "Invite Count";
+    var directs = getDirectReferrals(user);
+    html += '<div class="notice">Direct invites: <b class="blue">'+directs.length+'</b></div>';
+    if(!directs.length) html += '<div class="empty">No one has joined with your code yet</div>';
+    for(var i2=0;i2<directs.length;i2++){
+      var du = directs[i2];
+      html += '<div class="detail-row"><div><b>'+(du.name||"—")+'</b> · '+(du.phone||du.email||"")+'</div>'+
+        '<div class="when">Joined · Shares: '+((du.machines||[]).length)+'</div></div>';
+    }
+  }
+  else if(kind === "team"){
+    title.textContent = "Team Count";
+    var directs2 = getDirectReferrals(user);
+    var tree = getTeamRecursive(user, 20);
+    var buyers = 0;
+    for(var t1=0;t1<tree.list.length;t1++){
+      if((tree.list[t1].user.machines||[]).length) buyers++;
+    }
+    html += '<div class="kpi"><span>Direct members</span><b class="blue">'+directs2.length+'</b></div>';
+    html += '<div class="kpi"><span>Total team (direct + indirect)</span><b class="blue">'+tree.list.length+'</b></div>';
+    html += '<div class="kpi"><span>Team members who bought shares</span><b class="green">'+buyers+'</b></div>';
+    html += '<div class="detail-section"><h4>Members</h4>';
+    if(!tree.list.length) html += '<div class="empty">No team members yet</div>';
+    for(var t2=0;t2<tree.list.length;t2++){
+      var node = tree.list[t2];
+      var uu = node.user;
+      html += '<div class="detail-row"><div><b>'+(uu.name||"—")+'</b> · Level '+node.level+
+        ' · Shares: '+((uu.machines||[]).length)+'</div>'+
+        '<div class="when">'+(uu.phone||uu.email||"")+'</div></div>';
+    }
+    html += '</div>';
+  }
+  else if(kind === "teamIncome"){
+    title.textContent = "Team income";
+    var ri = Number(user.referralEarnings||0);
+    html += '<div class="notice">Total team / referral income: <b class="green">'+money(ri)+'</b></div>';
+    var po = user.referralPayouts || [];
+    if(!po.length) html += '<div class="empty">No referral payouts yet</div>';
+    for(var p=0;p<po.length;p++){
+      html += '<div class="detail-row"><div><b>'+(po[p].from||"Member")+'</b>'+(po[p].machine?(" · "+po[p].machine):"")+'</div>'+
+        '<div class="amt green">+'+money(po[p].amount)+'</div>'+
+        '<div class="when">'+(po[p].date||"—")+'</div></div>';
+    }
+  }
+
+  body.innerHTML = html;
+  openModal("statDetailModal");
+}
+
+
+function setLeagueFilter(league, btn){
+  leagueFilter = league || "all";
+  try{ if(marketViewMode==='market') renderClubMarket(); }catch(e){}
+  var tabs = document.querySelectorAll("#leagueTabs button");
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove("active");
+  if(btn) btn.classList.add("active");
+  applyLeagueAtmosphere(leagueFilter);
+  renderMachines();
+  try{ if(marketViewMode==='market') renderClubMarket(); }catch(e){}
+}
+function applyLeagueAtmosphere(league){
+  var fx = document.getElementById("leagueFx");
+  var hero = document.getElementById("leagueHero");
+  var title = document.getElementById("leagueHeroTitle");
+  var sub = document.getElementById("leagueHeroSub");
+  var map = {
+    "Premier League": "pl",
+    "La Liga": "laliga",
+    "Serie A": "seriea",
+    "Ligue 1": "ligue1",
+    "Bundesliga": "bundesliga",
+    "Saudi Pro League": "saudi",
+    "MLS": "mls",
+    "Championship": "championship"
+  };
+  if(fx){
+    fx.className = "league-fx";
+    if(league && league !== "all" && map[league]){
+      fx.classList.add("on", map[league]);
+    }
+  }
+  if(hero){
+    hero.className = "league-hero";
+    if(league && league !== "all" && map[league]){
+      hero.classList.add("on", map[league]);
+      if(title) title.textContent = league;
+      if(sub) sub.textContent = "Own Club · Share Market · Daily coupon return";
+    } else {
+      hero.classList.remove("on");
+    }
+  }
+}
+function applyClubAtmosphere(club){
+  var fx = document.getElementById("leagueFx");
+  if(!fx) return;
+  /* keep current league class, intensify */
+  fx.classList.add("on");
+  fx.style.filter = "saturate(1.25) brightness(1.05)";
+  setTimeout(function(){ if(fx) fx.style.filter = ""; }, 1200);
+  toast((club||"Club") + " selected");
+}
+
+
+/* ===== CLUB STOCK MARKET (daily track) ===== */
+var marketViewMode = "shares"; // shares | market
+var clubMarketState = null; // { dayKey, prices: {id: {price, change, history:[]}} }
+
+function marketDayKey(){
+  var d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function seededRand(seed){
+  var x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+function baseMarketPrice(m){
+  // Derive from nominal club value string or id
+  var mv = String(m.marketValue||"");
+  var num = parseFloat(mv.replace(/[^0-9.]/g,"")) || (3 + (m.id%7));
+  // map billions to UGX-ish display index around 30k-80k
+  return Math.round((28000 + num * 4200 + (m.id * 317) % 9000) / 100) * 100;
+}
+function loadClubMarket(){
+  try {
+    var raw = localStorage.getItem("imate1_club_market");
+    if(raw) clubMarketState = JSON.parse(raw);
+  } catch(e){ clubMarketState = null; }
+  if(!clubMarketState || !clubMarketState.prices) clubMarketState = { dayKey: "", prices: {} };
+  ensureClubMarketDay();
+}
+function saveClubMarket(){
+  try { localStorage.setItem("imate1_club_market", JSON.stringify(clubMarketState)); } catch(e){}
+}
+function ensureClubMarketDay(){
+  var key = marketDayKey();
+  var needNew = clubMarketState.dayKey !== key;
+  if(!clubMarketState.prices) clubMarketState.prices = {};
+  for(var i=0;i<machines.length;i++){
+    var m = machines[i];
+    if(!m) continue;
+    var id = String(m.id);
+    var base = baseMarketPrice(m);
+    if(!clubMarketState.prices[id]){
+      clubMarketState.prices[id] = { price: base, change: 0, history: [base, base, base, base, base, base, base] };
+    }
+    var p = clubMarketState.prices[id];
+    if(!p.history || p.history.length < 7){
+      p.history = p.history || [];
+      while(p.history.length < 7) p.history.unshift(p.price || base);
+    }
+    if(needNew){
+      // daily movement -1.8% .. +2.2% deterministic per day+club
+      var seed = 0;
+      for(var c=0;c<key.length;c++) seed += key.charCodeAt(c) * (c+1);
+      seed += m.id * 9973;
+      var r = seededRand(seed);
+      var pct = (r * 4.0) - 1.8; // -1.8 to +2.2
+      var prev = p.price || base;
+      var next = Math.max(15000, Math.round(prev * (1 + pct/100)));
+      p.history.push(next);
+      if(p.history.length > 14) p.history = p.history.slice(-14);
+      p.change = ((next - prev) / prev) * 100;
+      p.price = next;
+      p.prev = prev;
+    } else {
+      // recompute change vs previous history point
+      var h = p.history;
+      if(h.length >= 2){
+        var a = h[h.length-2], b = h[h.length-1];
+        p.change = a ? ((b-a)/a)*100 : 0;
+        p.price = b;
+      }
+    }
+  }
+  if(needNew) clubMarketState.dayKey = key;
+  saveClubMarket();
+}
+function setMarketView(mode, btn){
+  marketViewMode = mode || "shares";
+  var tabs = document.querySelectorAll(".market-tabs button");
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove("active");
+  if(btn) btn.classList.add("active");
+  else {
+    var a = document.getElementById(mode==="market"?"tabMarketView":"tabSharesView");
+    if(a) a.classList.add("active");
+  }
+  var panel = document.getElementById("clubMarketPanel");
+  var list = document.getElementById("machineList");
+  if(panel) panel.style.display = marketViewMode === "market" ? "block" : "none";
+  if(list) list.style.display = marketViewMode === "market" ? "none" : "block";
+  if(marketViewMode === "market") renderClubMarket();
+  else renderMachines();
+  try{ if(marketViewMode==='market') renderClubMarket(); }catch(e){}
+}
+function sparklineSvg(history, up){
+  var h = history || [1,1,1,1];
+  var min = Math.min.apply(null, h), max = Math.max.apply(null, h);
+  var span = (max - min) || 1;
+  var w = 72, ht = 28, pts = [];
+  for(var i=0;i<h.length;i++){
+    var x = (i/(h.length-1||1)) * (w-2) + 1;
+    var y = ht - 2 - ((h[i]-min)/span)*(ht-4);
+    pts.push(x.toFixed(1)+","+y.toFixed(1));
+  }
+  var color = up ? "#20e58b" : "#ff5c7a";
+  return '<svg class="market-spark" viewBox="0 0 '+w+' '+ht+'" xmlns="http://www.w3.org/2000/svg"><polyline fill="none" stroke="'+color+'" stroke-width="1.8" points="'+pts.join(" ")+'"/></svg>';
+}
+function renderClubMarket(){
+  loadClubMarket();
+  var el = document.getElementById("clubMarketList");
+  if(!el) return;
+  var rows = [];
+  var gainers = 0, losers = 0;
+  for(var i=0;i<machines.length;i++){
+    var m = machines[i];
+    if(!m) continue;
+    if(leagueFilter && leagueFilter !== "all" && m.league !== leagueFilter) continue;
+    var p = (clubMarketState.prices && clubMarketState.prices[String(m.id)]) || { price: baseMarketPrice(m), change: 0, history: [0,0,0] };
+    var ch = Number(p.change||0);
+    if(ch >= 0) gainers++; else losers++;
+    rows.push({ m: m, p: p, ch: ch });
+  }
+  rows.sort(function(a,b){ return Math.abs(b.ch) - Math.abs(a.ch); });
+  var gEl = document.getElementById("mktGainers");
+  var lEl = document.getElementById("mktLosers");
+  if(gEl) gEl.textContent = String(gainers);
+  if(lEl) lEl.textContent = String(losers);
+  if(!rows.length){ el.innerHTML = '<div class="empty">No clubs in this league</div>'; return; }
+  var h = "";
+  for(var r=0;r<rows.length;r++){
+    var item = rows[r];
+    var m = item.m;
+    var up = item.ch >= 0;
+    var chStr = (up?"+":"")+item.ch.toFixed(2)+"%";
+    var photo = m.photo || m.photoFb || "";
+    h += '<div class="market-row" onclick="openBuy('+(m.id)+')">'+
+      '<img src="'+photo+'" alt="" onerror="this.src=\''+(m.photoFb||'')+'\'">'+
+      '<div><div class="mname">'+escHtml(m.code||m.name)+'</div>'+
+      '<div class="mleague">'+escHtml(m.league||"")+' · '+escHtml(m.marketValue||"")+'</div>'+
+      sparklineSvg(item.p.history, up)+
+      '</div>'+
+      '<div><div class="mprice">'+Number(item.p.price||0).toLocaleString()+'</div>'+
+      '<div class="mchg '+(up?"up":"down")+'">'+chStr+'</div></div>'+
+    '</div>';
+  }
+  el.innerHTML = h;
+}
+
+
+function renderMachines(){
+  var list = document.getElementById("machineList"); if(!list) return;
+  var arr = machines.slice();
+  if(leagueFilter && leagueFilter !== "all"){
+    arr = arr.filter(function(m){ return (m.league||m.theme) === leagueFilter; });
+  }
+  var h = "";
+  if(!arr.length) h = '<div class="empty">No clubs in this league</div>';
+  else {
+    var currentLeague = "";
+    for(var i=0;i<arr.length;i++){
+      var m = arr[i];
+      var lg = m.league || m.theme || "";
+      if(leagueFilter === "all" && lg !== currentLeague){
+        currentLeague = lg;
+        h += '<h3 style="margin:14px 0 8px;color:#3db8ff;font-size:14px;grid-column:1/-1">'+currentLeague+'</h3>';
+      }
+      h += machineCard(m);
+    }
+  }
+  list.innerHTML = h;
+}
+
+
+
+function playerFaceFor(m){
+  /* crest only */
+  var crest = (m && (m.photo || m.photoFb)) || "";
+  var name = (m && (m.code || m.name)) || "Club";
+  return [name, crest];
+}
+function playerFaceTitle(m){
+  return ((m && m.code) || "Club") + " · 1 raffle per base share";
+}
+function playerFaceHtml(m){
+  var crest = (m && m.photo) || (m && m.photoFb) || "";
+  var fb = (m && m.photoFb) || "";
+  var name = (m && m.code) || "Club";
+  return '<img src="'+crest+'" alt="'+name+'" onerror="this.onerror=null;this.src=\''+fb+'\';"/>';
+}
+
+function machineCard(m){
+  return '<div class="product-card">'+
+    '<div class="product-img badge-img"><img src="'+m.photo+'" alt="'+m.code+'" loading="lazy" onerror="this.onerror=null;this.src=\''+(m.photoFb||'')+'\'"/><div class="product-badge raffle-badge" title="'+playerFaceTitle(m)+'">'+playerFaceHtml(m)+'</div></div>'+
+    '<div class="product-body"><h3>'+m.code+'</h3>'+
+    '<div class="muted" style="font-size:11px;margin:2px 0 6px">'+(m.league||m.theme||'')+'</div>'+
+    '<div class="product-line">Club value: <b class="blue">'+(m.marketValue||'—')+'</b></div>'+
+    '<div class="product-line">Shares from <b>'+money(35000)+'</b> / week (max 4)</div>'+
+    '<div class="product-line muted" style="font-size:11px">Shown in your local currency · USD equivalent</div>'+
+    '<div class="product-line">Raffle tickets: <b class="green">1</b> per 35,000 share unit</div>'+
+    '<div class="product-line"><b class="green">Daily coupon return</b></div>'+
+    '<div class="product-actions"><button type="button" class="btn" onclick="selectMachine('+m.id+')">Buy Shares</button></div></div></div>';
+}
+
+
+function openClubBuyAtmosphere(m){
+  var modal = document.getElementById("buyModal");
+  var fx = document.getElementById("clubBuyFx");
+  var img = document.getElementById("clubBuyBadge");
+  if(modal) modal.classList.add("club-buy", "open");
+  if(fx){
+    fx.style.display = "block";
+    var banner = fx.querySelector(".club-banner");
+    if(banner){
+      /* use club badge as soft backdrop pattern */
+      banner.style.backgroundImage = "url('"+(m.photo||m.photoFb||"")+"'), radial-gradient(circle at 50% 30%, rgba(0,140,255,.35), #030912 70%)";
+      banner.style.backgroundSize = "180px, cover";
+      banner.style.backgroundRepeat = "no-repeat, no-repeat";
+      banner.style.backgroundPosition = "center 20%, center";
+    }
+  }
+  if(img){
+    img.src = m.photo || m.photoFb || "";
+    img.onerror = function(){ this.src = m.photoFb || ""; };
+  }
+  try{applyLeagueAtmosphere(m.league||m.theme);}catch(e){}
+}
+function closeClubBuyAtmosphere(){
+  var modal = document.getElementById("buyModal");
+  var fx = document.getElementById("clubBuyFx");
+  if(modal) modal.classList.remove("club-buy");
+  if(fx) fx.style.display = "none";
+}
+
+function selectMachine(id){
+  selectedMachine = null;
+  for(var i=0;i<machines.length;i++) if(machines[i].id===id){ selectedMachine=machines[i]; break; }
+  if(!selectedMachine) return;
+  try{applyLeagueAtmosphere(selectedMachine.league||selectedMachine.theme); applyClubAtmosphere(selectedMachine.code);}catch(e){}
+  selectedTierWeeks = 1;
+  selectedTierPrice = 35000;
+  selectedLockDays = 7;
+  var title = document.getElementById("buyTitle");
+  if(title) title.textContent = selectedMachine.code + " — Buy Shares";
+  var details = document.getElementById("buyDetails");
+  if(details){
+    var tiers = (typeof SHARE_TIERS !== "undefined" ? SHARE_TIERS : []);
+    var th = '<div class="notice"><b>'+selectedMachine.code+'</b> · '+(selectedMachine.league||'')+
+      (selectedMachine.marketValue?('<br>Club value <b class="blue">'+selectedMachine.marketValue+'</b>'):'')+'</div>';
+    th += '<div class="muted" style="margin:8px 0">Choose how many weeks to lock. Price = <b>UGX 35,000 × weeks</b>. Earnings: <b>Daily coupon return</b> on your purchase.</div>';
+    th += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">';
+    for(var t=0;t<tiers.length;t++){
+      var tr = tiers[t];
+      var p0 = tr.price;
+      var days = tr.weeks * 7;
+      var finalBal = compoundValue(p0, days);
+      var gain = finalBal - p0;
+      th += '<button type="button" class="btn secondary lock-opt" data-weeks="'+tr.weeks+'" data-price="'+tr.price+'" onclick="pickShareTier('+tr.weeks+','+tr.price+')" style="margin:0;text-align:left;padding:12px">'+
+        '<b>'+tr.label+'</b><br><span class="green">'+money(tr.price)+'</span><br><small style="color:#93a4b8">Daily coupon return · est. end '+money(finalBal)+'</small></button>';
+    }
+    th += '</div>';
+    th += '<div class="kpi" style="margin-top:12px"><span>Selected</span><b id="tierSelectedLabel">1 week · '+money(35000)+'</b></div>';
+    th += '<div class="muted" id="tierEstLine" style="margin-top:6px">Est. after lock (compound): <b class="green" id="tierEstVal">'+money(compoundValue(35000,7))+'</b></div>';
+    details.innerHTML = th;
+  }
+  openClubBuyAtmosphere(selectedMachine);
+  openModal("buyModal");
+  pickShareTier(1, 35000);
+}
+function pickShareTier(weeks, price){
+  selectedTierWeeks = weeks;
+  selectedTierPrice = price;
+  selectedLockDays = weeks * 7;
+  var days = weeks * 7;
+  var finalBal = compoundValue(price, days);
+  var el = document.getElementById("tierSelectedLabel");
+  if(el) el.innerHTML = weeks+" week"+(weeks>1?"s":"")+" · "+money(price);
+  var ev = document.getElementById("tierEstVal");
+  if(ev) ev.textContent = money(finalBal);
+  var btns = document.querySelectorAll(".lock-opt");
+  for(var i=0;i<btns.length;i++){
+    var w = Number(btns[i].getAttribute("data-weeks"));
+    btns[i].style.borderColor = (w===weeks) ? "#20e58b" : "";
+    btns[i].style.boxShadow = (w===weeks) ? "0 0 12px rgba(32,229,139,.35)" : "";
+  }
+}
+
+function pickLock(d){
+  selectedLockDays = d;
+  var p0 = selectedMachine ? principalWithBonus(selectedMachine.price) : 0;
+  var el = document.getElementById("lockSelectedLabel");
+  if(el) el.innerHTML = d+" Days → "+money(compoundValue(p0, d));
+  var btns = document.querySelectorAll(".lock-opt");
+  for(var i=0;i<btns.length;i++){
+    var bd = Number(btns[i].getAttribute("data-days"));
+    btns[i].style.border = bd===d ? "2px solid #20e58b" : "";
+  }
+}
+function confirmPurchase(){
+  if(!selectedMachine) return;
+  var user = currentUser(); if(!user) return;
+  var price = Number(selectedTierPrice || price || 35000);
+  var lockDays = Number(selectedLockDays || (selectedTierWeeks||1)*7);
+  if(lockDays < 7) lockDays = 7;
+  if(lockDays > 28) lockDays = 28;
+  var bals = calcBalances(user);
+  if(bals.available < price){
+    alert("Insufficient balance.\nNeed "+money(price)+".\nDeposit first and wait for system confirmation and approval.");
+    return;
+  }
+  var principal = price;
+  var bonusAmt = 0;
+  user.balance = (user.balance || 0) - price;
+  user.machines = user.machines || [];
+  user.machines.push({
+    id: Date.now(),
+    machineId: selectedMachine.id,
+    name: selectedMachine.code || selectedMachine.name,
+    theme: selectedMachine.theme || "",
+    start: ugandaNow().toISOString(),
+    price: price,
+    principal: principal,
+    bonus: bonusAmt,
+    lockDays: lockDays,
+    dailyRate: DAILY_COMPOUND,
+    credited: false
+  });
+  user.transactions = user.transactions || [];
+  user.transactions.unshift({date:new Date().toLocaleString(), type:"Shares — "+selectedMachine.code+" ("+lockDays+"d lock)", amount:-price});
+  // Raffle: 1 ticket per 35,000 UGX share unit (1 week pack = 1, higher packs scale up)
+  var baseUnit = 35000;
+  var tixGain = Math.max(1, Math.round(Number(price) / baseUnit));
+  user.raffleTickets = (user.raffleTickets || 0) + tixGain;
+  user.transactions.unshift({date:new Date().toLocaleString(), type:"Raffle tickets +" + tixGain, amount:0});
+  user.transactions.unshift({date:new Date().toLocaleString(), type:"Weekly fund target 5%: "+money(weekly), amount:0});
+  if(!user.bonus){
+    user.bonus = true;
+    if(user.referredBy){
+      for(var i=0;i<state.users.length;i++){
+        if(state.users[i].id===user.referredBy){
+          var rw=Math.round(price*0.05);
+          state.users[i].balance=(state.users[i].balance||0)+rw;
+          state.users[i].referralEarnings=(state.users[i].referralEarnings||0)+rw;
+          state.users[i].referralPayouts=state.users[i].referralPayouts||[];
+          state.users[i].referralPayouts.unshift({date:new Date().toLocaleString(), from:user.name, machine:selectedMachine.code, amount:rw});
+          break;
+        }
+      }
+    }
+  }
+  closeModal("buyModal"); save(); render();
+  user.joinBonusLocked = false;
+  user.depositBonusLocked = false;
+  toast("Shares bought · "+lockDays+" days · Daily coupon return");
+}
+
+
+/* ===== DEPOSIT MoMo + TRC20 ===== */
+function copyText(txt, label){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ toast(label||"Copied"); }).catch(function(){ prompt("Copy:", txt); });
+  } else prompt("Copy:", txt);
+}
+
+function updateDepositChannels(){
+  var network = (document.getElementById("depositNetwork")||{}).value || "mtn";
+  var el = document.getElementById("depositChannels");
+  if(!el) return;
+  var amtRaw = (document.getElementById("depositAmount")||{}).value || "";
+  var amt = String(amtRaw).replace(/\D/g,"") || "0";
+  var senderField = document.getElementById("senderPhoneField");
+  if(senderField) senderField.style.display = (network === "usdt") ? "none" : "";
+
+  if(network === "usdt"){
+    el.innerHTML =
+      '<div style="font-size:13px;margin-bottom:8px"><b>USDT TRC20 deposit</b></div>'+
+      '<div class="muted" style="font-size:12px;margin-bottom:8px">Send only TRC20 USDT to this address, then paste your TxID below.</div>'+
+      '<div style="font-weight:700;font-size:12px;word-break:break-all;background:#030912;padding:10px;border-radius:8px;border:1px solid #18374e" id="depCopyAddr">'+DEPOSIT_USDT+'</div>'+
+      '<button type="button" class="btn" style="margin-top:10px" onclick="copyDepositContact(\'usdt\')">COPY TRC20 ADDRESS</button>'+
+      '<div class="muted" style="margin-top:10px;font-size:11px">After payment, paste the Transaction ID and submit.</div>';
+    return;
+  }
+
+  var isMtn = network === "mtn";
+  var payUssd = isMtn
+      ? ("*165*1*1*"+DEPOSIT_MM+"*"+amt+"#")
+      : ("*185*1*1*"+DEPOSIT_MM+"*"+amt+"#");
+  var altUssd = isMtn
+      ? ("*165*3*"+DEPOSIT_MM+"*"+amt+"#")
+      : ("*185*6*"+DEPOSIT_MM+"*"+amt+"#");
+  var label = isMtn ? "MTN Mobile Money" : "Airtel Money";
+
+  el.innerHTML =
+    '<div style="font-size:13px;margin-bottom:8px"><b>'+label+'</b></div>'+
+    '<div class="muted" style="font-size:12px;margin-bottom:8px">Send money to this number, then paste your Transaction ID.</div>'+
+    '<div style="background:#030912;border:1px solid #1a6aa8;border-radius:10px;padding:12px;margin:8px 0">'+
+      '<div class="muted" style="font-size:11px">DEPOSIT NUMBER</div>'+
+      '<div id="depCopyNumber" style="font-size:22px;font-weight:800;color:#20e58b;letter-spacing:1px;margin:6px 0">'+DEPOSIT_MM+'</div>'+
+      '<button type="button" class="btn" style="margin:0" onclick="copyDepositContact(\'momo\')">COPY NUMBER</button>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'+
+      '<a class="btn secondary" style="flex:1;text-align:center;text-decoration:none;margin:0" href="tel:'+payUssd+'">PAY VIA USSD</a>'+
+    '</div>'+
+    '<div class="muted" style="margin-top:10px;font-size:11px;line-height:1.45">'+
+      '1. Tap <b>COPY NUMBER</b> and send money from your MoMo app<br>'+
+      '2. Or tap <b>PAY VIA USSD</b> (number + amount filled)<br>'+
+      '3. Paste Transaction ID below and submit for approval'+
+    '</div>';
+}
+
+function copyDepositContact(kind){
+  var text = (kind === "usdt") ? DEPOSIT_USDT : DEPOSIT_MM;
+  var label = (kind === "usdt") ? "TRC20 address" : "Deposit number";
+  function ok(){
+    toast(label + " copied");
+    try {
+      alert(label + " copied:\\n\\n" + text + "\\n\\nPaste it in your payment app, send the amount, then return here and paste your Transaction ID.");
+    } catch(e) {}
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(ok).catch(function(){
+      fallbackCopy(text); ok();
+    });
+  } else {
+    fallbackCopy(text); ok();
+  }
+}
+function fallbackCopy(text){
+  try {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+  } catch(e) {}
+}
+
+
+var depositMethod = "usdt";
+var usdtNetwork = "trc20";
+var slideState = { depSlide: false, wdSlide: false };
+
+function setDepositMethod(m){
+  depositMethod = m || "usdt";
+  var usdt = document.getElementById("depPanelUsdt");
+  var mob = document.getElementById("depPanelMobile");
+  var t1 = document.getElementById("depTabUsdt");
+  var t2 = document.getElementById("depTabMobile");
+  var net = document.getElementById("depositNetwork");
+  var btn = document.getElementById("depPrimaryBtn");
+  if(usdt) usdt.style.display = depositMethod === "usdt" ? "block" : "none";
+  if(mob) mob.style.display = depositMethod === "mobile" ? "block" : "none";
+  if(t1) t1.classList.toggle("active", depositMethod === "usdt");
+  if(t2) t2.classList.toggle("active", depositMethod === "mobile");
+  if(net) net.value = depositMethod === "usdt" ? "usdt" : "mtn";
+  if(btn) btn.textContent = depositMethod === "usdt" ? "Get Deposit Address" : "Continue · Submit Deposit";
+  slideState.depSlide = false;
+  resetSlide("depSlide");
+  if(depositMethod === "mobile") updateDepositChannels();
+}
+
+function setUsdtNetwork(n, el){
+  usdtNetwork = n || "trc20";
+  var opts = document.querySelectorAll("#depPanelUsdt .network-opt");
+  for(var i=0;i<opts.length;i++) opts[i].classList.remove("active");
+  if(el) el.classList.add("active");
+  var wrap = document.getElementById("depUsdtAddrWrap");
+  if(wrap) wrap.style.display = "none";
+}
+
+function pickDepAmount(v, btn){
+  var inp = document.getElementById("depositAmount");
+  if(inp) inp.value = v;
+  var btns = document.querySelectorAll("#depAmountPresets button");
+  for(var i=0;i<btns.length;i++) btns[i].classList.remove("active");
+  if(btn) btn.classList.add("active");
+  updateDepositChannels();
+}
+
+function depositPrimaryAction(){
+  if(depositMethod === "usdt"){
+    if(!slideState.depSlide){ alert("Slide to verify first"); return; }
+    var cap = document.getElementById("depCaptcha");
+    if(cap && !cap.checked){ alert("Tick I'm not a robot"); return; }
+    var wrap = document.getElementById("depUsdtAddrWrap");
+    var show = document.getElementById("depUsdtAddrShow");
+    var btn = document.getElementById("depPrimaryBtn");
+    var already = wrap && wrap.style.display === "block";
+    if(!already){
+      if(show) show.textContent = (typeof DEPOSIT_USDT !== "undefined" ? DEPOSIT_USDT : "");
+      if(wrap) wrap.style.display = "block";
+      if(btn) btn.textContent = "Submit Deposit · TxID";
+      toast("Send only " + (usdtNetwork||"TRC20").toUpperCase() + " USDT, then paste TxID and submit");
+      return;
+    }
+    // second press: submit with TxID
+    var netEl = document.getElementById("depositNetwork");
+    if(netEl) netEl.value = "usdt";
+    submitDeposit();
+    return;
+  }
+  // mobile → full submit
+  var netEl2 = document.getElementById("depositNetwork");
+  if(netEl2) netEl2.value = "mtn";
+  submitDeposit();
+}
+
+function resetSlide(id){
+  slideState[id] = false;
+  var knob = document.getElementById(id === "depSlide" ? "depSlideKnob" : "wdSlideKnob");
+  var lab = document.getElementById(id === "depSlide" ? "depSlideLabel" : "wdSlideLabel");
+  var box = document.getElementById(id);
+  if(knob) knob.style.marginLeft = "0px";
+  if(lab) lab.textContent = "Drag →";
+  if(box) box.classList.remove("done");
+}
+
+function startSlide(e, id){
+  e.preventDefault();
+  var box = document.getElementById(id);
+  var knob = document.getElementById(id === "depSlide" ? "depSlideKnob" : "wdSlideKnob");
+  var lab = document.getElementById(id === "depSlide" ? "depSlideLabel" : "wdSlideLabel");
+  if(!box || !knob) return;
+  var rect = box.getBoundingClientRect();
+  var max = rect.width - knob.offsetWidth - 8;
+  function move(ev){
+    var x = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left - 22;
+    if(x < 0) x = 0;
+    if(x > max) x = max;
+    knob.style.marginLeft = x + "px";
+    if(x >= max * 0.92){
+      slideState[id] = true;
+      knob.style.marginLeft = max + "px";
+      if(lab) lab.textContent = "Verified ✓";
+      box.classList.add("done");
+      end();
+    }
+  }
+  function end(){
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", end);
+    window.removeEventListener("touchmove", move);
+    window.removeEventListener("touchend", end);
+  }
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", end);
+  window.addEventListener("touchmove", move, {passive:false});
+  window.addEventListener("touchend", end);
+}
+
+function onWithdrawNetworkChange(){
+  var n = (document.getElementById("withdrawNetwork")||{}).value || "";
+  var inp = document.getElementById("withdrawAddress");
+  if(!inp) return;
+  if(n === "mtn" || n === "airtel"){
+    inp.placeholder = "07XXXXXXXX MoMo number";
+  } else {
+    inp.placeholder = "Enter USDT wallet address";
+  }
+}
+
+function updateWithdrawCalc(){
+  var amt = Number((document.getElementById("withdrawAmount")||{}).value || 0);
+  var fee = Math.round(amt * 0.05);
+  var net = amt - fee;
+  var el = document.getElementById("withdrawCalc");
+  if(el) el.innerHTML = "5% fee: <b>"+money(fee)+"</b> · You receive: <b class='green'>"+money(net)+"</b>";
+}
+
+
+function openDepositModal(){
+  var u = currentUser();
+  var amt = document.getElementById("depositAmount");
+  var ref = document.getElementById("depositRef");
+  var sender = document.getElementById("depositSender");
+  var net = document.getElementById("depositNetwork");
+  if(amt) amt.value = "";
+  if(ref) ref.value = "";
+  if(sender) sender.value = u ? (u.phone||"") : "";
+  if(net) net.value = "mtn";
+  updateDepositChannels();
+  openModal("depositFundsModal");
+  // Popup so customer can copy deposit contact immediately
+  setTimeout(function(){
+    try {
+      var msg = "Send your deposit to:\\n\\n" + DEPOSIT_MM + "\\n\\nTap OK, then use COPY NUMBER on the next screen if needed.";
+      if(window.confirm(msg + "\\n\\nCopy number now?")){
+        copyDepositContact("momo");
+      }
+    } catch(e) {}
+  }, 250);
+}
+
+
+function submitDeposit(){
+  try {
+    var user = currentUser(); if(!user){ alert("Please log in first"); return; }
+    var amount = Number(document.getElementById("depositAmount").value||0);
+    var network = (document.getElementById("depositNetwork").value||"mtn");
+    var sender = (document.getElementById("depositSender").value||"").trim();
+    var ref = (document.getElementById("depositRef").value||"").trim();
+    var confirmBox = document.getElementById("depositTxConfirm");
+
+    if(amount < 3000){ alert("Minimum UGX 3,000"); return; }
+    if(network !== "usdt"){
+      var digits = normalizePhone(sender);
+      if(!digits || digits.length < 9){ alert("Enter the Mobile Money number you paid from"); return; }
+    }
+    if(!ref || ref.length < 4){ alert("Paste your Transaction ID (TxID) after you pay"); return; }
+    if(depositMethod === "mobile" && !slideState.depSlide){ alert("Slide to verify first"); return; }
+    var depCap = document.getElementById("depCaptcha");
+    if(depositMethod === "mobile" && depCap && !depCap.checked){ alert("Tick I'm not a robot"); return; }
+    // map network for mobile
+    if(depositMethod === "mobile"){
+      network = "mtn";
+      var netEl = document.getElementById("depositNetwork");
+      if(netEl) network = netEl.value || "mtn";
+    } else {
+      network = "usdt";
+    }
+    // basic TxID shape check
+    if(/\s{2,}/.test(ref)){ alert("TxID looks invalid — remove extra spaces"); return; }
+    if(confirmBox && !confirmBox.checked){
+      alert("Tick the box to confirm your Transaction ID is correct (TxID verification step).");
+      return;
+    }
+
+    // Step: user re-confirms TxID before submit
+    var verifyMsg =
+      "TXID VERIFICATION\\n\\n"+
+      "Amount: UGX "+amount.toLocaleString()+"\\n"+
+      "Method: "+(network==="mtn"?"MTN":network==="airtel"?"Airtel":"USDT TRC20")+"\\n"+
+      "Transaction ID:\\n"+ref+"\\n\\n"+
+      "Confirm this TxID is exactly as shown on your payment receipt?";
+    if(!window.confirm(verifyMsg)){
+      toast("Submission cancelled — check your TxID");
+      return;
+    }
+
+    var method = network==="mtn"?"MTN Mobile Money":network==="airtel"?"Airtel Money":"USDT TRC20";
+    var depId = "d_" + Date.now();
+    var dep = {
+      id: depId,
+      amount: amount,
+      method: method,
+      network: network,
+      channel: network==="usdt" ? DEPOSIT_USDT : DEPOSIT_MM,
+      sender: sender || "—",
+      reference: ref,
+      txId: ref,
+      status: "pending",
+      txidUserConfirmed: true,
+      txidAdminVerified: false,
+      date: new Date().toLocaleString(),
+      created_at: new Date().toISOString(),
+      userId: user.id,
+      userName: user.name || "",
+      userPhone: user.phone || "",
+      userEmail: user.email || ""
+    };
+
+    user.deposits = user.deposits || [];
+    user.deposits.unshift(dep);
+    // Push to server so admin on any device can see TxID
+    try {
+      apiCall("/api/deposit", "POST", {
+        amount: amount,
+        network: network,
+        sender: sender,
+        reference: ref,
+        txid: ref,
+        txId: ref
+      }).then(function(res){
+        if(res && res.deposit && res.deposit.id){
+          dep.id = res.deposit.id;
+          dep.status = res.deposit.status || "pending";
+        }
+        toast("TxID sent to server for system confirmation");
+        try{ save(); renderPendingQueuesPanel(); }catch(e){}
+      }).catch(function(err){
+        console.warn("deposit api", err);
+        toast("Saved locally — admin must use same browser or server login");
+      });
+    } catch(eApi) {}
+    user.transactions = user.transactions || [];
+    user.transactions.unshift({
+      date: new Date().toLocaleString(),
+      type: "Deposit pending TxID verification — "+ref,
+      amount: 0
+    });
+
+    state.pendingDeposits = state.pendingDeposits || [];
+    state.pendingDeposits.unshift({
+      depId: depId,
+      userId: user.id,
+      amount: amount,
+      reference: ref,
+      method: method,
+      sender: sender,
+      date: dep.date,
+      status: "pending"
+    });
+
+    try { safeStorage.setItem("iMate1", JSON.stringify(state)); } catch(e) {}
+    try { closeModal("depositFundsModal"); } catch(e) {}
+    try { save(); } catch(e) {}
+    try {
+      pushStaffNotification(
+        "New deposit · TxID to verify",
+        (user.name||"Member")+" · "+money(amount)+" · "+method+"\\nTxID: "+ref,
+        { type:"deposit", depId: depId, userId: user.id }
+      );
+    } catch(e) {}
+    try { renderAdminPendingDeposits(); } catch(e) {}
+    try { render(); } catch(e) {}
+    toast("TxID submitted — waiting admin verification");
+    alert("Deposit submitted.\\n\\nTxID: "+ref+"\\n\\nStatus: Pending verification.\\nAdmin will verify this Transaction ID before approving.");
+  } catch(err) {
+    alert("Deposit error: " + (err && err.message ? err.message : String(err)));
+  }
+}
+
+
+function autoVerifyDeposit(user, dep){
+  /* Disabled: wallet  */
+  if(dep) dep.status = "pending";
+  save(); render();
+}
+
+function creditDepositLocal(user, dep, note){
+  /* Only admin confirmDepositDemo may credit */
+  return;
+}
+
+
+function listAllPendingDeposits(){
+  ensureState();
+  var rows = [];
+  var seen = {};
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u || u.isAdmin || u.isSupport) continue;
+    var deps = u.deposits || [];
+    for(var j=0;j<deps.length;j++){
+      var d = deps[j];
+      if(!d) continue;
+      var st = String(d.status||"").toLowerCase();
+      if(st === "pending" || st === "submitted" || st === "awaiting" || st === ""){
+        seen[d.id] = 1;
+        rows.push({ user: u, dep: d });
+      }
+    }
+  }
+  // also global queue
+  var g = state.pendingDeposits || [];
+  for(var g_i=0; g_i<g.length; g_i++){
+    var gitem = g[g_i];
+    if(!gitem || String(gitem.status||"pending").toLowerCase() !== "pending") continue;
+    if(seen[gitem.depId]) continue;
+    var gu = null;
+    for(var ui=0; ui<state.users.length; ui++){
+      if(state.users[ui].id === gitem.userId){ gu = state.users[ui]; break; }
+    }
+    if(!gu){
+      gu = { id: gitem.userId, name: "Member", phone: "", email: "", deposits: [] };
+    }
+    rows.push({
+      user: gu,
+      dep: {
+        id: gitem.depId,
+        amount: gitem.amount,
+        reference: gitem.reference,
+        txId: gitem.reference,
+        method: gitem.method,
+        sender: gitem.sender,
+        status: "pending",
+        date: gitem.date
+      }
+    });
+  }
+  rows.sort(function(a,b){
+    return String(b.dep.date||b.dep.created_at||"").localeCompare(String(a.dep.date||a.dep.created_at||""));
+  });
+  return rows;
+}
+
+function renderAdminPendingDeposits(){
+  var user = currentUser();
+  var card = document.getElementById("adminApprovalsCard");
+  var box = document.getElementById("adminPendingDeposits");
+  var boxHome = document.getElementById("adminPendingDepositsHome");
+  if(!user || !user.isAdmin){
+    if(card) card.style.display = "none";
+    if(boxHome) boxHome.innerHTML = "";
+    return;
+  }
+  if(card) card.style.display = "block";
+  var rows = listAllPendingDeposits();
+  var html = "";
+  if(!rows.length){
+    html = '<div class="empty">No pending deposits right now.</div>';
+  } else {
+    for(var i=0;i<rows.length;i++){
+      var u = rows[i].user;
+      var d = rows[i].dep;
+      var amt = Number(d.amount||0);
+      var tx = d.reference || d.provider_ref || d.txId || d.txid || "—";
+      var when = d.date || d.created_at || "—";
+      var method = d.method || d.network || "—";
+      var sender = d.sender || "—";
+      html += '<div class="notice" style="margin-bottom:10px">'+
+        '<div><b>'+(u.name||"Member")+'</b> · '+(u.phone||"")+'</div>'+
+        '<div class="muted" style="font-size:11px">'+(u.email||"")+'</div>'+
+        '<div style="margin-top:6px">Amount: <b class="green">'+money(amt)+'</b></div>'+
+        '<div>Method: <b>'+method+'</b></div>'+
+        '<div>Sender: <b>'+sender+'</b></div>'+
+        '<div>Tx ID: <b class="blue" style="word-break:break-all">'+tx+'</b></div>'+
+        '<div class="muted" style="font-size:11px">'+when+'</div>'+
+        '<div style="display:flex;gap:8px;margin-top:8px">'+
+          '<button type="button" class="btn secondary" style="flex:1;margin:0" onclick="adminVerifyTxid(\''+u.id+'\',\''+d.id+'\')">VERIFY TxID</button>'+'<button type="button" class="btn" style="flex:1;margin:0" onclick="adminApproveDeposit(\''+u.id+'\',\''+d.id+'\')">APPROVE</button>'+
+          '<button type="button" class="btn secondary" style="flex:1;margin:0" onclick="adminRejectDeposit(\''+u.id+'\',\''+d.id+'\')" class="btn danger reject" style="background:#c62828;color:#fff">REJECT</button>'+
+        '</div></div>';
+    }
+  }
+  if(box) box.innerHTML = html;
+  if(boxHome) boxHome.innerHTML = '<div style="font-size:12px;color:#ffb84d;margin-bottom:6px">Pending deposits: <b>'+rows.length+'</b></div>' + html;
+}
+
+
+function adminVerifyTxid(userId, depId){
+  var me = currentUser();
+  if(!me || !(me.isAdmin || me.isCoManager || me.canManualCredit)){ alert("System authorization required"); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u || u.id !== userId) continue;
+    var deps = u.deposits || [];
+    for(var j=0;j<deps.length;j++){
+      if(deps[j].id === depId){
+        var d = deps[j];
+        var tx = d.reference || d.txId || "";
+        var msg = "VERIFY TRANSACTION ID\\n\\nMember: "+(u.name||"")+"\\nPhone: "+(u.phone||"")+"\\nAmount: "+money(d.amount)+"\\nMethod: "+(d.method||"")+"\\n\\nTxID:\\n"+tx+"\\n\\nHave you checked this TxID on MoMo / USDT and confirmed it is valid?";
+        if(!window.confirm(msg)) return;
+        d.txidAdminVerified = true;
+        d.txidVerifiedAt = new Date().toLocaleString();
+        d.txidVerifiedBy = me.email || "admin";
+        // keep status pending until approve, but mark verified
+        d.verifyNote = "TxID verified by admin";
+        save();
+        toast("TxID verified — you can Approve now");
+        try{ pushStaffNotification("TxID verified", (u.name||"Member")+" · "+tx, {type:"txid_verified", depId:depId}); }catch(e){}
+        try{ renderAdminPendingDeposits(); }catch(e){}
+        try{ openStatDetail("deposits"); }catch(e){}
+        try{ render(); }catch(e){}
+        return;
+      }
+    }
+  }
+  alert("Deposit not found");
+}
+
+function adminApproveDeposit(userId, depId){
+  var me = currentUser();
+  if(!me || !(me.isAdmin || me.isCoManager || me.canManualCredit)){ alert("System authorization required"); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u || u.id !== userId) continue;
+    var deps = u.deposits || [];
+    for(var j=0;j<deps.length;j++){
+      if(deps[j].id === depId){
+        var d = deps[j];
+        if(String(d.status).toLowerCase() === "confirmed" || String(d.status).toLowerCase() === "approved"){
+          toast("Already approved"); return;
+        }
+        if(!d.txidAdminVerified){
+          var txc = d.reference || d.txId || "";
+          if(!window.confirm("TxID not marked verified yet.\n\nTxID: "+txc+"\n\nVerify and approve in one step?")) return;
+          d.txidAdminVerified = true;
+          d.txidVerifiedAt = new Date().toLocaleString();
+          d.txidVerifiedBy = me.email || "admin";
+        }
+        d.status = "confirmed";
+        d.approvedAt = new Date().toLocaleString();
+        d.approvedBy = me.email || "admin";
+        var depAmt = Number(d.amount||0);
+        var depBonus = Math.round(depAmt * 0.025);
+        var creditTotal = depAmt + depBonus;
+        d.bonus25 = depBonus; d.bonus5 = depBonus;
+        d.creditedTotal = creditTotal;
+        u.balance = Number(u.balance||0) + creditTotal;
+        u.depositBonusTotal = Number(u.depositBonusTotal||0) + depBonus;
+        if(!(u.machines||[]).length) u.depositBonusLocked = true;
+        // Fund pool: +deposit (company received), −2.5% bonus (paid to member)
+        try {
+          var depUsd = amountLocalToUSD(depAmt, u);
+          var bonusUsd = amountLocalToUSD(depBonus, u);
+          adjustRewardPool(depUsd, "Deposit received · "+(u.name||u.phone||userId), {userId:u.id, depId:depId, type:"deposit"});
+          if(bonusUsd > 0) adjustRewardPool(-bonusUsd, "Deposit 2.2.5% bonus → "+(u.name||""), {userId:u.id, depId:depId, type:"deposit_bonus"});
+        } catch(ePool) {}
+        u.transactions = u.transactions || [];
+        u.transactions.unshift({
+          date: new Date().toLocaleString(),
+          type: "Deposit approved — "+(d.method||"MoMo/USDT"),
+          amount: depAmt
+        });
+        u.transactions.unshift({
+          date: new Date().toLocaleString(),
+          type: "Deposit 2.2.5% bonus",
+          amount: depBonus
+        });
+        u.rewards = u.rewards || [];
+        u.rewards.unshift({
+          id: "rw_dep_"+Date.now(),
+          type: "deposit_bonus",
+          title: "Deposit 2.2.5% bonus",
+          detail: "Bonus on "+money(depAmt),
+          amount: depBonus,
+          date: new Date().toLocaleString()
+        });
+        try{ creditReferrerDividend(u, depAmt); }catch(e){}
+        // clear global queue entry
+        state.pendingDeposits = (state.pendingDeposits||[]).filter(function(x){ return x && x.depId !== depId; });
+        save();
+        toast("Approved "+money(depAmt)+" + 5% "+money(depBonus)+" → "+money(creditTotal));
+        try{
+          pushStaffNotification(
+            "Deposit APPROVED",
+            (u.name||"Member")+" · "+money(d.amount)+" · TxID "+(d.reference||d.txId||""),
+            { type:"deposit_approved", depId: depId, userId: userId }
+          );
+        }catch(e){}
+        renderAdminPendingDeposits();
+        try{ render(); }catch(e){}
+        return;
+      }
+    }
+  }
+  alert("Deposit not found. Member may have used a different device (local data only).");
+}
+
+function adminRejectDeposit(userId, depId){
+  var me = currentUser();
+  if(!me || !(me.isAdmin || me.isCoManager || me.canManualCredit)){ alert("System authorization required"); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u || u.id !== userId) continue;
+    var deps = u.deposits || [];
+    for(var j=0;j<deps.length;j++){
+      if(deps[j].id === depId){
+        deps[j].status = "rejected";
+        deps[j].rejectedAt = new Date().toLocaleString();
+        save();
+        toast("Deposit rejected");
+        try{
+          pushStaffNotification(
+            "Deposit REJECTED",
+            (u.name||"Member")+" · "+money(deps[j].amount||0)+" · TxID "+(deps[j].reference||""),
+            { type:"deposit_rejected", depId: depId, userId: userId }
+          );
+        }catch(e){}
+        renderAdminPendingDeposits();
+        return;
+      }
+    }
+  }
+  alert("Deposit not found");
+}
+
+function confirmDepositDemo(depId){
+  var user = currentUser(); if(!user || !user.isAdmin) return;
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i]; var deps = u.deposits || [];
+    for(var j=0;j<deps.length;j++){
+      if(deps[j].id===depId && deps[j].status==="pending"){
+        deps[j].status = "confirmed";
+        u.balance = (u.balance||0) + Number(deps[j].amount);
+        u.transactions = u.transactions || [];
+        u.transactions.unshift({date:new Date().toLocaleString(), type:"Deposit confirmed — "+deps[j].method, amount:deps[j].amount});
+        try{creditReferrerDividend(u, deps[j].amount);}catch(e){}
+        save(); toast("Confirmed +"+money(deps[j].amount)); render(); return;
+      }
+    }
+  }
+}
+
+/* ===== WITHDRAW ===== */
+
+function fillSettingsForm(){
+  var user = currentUser(); if(!user) return;
+  var p = user.payout || {};
+  var el;
+  el = document.getElementById("setBankName"); if(el) el.value = p.bankName || "";
+  el = document.getElementById("setBankNumber"); if(el) el.value = p.bankNumber || "";
+  el = document.getElementById("setMtn"); if(el) el.value = p.mtn || "";
+  el = document.getElementById("setAirtel"); if(el) el.value = p.airtel || "";
+  el = document.getElementById("setTrc20"); if(el) el.value = p.trc20 || "";
+  el = document.getElementById("setWdPass"); if(el) el.value = "";
+  el = document.getElementById("setWdPass2"); if(el) el.value = "";
+  el = document.getElementById("setCurPass"); if(el) el.value = "";
+  el = document.getElementById("setNewPass"); if(el) el.value = "";
+  el = document.getElementById("setNewPass2"); if(el) el.value = "";
+}
+
+
+function openModal(id){
+  var el = document.getElementById(id);
+  if(!el){
+    console.error("Modal not found:", id);
+    alert("Screen not found: " + id);
+    return;
+  }
+  el.classList.add("open");
+  el.style.display = "flex";
+  el.style.zIndex = "5000";
+}
+function closeModal(id){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.classList.remove("open");
+  el.style.display = "none";
+}
+function openAboutUs(){
+  var el = document.getElementById("aboutModal");
+  if(!el){
+    alert("About Us content is missing in this file.");
+    return;
+  }
+  openModal("aboutModal");
+}
+
+
+
+function renderSupportPasswordPanel(){
+  var box = document.getElementById("adminUsersList");
+  if(!box) return;
+  var user = currentUser();
+  if(!canManagePasswords(user)) return;
+  var html = "";
+  if(isSupportStaff(user) && !isFullAdmin(user)){
+    html += '<div class="notice" style="margin-bottom:10px">Support role: you can <b>view/reset customer login passwords</b>. You <b>cannot</b> approve withdrawals or deposits.</div>';
+  }
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    if(!u || u.isAdmin || u.isSupport) continue;
+    html += '<div class="user-admin-row"><b>'+(u.name||"")+'</b><br>'+
+      (u.email||"")+' · '+(u.phone||"")+'<br>'+
+      'Password: <span style="color:#ffb84d">'+(u.password||"—")+'</span><br>'+
+      '<button type="button" class="btn secondary" style="margin-top:6px;padding:8px;width:auto" onclick="staffResetPassword(\''+u.id+'\')">SET NEW PASSWORD</button></div>';
+  }
+  if(!html) html = '<div class="muted">No customers yet</div>';
+  box.innerHTML = html;
+}
+function staffResetPassword(uid){
+  if(!canManagePasswords()){ alert("Not allowed"); return; }
+  var np = prompt("Enter new password for this customer:");
+  if(!np || np.length < 4){ alert("Password too short"); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    if(state.users[i].id===uid){
+      state.users[i].password = np;
+      save();
+      toast("Password updated");
+      renderSupportPasswordPanel();
+      return;
+    }
+  }
+  alert("User not found");
+}
+
+function openSettings(){
+  fillSettingsForm();
+  openModal("accountModal");
+}
+function saveWithdrawPassword(){
+  var user = currentUser(); if(!user) return;
+  var p1 = (document.getElementById("setWdPass")||{}).value || "";
+  var p2 = (document.getElementById("setWdPass2")||{}).value || "";
+  if(p1.length < 4){ alert("Withdraw password must be at least 4 characters"); return; }
+  if(p1 !== p2){ alert("Withdraw passwords do not match"); return; }
+  user.withdrawPassword = p1;
+  save();
+  toast("Withdraw password saved");
+  document.getElementById("setWdPass").value = "";
+  document.getElementById("setWdPass2").value = "";
+}
+function savePayoutAccounts(){
+  var user = currentUser(); if(!user) return;
+  user.payout = {
+    bankName: ((document.getElementById("setBankName")||{}).value || "").trim(),
+    bankNumber: ((document.getElementById("setBankNumber")||{}).value || "").trim(),
+    mtn: ((document.getElementById("setMtn")||{}).value || "").trim(),
+    airtel: ((document.getElementById("setAirtel")||{}).value || "").trim(),
+    trc20: ((document.getElementById("setTrc20")||{}).value || "").trim()
+  };
+  save();
+  toast("Payout details saved");
+}
+function changeLoginPassword(){
+  var user = currentUser(); if(!user) return;
+  var cur = (document.getElementById("setCurPass")||{}).value || "";
+  var n1 = (document.getElementById("setNewPass")||{}).value || "";
+  var n2 = (document.getElementById("setNewPass2")||{}).value || "";
+  if(!cur){ alert("Enter your current password"); return; }
+  if(String(user.password||"") !== String(cur)){
+    alert("Current password is wrong.\\n\\nYou can contact support for help resetting your account.");
+    return;
+  }
+  if(n1.length < 4){ alert("New password must be at least 4 characters"); return; }
+  if(n1 !== n2){ alert("New passwords do not match"); return; }
+  user.password = n1;
+  save();
+  toast("Login password updated");
+  document.getElementById("setCurPass").value = "";
+  document.getElementById("setNewPass").value = "";
+  document.getElementById("setNewPass2").value = "";
+}
+
+function openWithdraw(){
+  resetSlide("wdSlide");
+  var c = document.getElementById("wdCaptcha"); if(c) c.checked = false;
+  try{ updateWithdrawCalc(); }catch(e){}
+
+  var user=currentUser(); if(!user) return;
+  var bals=calcBalances(user);
+  document.getElementById("withdrawLockNote").innerHTML =
+    "Available: <b class=\"green\">"+money(bals.available)+"</b><br>Locked (7-day wait): <b>"+money(bals.locked)+"</b>";
+  document.getElementById("withdrawAmount").value = "";
+  openModal("withdrawModal");
+}
+function doWithdraw(){
+  if(!slideState.wdSlide){ alert("Slide to verify first"); return; }
+  var wdCap = document.getElementById("wdCaptcha");
+  if(wdCap && !wdCap.checked){ alert("Tick I'm not a robot"); return; }
+  var wdNet = (document.getElementById("withdrawNetwork")||{}).value || "";
+  if(!wdNet){ alert("Select network / method"); return; }
+  var wdAddr = ((document.getElementById("withdrawAddress")||{}).value || "").trim();
+  if(!wdAddr){ alert("Enter wallet address or MoMo number"); return; }
+
+  var user = currentUser(); if(!user) return;
+  if(user.withdrawPassword){
+    var wp = prompt("Enter your withdraw fund password:");
+    if(wp === null) return;
+    if(String(wp) !== String(user.withdrawPassword)){ alert("Wrong withdraw password"); return; }
+  } else {
+    alert("Please set a Withdraw fund password in Settings first.");
+    openSettings();
+    return;
+  }
+
+  var user=currentUser(); if(!user) return;
+  var bals=calcBalances(user);
+  var amount=Number(document.getElementById("withdrawAmount").value||0);
+  if(amount<=0){ alert("Enter amount"); return; }
+  var maxWd = typeof withdrawableBalance==="function" ? withdrawableBalance(user) : bals.available;
+  if(amount>maxWd){
+    if(typeof lockedBonusTotal==="function" && lockedBonusTotal(user)>0){
+      alert("Not enough withdrawable balance.\nJoining / deposit bonuses unlock after you buy club shares.\nAvailable: "+money(maxWd));
+    } else {
+      alert("Not enough available balance.\nShare earnings move to Balance after the 7-day lock completes.");
+    }
+    return;
+  }
+  user.withdrawals = user.withdrawals || [];
+  var fee=Math.round(amount*0.05*100)/100;
+  /* Hold funds as pending — do NOT remove from balance until admin approves */
+  user.withdrawals.unshift({
+    id:"w_"+Date.now(), amount:amount, fee:fee, net:amount-fee,
+    status:"pending",
+      balanceHeld: true, date:new Date().toLocaleString()
+  });
+  user.pendingWithdraw = (user.pendingWithdraw||0) + amount;
+  user.transactions = user.transactions || [];
+  user.transactions.unshift({date:new Date().toLocaleString(), type:"Withdrawal request", amount:0});
+  closeModal("withdrawModal"); save();
+  toast("Withdrawal submitted.");
+}
+
+
+function openChat(){
+  renderChat();
+  openModal("chatModal");
+}
+function renderChat(){
+  var user = currentUser(); if(!user) return;
+  user.chats = user.chats || [];
+  var el = document.getElementById("chatMessages");
+  if(!el) return;
+  if(!user.chats.length){
+    el.innerHTML = '<div class="muted" style="text-align:center;padding:20px">No messages yet. Say hello to the manager.</div>';
+    return;
+  }
+  var h = "";
+  for(var i=0;i<user.chats.length;i++){
+    var m = user.chats[i];
+    var align = m.from === "me" ? "right" : "left";
+    var bg = m.from === "me" ? "#0a4a7a" : "#1a2a3a";
+    h += '<div style="text-align:'+align+';margin:8px 0"><span style="display:inline-block;max-width:80%;background:'+bg+';padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.4">'+
+      m.text + '<br><small style="opacity:.6;font-size:10px">'+m.date+'</small></span></div>';
+  }
+  el.innerHTML = h;
+  el.scrollTop = el.scrollHeight;
+}
+function sendChat(){
+  var user = currentUser(); if(!user) return;
+  var inp = document.getElementById("chatInput");
+  var text = (inp.value || "").trim();
+  if(!text) return;
+  user.chats = user.chats || [];
+  user.chats.push({ from: "me", text: text, date: new Date().toLocaleString() });
+  // Auto-ack from manager 
+  user.chats.push({
+    from: "manager",
+    text: "Thanks for your message. Our support team will reply as soon as possible.",
+    date: new Date().toLocaleString()
+  });
+  inp.value = "";
+  save();
+  renderChat();
+  toast("Message sent");
+}
+
+function rejectWithdraw(wid){
+  var me = currentUser();
+  if(!me || !(me.isAdmin || me.isCoManager || me.canManualCredit)){ alert("System authorization required"); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    var u = state.users[i];
+    var ws = u.withdrawals || [];
+    for(var j=0;j<ws.length;j++){
+      if(ws[j].id===wid && ws[j].status==="pending"){
+        ws[j].status = "rejected";
+        ws[j].rejectedAt = new Date().toLocaleString();
+        u.pendingWithdraw = Math.max(0, (u.pendingWithdraw||0) - Number(ws[j].amount||0));
+        u.transactions = u.transactions || [];
+        u.transactions.unshift({date:new Date().toLocaleString(), type:"Withdrawal rejected", amount:0});
+        save();
+        toast("Withdrawal rejected");
+        try{ render(); }catch(e){}
+        return;
+      }
+    }
+  }
+  alert("Withdrawal not found");
+}
+function approveWithdraw(wid){
+  if(!canApproveWithdrawals()){ alert("Support staff cannot approve withdrawals. Contact full admin."); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    var u=state.users[i];
+    if(!u) continue;
+    var ws=u.withdrawals||[];
+    for(var j=0;j<ws.length;j++){
+      if(ws[j].id===wid && String(ws[j].status).toLowerCase()==="pending"){
+        var w = ws[j];
+        var gross = Number(w.amount||0);
+        var fee = Number(w.fee||0);
+        // Money already held as pendingWithdraw — finalize: balance stays reduced, pending cleared
+        w.status = "approved";
+        w.approvedAt = new Date().toLocaleString();
+        u.pendingWithdraw = Math.max(0, Number(u.pendingWithdraw||0) - gross);
+        // Do not subtract balance again if already deducted on request
+        if(w.balanceHeld){
+          // already removed from available at request time
+        } else {
+          u.balance = Math.max(0, Number(u.balance||0) - gross);
+          w.balanceHeld = true;
+        }
+        u.transactions = u.transactions || [];
+        u.transactions.unshift({date:new Date().toLocaleString(), type:"Withdrawal approved (pay offline)", amount:-gross});
+        if(fee) u.transactions.unshift({date:new Date().toLocaleString(), type:"5% withdrawal fee", amount:-fee});
+        // Fund pool: deduct payout (admin pays via another channel)
+        try {
+          var payUsd = amountLocalToUSD(gross, u);
+          adjustRewardPool(-payUsd, "Withdrawal approved → "+(u.name||u.phone||""), {userId:u.id, wid:wid, type:"withdraw"});
+        } catch(eP){}
+        save();
+        toast("Withdrawal approved — pay client offline; amount cleared");
+        try{ render(); updateRewardPoolDisplay(); }catch(e){}
+        return;
+      }
+    }
+  }
+  alert("Withdrawal not found");
+}
+
+function rejectWithdraw(wid){
+  ensureState();
+  var me = currentUser();
+  if(!me || !(me.isAdmin || me.canApproveWithdraw)){ alert("System authorization required"); return; }
+  for(var i=0;i<state.users.length;i++){
+    var u=state.users[i];
+    if(!u) continue;
+    var ws=u.withdrawals||[];
+    for(var j=0;j<ws.length;j++){
+      if(ws[j].id===wid && String(ws[j].status).toLowerCase()==="pending"){
+        var w = ws[j];
+        var gross = Number(w.amount||0);
+        w.status = "rejected";
+        w.rejectedAt = new Date().toLocaleString();
+        // Return funds to client balance
+        u.balance = Number(u.balance||0) + gross;
+        u.pendingWithdraw = Math.max(0, Number(u.pendingWithdraw||0) - gross);
+        w.balanceHeld = false;
+        u.transactions = u.transactions || [];
+        u.transactions.unshift({date:new Date().toLocaleString(), type:"Withdrawal rejected — returned to balance", amount:gross});
+        // Pool unchanged (never deducted until approve)
+        save();
+        toast("Withdrawal rejected — funds returned to client");
+        try{ render(); }catch(e){}
+        return;
+      }
+    }
+  }
+  alert("Withdrawal not found");
+}
+
+function copyInvite(){
+  var l=document.getElementById("myInviteLink").textContent;
+  copyText(l, "Link copied");
+}
+function resetAppData(){ if(confirm("Reset ALL local data on this device? This cannot be undone.")){ try{safeStorage.removeItem("iMate1");}catch(e){} location.reload(); } }
+
+/* ===== RENDER ===== */
+function render(){
+  var user=currentUser(); if(!user) return;
+  try{ renderPendingQueuesPanel(); }catch(e){}
+  try{ if(user.isAdmin || user.canApproveDeposit){ refreshAdminQueues(); } }catch(e){}
+  var bals=calcBalances(user);
+  renderMachines();
+  try{ if(marketViewMode==='market') renderClubMarket(); }catch(e){}
+
+  var myM=document.getElementById("myMachines");
+  if(myM){
+    if(!user.machines||!user.machines.length) myM.innerHTML='<div class="empty">No shares yet</div>';
+    else {
+      var mh="";
+      for(var j=0;j<user.machines.length;j++){
+        var x=user.machines[j];
+        var photo="";
+        for(var pi=0;pi<machines.length;pi++) if(machines[pi].id===x.machineId){ photo=machines[pi].photo; break; }
+        var cur = machineCurrentValue(x);
+        var fin = machineProjectedFinal(x);
+        var elap = Math.min(compoundsElapsed(x), x.lockDays||7);
+        var left = Math.max(0, (x.lockDays||7) - elap);
+        mh += '<div class="product-card">'+
+          '<div class="product-img"><img src="'+photo+'" alt="" loading="lazy" onerror="this.style.opacity=0.3"/></div>'+
+          '<div class="product-body"><h3>'+(x.name||x.code||("Club Shares "+x.machineId))+'</h3>'+
+          '<div class="product-line">Start locked: <b>'+money(x.principal||principalWithBonus(x.price))+'</b></div>'+
+          '<div class="product-line">Now (day '+elap+'): <b class="green">'+money(cur)+'</b></div>'+
+          '<div class="product-line">End of '+((x.lockDays||7))+'d: <b class="hi">'+money(fin)+'</b></div>'+
+          '<div class="product-line">'+(x.credited?'<span class="badge">Released</span>':'<span class="badge lock">'+left+' days left</span>')+'</div>'+
+          '</div></div>';
+      }
+      myM.innerHTML = mh;
+    }
+  }
+
+  var invested=0, proj5=0;
+  if(user.machines) for(var m=0;m<user.machines.length;m++){ invested+=user.machines[m].price; proj5+=(user.machines[m].cycleTotal||user.machines[m].daily*7); }
+  var balFmt=Number(bals.available).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+  setText("statMachines", user.machines?user.machines.length:0);
+  setText("statInvested", money(invested));
+  setText("statEarnings", money(proj5));
+  setText("statBalance", money(bals.available));
+  setText("incomeBalance", money(bals.available));
+  setText("lockedBalance", money(bals.locked));
+  setText("statWallet", balFmt);
+  setText("statBalanceTop", balFmt);
+  setText("welcomeName", (user.name||"User").split(" ")[0]);
+
+  /* Home dashboard stats */
+  try {
+    var depTot = 0, wTot = 0;
+    if(user.isAdmin){
+      for(var _ai=0;_ai<state.users.length;_ai++){
+        var _au = state.users[_ai];
+        if(!_au || _au.isAdmin) continue;
+        var _ads = _au.deposits || [];
+        for(var _ad=0;_ad<_ads.length;_ad++) depTot += Number(_ads[_ad].amount||0);
+        var _aws = _au.withdrawals || [];
+        for(var _aw=0;_aw<_aws.length;_aw++) wTot += Number(_aws[_aw].amount||0);
+      }
+    } else {
+      depTot = depositTotalConfirmed(user);
+      var wbd = withdrawBreakdown(user);
+      wTot = (wbd.pending||0) + (wbd.approved||0);
+    }
+    setText("homeDepositTotal", fmtMoneyNum(depTot));
+    try {
+      var balsH = calcBalances(user);
+      var avail = Number(balsH.available != null ? balsH.available : (user.balance||0));
+      setText("homeTotalBalance", money(avail));
+      var usdEl = document.getElementById("homeTotalBalanceUsd");
+      if(usdEl) usdEl.textContent = "≈ $" + (typeof toUSD === "function" ? toUSD(avail, user).toFixed(2) : "0.00");
+    } catch(e) {}
+    setText("homeWithdrawTotal", fmtMoneyNum(wTot));
+    setText("homeAiIncome", fmtMoneyNum(miningIncomeTotal(user)));
+    setText("homeTodayEarn", fmtMoneyNum(todayEarnings(user)));
+    var dirs = getDirectReferrals(user);
+    setText("homeInviteCount", String(dirs.length));
+    var teamTree = getTeamRecursive(user, 20);
+    setText("homeTeamCount", String(teamTree.list.length));
+    setText("homeTeamIncome", fmtMoneyNum(user.referralEarnings||0));
+  } catch(e){ console.error(e); }
+
+  setText("profileName", user.name||"—");
+  setText("profilePhone", user.phone||"—");
+  setText("profileEmail", user.email||"—");
+  var ar=document.getElementById("adminRow"); if(ar) ar.classList.toggle("hidden", !user.isAdmin);
+  var ap=document.getElementById("adminPanelCard"); if(ap) ap.classList.toggle("hidden", !user.isAdmin);
+  var ab=document.getElementById("adminBadgeHdr"); if(ab) ab.classList.toggle("hidden", !user.isAdmin);
+  try{
+    try{ updateRewardPoolDisplay(); }catch(e){}
+    var rpd=document.getElementById("rewardPoolDisplay");
+    if(rpd && user.isAdmin){
+      var pool = user.rewardPool != null ? user.rewardPool : 100000000;
+      rpd.textContent = "USD " + Number(pool).toLocaleString(undefined,{maximumFractionDigits:2});
+    }
+  }catch(e){}
+
+  try{ ensureUniqueInviteCodes(); }catch(e){}
+  setText("myInviteCode", user.inviteCode||"—");
+  var base = (location.origin && location.origin.indexOf("http")===0) ? (location.origin + location.pathname) : (location.href.split("?")[0]);
+  setText("myInviteLink", base.replace(/\/$/, "") + "?ref=" + (user.inviteCode||""));
+  var direct = getDirectReferrals(user);
+  setText("refCount", String(direct.length));
+  var tree = getTeamRecursive(user, 20);
+  setText("teamFullCount", String(tree.list.length));
+  setText("refEarnings", money(user.referralEarnings||0));
+  try {
+    var jr = user.joinReward || 0;
+    setText("joinRewardAmt", jr ? money(jr) : (money(ugxToLocal(500, user))+" (pending)"));
+    setText("welcomeRewardAmt", user.welcomeCredited ? ("Credited · "+money(jr||0)) : "5 USD + 500 UGX on join");
+    var rEl = document.getElementById("rewardsList");
+    if(rEl){
+      var rs = user.rewards || [];
+      if(!rs.length){
+        rEl.innerHTML = '<div class="empty">Join to unlock welcome reward</div>';
+      } else {
+        var rh = "";
+        for(var ri=0; ri<rs.length; ri++){
+          var r = rs[ri];
+          rh += '<div class="kpi"><span>'+escHtml(r.title||r.type||"Reward")+'<br><small class="muted">'+escHtml(r.date||"")+'</small></span><b class="green">+'+money(r.amount||0)+'</b></div>';
+        }
+        rEl.innerHTML = rh;
+      }
+    }
+  } catch(e) { console.error(e); }
+  try{ renderTeamTree(user); }catch(e){ console.error(e); }
+  var payEl=document.getElementById("refPayouts");
+  if(payEl){
+    var po=user.referralPayouts||[];
+    if(!po.length) payEl.innerHTML='<div class="empty">No referral rewards yet</div>';
+    else {
+      var ph="";
+      for(var p=0;p<po.length;p++){
+        ph+='<div class="kpi"><span>'+escHtml(po[p].from||"Member")+(po[p].machine?(" · "+escHtml(po[p].machine)):"")+'</span><b class="green">+'+money(po[p].amount)+'</b></div>';
+      }
+      payEl.innerHTML=ph;
+    }
+  }
+}
+
+/* ===== BOOT ===== */
+document.querySelectorAll(".nav[data-page]").forEach(function(btn){
+  btn.onclick = function(){ goPage(btn.getAttribute("data-page")); };
+});
+var wAmt = document.getElementById("withdrawAmount");
+if(wAmt) wAmt.addEventListener("input", function(e){
+  var a=Number(e.target.value||0);
+  document.getElementById("withdrawCalc").innerHTML = "Fee 5%: <b>"+money(a*0.05)+"</b> · Net <b class=\"green\">"+money(a*0.95)+"</b>";
+});
+
+loadState();
+var params = new URLSearchParams(location.search);
+if(params.get("ref")){
+  document.getElementById("suInvite").value = params.get("ref").toUpperCase();
+  switchAuth("signup");
+}
+showApp();
+
+/* ===== Moving starfield (behind all tabs) ===== */
+(function initSpaceParticles(){
+  var canvas = document.getElementById("particleCanvas");
+  if(!canvas) return;
+  var ctx = canvas.getContext("2d");
+  var stars = [];
+  var w = 0, h = 0;
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  function spawn(){
+    stars = [];
+    var n = Math.min(120, Math.floor((w*h)/9000));
+    for(var i=0;i<n;i++){
+      stars.push({
+        x: Math.random()*w - w/2,
+        y: Math.random()*h - h/2,
+        z: Math.random()*w,
+        pz: 0
+      });
+    }
+  }
+  function tick(){
+    if(!ctx) return;
+    ctx.fillStyle = "rgba(2,1,10,0.35)";
+    ctx.fillRect(0,0,w,h);
+    var cx = w/2, cy = h/2;
+    for(var i=0;i<stars.length;i++){
+      var s = stars[i];
+      s.pz = s.z;
+      s.z -= 12;
+      if(s.z <= 0){
+        s.x = Math.random()*w - w/2;
+        s.y = Math.random()*h - h/2;
+        s.z = w;
+        s.pz = s.z;
+      }
+      var k = 128 / s.z;
+      var px = s.x * k + cx;
+      var py = s.y * k + cy;
+      var pk = 128 / s.pz;
+      var ppx = s.x * pk + cx;
+      var ppy = s.y * pk + cy;
+      var size = (1 - s.z/w) * 2.2;
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(180,220,255," + (0.4 + (1-s.z/w)*0.6) + ")";
+      ctx.lineWidth = size;
+      ctx.moveTo(ppx, ppy);
+      ctx.lineTo(px, py);
+      ctx.stroke();
+    }
+    requestAnimationFrame(tick);
+  }
+  resize();
+  spawn();
+  tick();
+  window.addEventListener("resize", function(){ resize(); spawn(); });
+})();
+
+try{ if(typeof ensureAdmin==='function') ensureAdmin(); }catch(e){}
+try{ if(typeof ensureStaffUser==='function') ensureStaffUser(); }catch(e){}
+
+
+/* ===== Live crypto market (Market tab) ===== */
+var CRYPTO_SEED = [
+  {s:"BTC",n:"Bitcoin",p:62970,c:-0.36},
+  {s:"ETH",n:"Ethereum",p:1877,c:-0.12},
+  {s:"BNB",n:"Binance Coin",p:606,c:-0.44},
+  {s:"SOL",n:"Solana",p:75.1,c:-0.91},
+  {s:"XRP",n:"XRP",p:1.00,c:-0.65},
+  {s:"DOGE",n:"Dogecoin",p:0.0699,c:-0.11},
+  {s:"ADA",n:"Cardano",p:0.1797,c:-1.21},
+  {s:"AVAX",n:"Avalanche",p:6.44,c:0.22},
+  {s:"DOT",n:"Polkadot",p:0.76,c:-1.55},
+  {s:"LINK",n:"Chainlink",p:8.97,c:0.40},
+  {s:"MATIC",n:"Polygon",p:0.52,c:-0.80},
+  {s:"LTC",n:"Litecoin",p:74.2,c:-0.55}
+];
+var cryptoFilter = "all";
+var cryptoTickTimer = null;
+function setCryptoFilter(f, btn){
+  cryptoFilter = f || "all";
+  try{
+    var parent = btn && btn.parentNode;
+    if(parent){
+      var bs = parent.querySelectorAll("button");
+      for(var i=0;i<bs.length;i++){ bs[i].classList.remove("btn"); bs[i].classList.add("btn","secondary"); bs[i].classList.remove("secondary"); if(bs[i]!==btn) bs[i].classList.add("secondary"); }
+      if(btn){ btn.classList.remove("secondary"); }
+    }
+  }catch(e){}
+  renderCryptoMarket();
+}
+function sparkSvg(chg){
+  var pts = [];
+  var y = 14;
+  for(var i=0;i<12;i++){
+    y += (Math.random()-0.5)*6 + (chg>=0?0.3:-0.3);
+    y = Math.max(2, Math.min(26, y));
+    pts.push((i*6)+","+y.toFixed(1));
+  }
+  var col = chg>=0 ? "#00d26a" : "#ff4d4d";
+  return '<svg class="market-spark" viewBox="0 0 72 28" width="72" height="28"><polyline fill="none" stroke="'+col+'" stroke-width="2" points="'+pts.join(" ")+'"/></svg>';
+}
+
+function renderAccountLedger(user){
+  var box = document.getElementById("accountLedger");
+  if(!box || !user) return;
+  var txs = (user.transactions||[]).slice(0,40);
+  if(!txs.length){ box.innerHTML = "No movements yet"; return; }
+  var h = "";
+  for(var i=0;i<txs.length;i++){
+    var t = txs[i];
+    var amt = Number(t.amount||0);
+    var col = amt>0 ? "#00d26a" : (amt<0 ? "#ff6b6b" : "#93a4b8");
+    h += '<div style="padding:8px 0;border-bottom:1px solid #1a2228"><div style="display:flex;justify-content:space-between;gap:8px"><span>'+(t.type||"Movement")+'</span><b style="color:'+col+'">'+(amt?money(amt):"—")+'</b></div><div class="muted" style="font-size:10px">'+(t.date||"")+'</div></div>';
+  }
+  box.innerHTML = h;
+}
+
+function renderCryptoMarket(){
+  var box = document.getElementById("cryptoMarketList");
+  if(!box) return;
+  // mild live drift
+  for(var i=0;i<CRYPTO_SEED.length;i++){
+    var c = CRYPTO_SEED[i];
+    var d = (Math.random()-0.48)*0.004;
+    c.p = Math.max(0.0001, c.p * (1+d));
+    c.c = Math.round((c.c + d*100)*100)/100;
+  }
+  var list = CRYPTO_SEED.slice();
+  if(cryptoFilter==="gainers") list = list.filter(function(x){return x.c>=0}).sort(function(a,b){return b.c-a.c});
+  if(cryptoFilter==="losers") list = list.filter(function(x){return x.c<0}).sort(function(a,b){return a.c-b.c});
+  var h = "";
+  for(var j=0;j<list.length;j++){
+    var x = list[j];
+    var col = x.c>=0 ? "#00d26a" : "#ff4d4d";
+    var priceStr = x.p >= 100 ? ("$"+x.p.toLocaleString(undefined,{maximumFractionDigits:2})) : ("$"+x.p.toFixed(x.p<1?6:2));
+    h += '<div style="display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid #1a1f24">'+
+      '<div style="width:36px;height:36px;border-radius:50%;background:#141a22;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#7ec8ff">'+(x.s.substring(0,2))+'</div>'+
+      '<div style="flex:1"><b>'+x.s+'</b><div class="muted" style="font-size:11px">'+x.n+'</div></div>'+
+      sparkSvg(x.c)+
+      '<div style="text-align:right;min-width:72px"><b>'+priceStr+'</b><div style="color:'+col+';font-size:12px">'+(x.c>=0?'+':'')+x.c.toFixed(2)+'%</div></div>'+
+      '</div>';
+  }
+  box.innerHTML = h;
+  if(!cryptoTickTimer){
+    cryptoTickTimer = setInterval(function(){
+      var p = document.getElementById("marketLive");
+      if(p && p.classList.contains("active")) renderCryptoMarket();
+    }, 2500);
+  }
+}
+
+/* ===== Help chat + AI assistants ===== */
+var AI_ASSISTANTS = ["Arnold","Brittney","Stanley","Amanda","James","Anne","Laila"];
+var activeAssistant = "Arnold";
+function openHelpChat(){
+  openModal("helpChatModal");
+  var user = null; try{ user = currentUser(); }catch(e){}
+  var staff = user && (user.isAdmin || user.isSupport || user.isCoManager);
+  var pick = document.getElementById("helpStaffPick");
+  if(pick){
+    if(staff){
+      pick.classList.remove("hidden");
+      var list = document.getElementById("aiAssistList");
+      if(list){
+        list.innerHTML = AI_ASSISTANTS.map(function(n){
+          return '<button type="button" class="btn secondary" style="padding:8px 10px;font-size:12px;width:auto" onclick="selectAssistant(\''+n+'\')">'+n+'</button>';
+        }).join("");
+      }
+    } else pick.classList.add("hidden");
+  }
+  var log = document.getElementById("helpChatLog");
+  if(log && !log.dataset.ready){
+    log.dataset.ready = "1";
+    appendHelpMsg("system", "Hello, how may we assist you today? For password reset, send a clear photo of your registered ID.");
+  }
+}
+function selectAssistant(name){
+  activeAssistant = name;
+  appendHelpMsg("assistant", 'Hello, it\\'s me "'+name+'" how may I assist you today');
+  toast("Replying as "+name);
+}
+function appendHelpMsg(who, msg){
+  var log = document.getElementById("helpChatLog"); if(!log) return;
+  var color = who==="me" ? "#7ec8ff" : (who==="assistant" ? "#00d26a" : "#93a4b8");
+  var label = who==="me" ? "You" : (who==="assistant" ? activeAssistant : "Support");
+  log.innerHTML += '<div style="margin:8px 0"><b style="color:'+color+'">'+label+'</b><div style="margin-top:4px">'+msg+'</div></div>';
+  log.scrollTop = log.scrollHeight;
+}
+function sendHelpChat(){
+  var inp = document.getElementById("helpChatInput");
+  var msg = inp ? String(inp.value||"").trim() : "";
+  if(!msg) return;
+  if(inp) inp.value = "";
+  var user = null; try{ user = currentUser(); }catch(e){}
+  var staff = user && (user.isAdmin || user.isSupport || user.isCoManager);
+  if(staff){
+    appendHelpMsg("assistant", msg);
+  } else {
+    appendHelpMsg("me", msg);
+    setTimeout(function(){
+      appendHelpMsg("assistant", "Thanks — a support agent will review this. For password reset, reply with your ID type and number, and attach a clear photo of the document.");
+    }, 600);
+  }
+}
+
+/* Co-manager authorize */
+function authorizeCoManager(userId){
+  var me = currentUser();
+  if(!me || !me.isAdmin){ toast("Only system owner can authorize co-managers"); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    if(state.users[i].id===userId){
+      if(state.users[i].isAdmin){ toast("Cannot change system owner"); return; }
+      state.users[i].isCoManager = true;
+      state.users[i].canApproveDeposit = true;
+      state.users[i].canApprovePassword = true;
+      state.users[i].canManualCredit = true;
+      // cannot approve withdrawal unless owner
+      state.users[i].canApproveWithdraw = false;
+      save();
+      toast("Co-manager authorized");
+      try{ render(); }catch(e){}
+      return;
+    }
+  }
+}
+function dismissCoManager(userId){
+  var me = currentUser();
+  if(!me || !me.isAdmin){ toast("Only system owner can dismiss"); return; }
+  ensureState();
+  for(var i=0;i<state.users.length;i++){
+    if(state.users[i].id===userId){
+      if(state.users[i].isAdmin){ toast("Cannot dismiss system owner"); return; }
+      state.users[i].isCoManager = false;
+      state.users[i].canApproveDeposit = false;
+      state.users[i].canManualCredit = false;
+      save();
+      toast("Co-manager dismissed");
+      try{ render(); }catch(e){}
+      return;
+    }
+  }
+}
+
+</script>
+</body>
+</html>

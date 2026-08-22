@@ -488,6 +488,18 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _file(self, name, ctype):
+        # Exact 14 Aug 2026 frontend is stored as frontend.part1-4.html
+        if name in ("index.html", "frontend.html", "imate1-phone.html"):
+            parts = [BASE / ("frontend.part%d.html" % i) for i in range(1, 5)]
+            if all(p.exists() for p in parts):
+                data = b"".join(p.read_bytes() for p in parts)
+                self.send_response(200)
+                self.send_header("Content-Type", ctype)
+                self.send_header("Content-Length", str(len(data)))
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(data)
+                return
         path = BASE / name
         if not path.exists():
             return self._json(404, {"error": "missing " + name})
