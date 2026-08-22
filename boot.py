@@ -15,6 +15,13 @@ if parts:
     (root / "frontend.html").write_bytes(html)
     print("assembled", len(html), "from", [p.name for p in parts])
 
+try:
+    pm = root / "patch_market.py"
+    if pm.exists():
+        runpy.run_path(str(pm), run_name="__market_patch__")
+except Exception as e:
+    print("patch_market failed", e)
+
 md = root / "static" / "market-data.js"
 if not md.exists() and (root / "market-data.js").exists():
     md.write_bytes((root / "market-data.js").read_bytes())

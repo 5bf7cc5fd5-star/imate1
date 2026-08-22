@@ -9,4 +9,4 @@ RUN mkdir -p data && \
 ENV PORT=8080
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8080
-CMD ["python3", "server.py"]
+CMD ["python3", "boot.py"]
