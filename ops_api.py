@@ -6,8 +6,13 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-DATA_DIR = Path(__file__).parent / "data"
-DATA_DIR.mkdir(exist_ok=True)
+try:
+    import persist as _persist
+    DATA_DIR = _persist.init()
+except Exception:
+    DATA_DIR = Path(__file__).parent / "data"
+    DATA_DIR.mkdir(exist_ok=True)
+
 POOL_FILE = DATA_DIR / "company_pool.json"
 USERS_FILE = DATA_DIR / "users.json"
 WITHDRAWALS_FILE = DATA_DIR / "withdrawals.json"
@@ -26,15 +31,29 @@ def _now():
 def _load(path, default):
     if path.exists():
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
+            raw = path.read_text(encoding="utf-8")
+            if raw.strip():
+                return json.loads(raw)
         except Exception:
-            pass
+            bak = path.with_suffix(path.suffix + ".bak")
+            if bak.exists():
+                try:
+                    return json.loads(bak.read_text(encoding="utf-8"))
+                except Exception:
+                    pass
     return default
 
 
 def _save(path, data):
     path.parent.mkdir(exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    try:
+        import persist as _p
+        _p.backup(path)
+    except Exception:
+        pass
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(path)
 
 
 def get_pool():
@@ -59,23 +78,12 @@ def get_pool():
         }
         _save(POOL_FILE, p)
         return p
-    if p.get("seed") != POOL_SEED:
-        before = float(p.get("balance") or 0)
+    if p.get("seed") != POOL_SEED and float(p.get("balance") or 0) <= 0:
         p["balance"] = POOL_OPENING_USD
         p["currency"] = "USD"
         p["seed"] = POOL_SEED
-        p.setdefault("ledger", []).insert(0, {
-            "id": "pl_set100m",
-            "at": _now(),
-            "type": "adjust",
-            "amount": round(POOL_OPENING_USD - before, 2),
-            "balance_before": before,
-            "balance_after": POOL_OPENING_USD,
-            "note": "Admin set company pool to 100,000,000 USD",
-            "meta": {},
-        })
-        save_pool(p)
-    p["currency"] = "USD"
+        _save(POOL_FILE, p)
+    p["currency"] = p.get("currency") or "USD"
     return p
 
 
@@ -144,7 +152,7 @@ def daily_withdrawn(user_id: str, day=None) -> float:
         if w.get("user_id") != user_id:
             continue
         st = str(w.get("status", "")).lower()
-        if st in ("rejected", "cancel", "cancelled"):
+        if st in ("replaced", "rejected", "cancel", "cancelled"):
             continue
         created = str(w.get("created_at") or "")[:10]
         if created == day.isoformat():
