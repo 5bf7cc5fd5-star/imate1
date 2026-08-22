@@ -1,0 +1,27 @@
+name: Deploy Own Club
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm release on main
+        run: |
+          echo "Deploying $(git rev-parse --short HEAD)"
+          echo "Railway watches this repo. A push to main rebuilds ownclubshares.co"
+          echo "Start command: python3 boot.py (persist + migrate + server)"
+      - name: Optional Railway CLI deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "No RAILWAY_TOKEN secret — relying on Railway GitHub auto-deploy"
+            exit 0
+          fi
+          npm i -g @railway/cli
+          railway up --ci || railway up --ci --service ownclubshares
