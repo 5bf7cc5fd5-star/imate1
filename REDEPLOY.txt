@@ -1,1 +1,1 @@
-MARKET DATA 32 CLUBS boot+patch 2026-08-22T14:15
+REDEPLOY wiyak+market 2026-08-22-v5

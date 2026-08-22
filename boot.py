@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
+"""Start Own Club. Do NOT assemble frontend.part* — those parts are the old dark login."""
 from pathlib import Path
 import runpy
 
 root = Path(__file__).resolve().parent
-static = root / "static"
-static.mkdir(exist_ok=True)
+(root / "static").mkdir(exist_ok=True)
 
-parts = sorted(root.glob("app.part*.html"))
-if not parts:
-    parts = sorted(root.glob("frontend.part*.html"))
-if parts:
-    html = b"".join(p.read_bytes() for p in parts)
-    (root / "index.html").write_bytes(html)
-    (root / "frontend.html").write_bytes(html)
-    print("assembled", len(html), "from", [p.name for p in parts])
+# Copy market feed into static if needed
+src = root / "static" / "market-data.js"
+alt = root / "market-data.js"
+if (not src.exists() or src.stat().st_size < 200) and alt.exists() and alt.stat().st_size > 200:
+    src.write_bytes(alt.read_bytes())
+    print("copied market-data.js -> static/")
 
+# Inject live market clubs into the Wiyak HTML
 try:
     pm = root / "patch_market.py"
     if pm.exists():
@@ -22,12 +21,7 @@ try:
 except Exception as e:
     print("patch_market failed", e)
 
-md = root / "static" / "market-data.js"
-if not md.exists() and (root / "market-data.js").exists():
-    md.write_bytes((root / "market-data.js").read_bytes())
-    print("copied market-data.js into static/")
-
-for name in ("index.html", "frontend.html", "admin.html"):
+for name in ("index.html", "frontend.html"):
     p = root / name
     if not p.exists():
         continue
@@ -35,11 +29,12 @@ for name in ("index.html", "frontend.html", "admin.html"):
     extra = b""
     if b"edge-fix.css" not in data:
         extra += b'<link rel="stylesheet" href="/static/edge-fix.css">'
-    if b"market-data.js" not in data:
-        extra += b'<script src="/static/market-data.js"></script>'
+    if b"/static/market-data.js" not in data:
+        extra += b'<script src="/static/market-data.js" defer></script>'
     if extra and b"</head>" in data:
         data = data.replace(b"</head>", extra + b"</head>", 1)
         p.write_bytes(data)
         print("injected tags into", name)
 
+print("boot: serving Wiyak index, no part-assemble")
 runpy.run_path(str(root / "server.py"), run_name="__main__")
