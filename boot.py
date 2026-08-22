@@ -1,23 +1,47 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import runpy
+import re
 
 root = Path(__file__).resolve().parent
 (root / "static").mkdir(exist_ok=True)
 
 INJECT = """
-<link rel=\"stylesheet\" href=\"/static/edge-fix.css?v=12\">
-<script src=\"/static/market-data.js?v=12\"></script>
-<script src=\"/static/lock-nav.js?v=12\"></script>
-<style id=\"lock-tabs\">
-nav.bottom{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;width:100vw!important;margin:0!important;padding:0!important;transform:none!important;z-index:2147483647!important}
+<link rel=\"stylesheet\" href=\"/static/edge-fix.css?v=13\">
+<script src=\"/static/market-data.js?v=13\"></script>
+<script src=\"/static/lock-nav.js?v=13\"></script>
+<style id=\"fullbleed-13\">
+html,body,#mainApp,.app,.app-shell,.space-bg,.page,.content{
+  width:100%!important;max-width:none!important;min-width:0!important;
+  margin:0!important;left:0!important;right:0!important;
+}
+@media (min-width:768px){
+  .app,#mainApp,#authScreen,.wiyak-auth,nav.bottom{
+    max-width:none!important;width:100%!important;margin:0!important;
+    left:0!important;right:0!important;transform:none!important;
+  }
+}
+nav.bottom{
+  position:fixed!important;left:0!important;right:0!important;bottom:0!important;
+  width:100%!important;max-width:none!important;transform:none!important;
+}
 </style>
 """
 
 def fix_html(text):
     text = text.replace("nav.bottom,.nav{", "nav.bottom{")
     text = text.replace("top:-14px;", "top:0!important;")
-    if "lock-nav.js?v=12" not in text:
+    text = text.replace("max-width:430px", "max-width:none")
+    text = text.replace("max-width: 430px", "max-width: none")
+    text = text.replace("width:430px", "width:100%")
+    text = text.replace("width: 430px", "width: 100%")
+    text = re.sub(
+        r"@media\s*\(min-width:\s*768px\)\s*\{[^}]*nav\\.bottom[^}]*\}[^}]*\}",
+        "@media (min-width:768px){.app,#mainApp,nav.bottom{max-width:none!important;width:100%!important;margin:0!important;left:0!important;transform:none!important;}}",
+        text,
+        flags=re.I,
+    )
+    if "fullbleed-13" not in text:
         if "</body>" in text:
             text = text.replace("</body>", INJECT + "\n</body>", 1)
         elif "</head>" in text:
