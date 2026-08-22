@@ -1,4 +1,4 @@
-"""Patch server.py: company pool, credits, VIP withdraw caps."""
+"""Patch server.py: company pool, credits, VIP withdraw caps, member IDs."""
 from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 SP = ROOT / "server.py"
@@ -26,6 +26,35 @@ def _pool_on_withdraw_disburse(wd):
         _ops.pool_ledger("withdraw_in", amt, f"Withdrawal disbursed user={wd.get('user_id')}", {"user_id": wd.get("user_id"), "withdrawal_id": wd.get("id"), "amount": amt})
     except Exception as e:
         print("pool withdraw err", e)
+'''
+
+OLD_PUB = '''def public_user(u):
+    return {
+        "id": u["id"],
+        "name": u["name"],
+'''
+
+NEW_PUB = '''def public_user(u):
+    try:
+        if not u.get("member_no"):
+            import member_ids as _mid
+            u["member_no"] = _mid.alloc(get_users())
+            update_user(u)
+    except Exception as _mn:
+        print("member_no", _mn)
+    return {
+        "id": u["id"],
+        "name": u["name"],
+        "member_no": u.get("member_no") or "",
+'''
+
+OLD_REG = '''            "id": "u_" + uuid.uuid4().hex[:12],
+            "name": name,
+'''
+
+NEW_REG = '''            "id": "u_" + uuid.uuid4().hex[:12],
+            "member_no": __import__("member_ids").alloc(get_users()),
+            "name": name,
 '''
 
 OLD_DEP = '''    if action == "confirm":
@@ -160,33 +189,42 @@ NEW_ADMIN_ROUTES = '''    if path == "/api/admin/withdrawals/action":
     self._json(404, {"error": "Not found"})
 '''
 
+def apply_member_ids(t):
+    if '"member_no": u.get("member_no")' not in t and OLD_PUB in t:
+        t = t.replace(OLD_PUB, NEW_PUB, 1)
+        print("patched public_user member_no")
+    if '"member_no": __import__("member_ids")' not in t and OLD_REG in t:
+        t = t.replace(OLD_REG, NEW_REG, 1)
+        print("patched register member_no")
+    return t
+
 def main():
     if not SP.exists():
         print("no server.py"); return
     t = SP.read_text(encoding="utf-8")
-    if MARKER in t:
-        print("ops patch already present"); return
-    anchor = "DATA_DIR.mkdir(exist_ok=True)"
-    if anchor in t:
-        t = t.replace(anchor, anchor + "\n" + PATCH_HELPERS, 1)
+    if MARKER not in t:
+        anchor = "DATA_DIR.mkdir(exist_ok=True)"
+        if anchor in t:
+            t = t.replace(anchor, anchor + "\n" + PATCH_HELPERS, 1)
+        else:
+            t = PATCH_HELPERS + "\n" + t
+        if OLD_DEP in t:
+            t = t.replace(OLD_DEP, NEW_DEP, 1); print("patched deposit")
+        if OLD_WD_ACT in t:
+            t = t.replace(OLD_WD_ACT, NEW_WD_ACT, 1); print("patched wd act")
+        if OLD_WD_OK in t:
+            t = t.replace(OLD_WD_OK, NEW_WD_OK, 1); print("patched wd ok")
+        if OLD_WD_BAL in t:
+            t = t.replace(OLD_WD_BAL, NEW_WD_BAL, 1); print("patched vip")
+        if OLD_ADMIN_ROUTES in t:
+            t = t.replace(OLD_ADMIN_ROUTES, NEW_ADMIN_ROUTES, 1); print("patched routes")
+        get_anchor = 'if path == "/api/admin/users":'
+        if get_anchor in t and 'path == "/api/admin/pool"' not in t:
+            t = t.replace(get_anchor, 'if path == "/api/admin/pool":\n            try:\n                import ops_api as _ops2\n                return self._json(200, _ops2.get_pool())\n            except Exception as e:\n                return self._json(500, {"error": str(e)})\n        if path == "/api/admin/withdraw-rules":\n            try:\n                import ops_api as _ops2\n                return self._json(200, _ops2.withdraw_rules_payload())\n            except Exception as e:\n                return self._json(500, {"error": str(e)})\n        ' + get_anchor, 1)
+            print("patched GET")
     else:
-        t = PATCH_HELPERS + "\n" + t
-    if OLD_DEP in t:
-        t = t.replace(OLD_DEP, NEW_DEP, 1); print("patched deposit")
-    else:
-        print("WARN deposit block")
-    if OLD_WD_ACT in t:
-        t = t.replace(OLD_WD_ACT, NEW_WD_ACT, 1); print("patched wd act")
-    if OLD_WD_OK in t:
-        t = t.replace(OLD_WD_OK, NEW_WD_OK, 1); print("patched wd ok")
-    if OLD_WD_BAL in t:
-        t = t.replace(OLD_WD_BAL, NEW_WD_BAL, 1); print("patched vip")
-    if OLD_ADMIN_ROUTES in t:
-        t = t.replace(OLD_ADMIN_ROUTES, NEW_ADMIN_ROUTES, 1); print("patched routes")
-    get_anchor = 'if path == "/api/admin/users":'
-    if get_anchor in t and 'path == "/api/admin/pool"' not in t:
-        t = t.replace(get_anchor, 'if path == "/api/admin/pool":\n            try:\n                import ops_api as _ops2\n                return self._json(200, _ops2.get_pool())\n            except Exception as e:\n                return self._json(500, {"error": str(e)})\n        if path == "/api/admin/withdraw-rules":\n            try:\n                import ops_api as _ops2\n                return self._json(200, _ops2.withdraw_rules_payload())\n            except Exception as e:\n                return self._json(500, {"error": str(e)})\n        ' + get_anchor, 1)
-        print("patched GET")
+        print("ops patch already present")
+    t = apply_member_ids(t)
     SP.write_text(t, encoding="utf-8")
     print("done", SP.stat().st_size)
 
