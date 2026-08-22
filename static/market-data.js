@@ -1,4 +1,4 @@
-/* Own Club — live league net worth + revenue (Deloitte / market values 2025-26) */
+/* Own Club — live market + league table. Club badges are 1:1 official crests. */
 (function(){
   var CLUBS = [
     {id:1,code:"Manchester City",league:"Premier League",mv:5.0e9,photo:"https://crests.football-data.org/65.png"},
@@ -21,20 +21,19 @@
     {id:18,code:"Marseille",league:"Ligue 1",mv:0.48e9,photo:"https://crests.football-data.org/516.png"},
     {id:19,code:"Bayern Munich",league:"Bundesliga",mv:5.1e9,photo:"https://crests.football-data.org/5.png"},
     {id:20,code:"Borussia Dortmund",league:"Bundesliga",mv:2.0e9,photo:"https://crests.football-data.org/4.png"},
-    {id:21,code:"Al Hilal",league:"Saudi Pro League",mv:0.90e9,photo:"https://crests.football-data.org/65.png"},
-    {id:22,code:"Al Nassr",league:"Saudi Pro League",mv:0.75e9,photo:"https://crests.football-data.org/66.png"},
-    {id:23,code:"Al Ittihad",league:"Saudi Pro League",mv:0.55e9,photo:"https://crests.football-data.org/61.png"},
-    {id:24,code:"Al Ahli",league:"Saudi Pro League",mv:0.50e9,photo:"https://crests.football-data.org/57.png"},
-    {id:25,code:"Inter Miami",league:"MLS",mv:1.1e9,photo:"https://crests.football-data.org/81.png"},
-    {id:26,code:"LAFC",league:"MLS",mv:1.0e9,photo:"https://crests.football-data.org/86.png"},
-    {id:27,code:"LA Galaxy",league:"MLS",mv:0.60e9,photo:"https://crests.football-data.org/73.png"},
-    {id:28,code:"Atlanta United",league:"MLS",mv:0.70e9,photo:"https://crests.football-data.org/64.png"},
+    {id:21,code:"Al Hilal",league:"Saudi Pro League",mv:0.90e9,photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Al_Hilal_SFC_Logo.svg/240px-Al_Hilal_SFC_Logo.svg.png"},
+    {id:22,code:"Al Nassr",league:"Saudi Pro League",mv:0.75e9,photo:"https://upload.wikimedia.org/wikipedia/en/thumb/a/a4/Al-Nassr_FC.png/240px-Al-Nassr_FC.png"},
+    {id:23,code:"Al Ittihad",league:"Saudi Pro League",mv:0.55e9,photo:"https://upload.wikimedia.org/wikipedia/en/thumb/6/6b/Al-Ittihad_Club_%28Jeddah%29_logo.svg/240px-Al-Ittihad_Club_%28Jeddah%29_logo.svg.png"},
+    {id:24,code:"Al Ahli",league:"Saudi Pro League",mv:0.50e9,photo:"https://upload.wikimedia.org/wikipedia/en/thumb/7/75/Al-Ahli_Saudi_FC_logo.svg/240px-Al-Ahli_Saudi_FC_logo.svg.png"},
+    {id:25,code:"Inter Miami",league:"MLS",mv:1.1e9,photo:"https://upload.wikimedia.org/wikipedia/en/thumb/5/5c/Inter_Miami_CF_logo.svg/240px-Inter_Miami_CF_logo.svg.png"},
+    {id:26,code:"LAFC",league:"MLS",mv:1.0e9,photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Los_Angeles_FC_logo.svg/240px-Los_Angeles_FC_logo.svg.png"},
+    {id:27,code:"LA Galaxy",league:"MLS",mv:0.60e9,photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/LA_Galaxy_logo.svg/240px-LA_Galaxy_logo.svg.png"},
+    {id:28,code:"Atlanta United",league:"MLS",mv:0.70e9,photo:"https://upload.wikimedia.org/wikipedia/en/thumb/b/bb/Atlanta_United_FC_logo.svg/240px-Atlanta_United_FC_logo.svg.png"},
     {id:29,code:"Leicester City",league:"Championship",mv:0.45e9,photo:"https://crests.football-data.org/338.png"},
     {id:30,code:"Leeds United",league:"Championship",mv:0.40e9,photo:"https://crests.football-data.org/341.png"},
     {id:31,code:"Southampton",league:"Championship",mv:0.38e9,photo:"https://crests.football-data.org/340.png"},
     {id:32,code:"Ipswich Town",league:"Championship",mv:0.25e9,photo:"https://crests.football-data.org/349.png"}
   ];
-  /* Net worth = combined league market value. Revenue = latest Deloitte / reported season. */
   var LEAGUES = [
     {id:"pl", name:"Premier League", shown:"English \u00b7 Revenue", net0:14.60e9, rev0:9.70e9},
     {id:"ucl", name:"Champions League", shown:"UEFA \u00b7 Revenue", net0:8.50e9, rev0:4.40e9},
@@ -50,6 +49,9 @@
     if(n>=1e9) return "$"+(n/1e9).toFixed(2)+"B";
     if(n>=1e6) return "$"+(n/1e6).toFixed(0)+"M";
     return "$"+n.toFixed(0);
+  }
+  function initials(name){
+    return String(name||"?").split(/\s+/).map(function(w){return w[0];}).join("").slice(0,3).toUpperCase();
   }
   var st = {};
   var live = {};
@@ -76,6 +78,9 @@
     }
     return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none"><polyline fill="none" stroke="'+(up?"#2ee56a":"#ff5b5b")+'" stroke-width="1.8" stroke-linejoin="round" points="'+pts.join(" ")+'"/></svg>';
   }
+  function badge(c){
+    return '<img class="mkt-badge" src="'+c.photo+'" alt="'+c.code+'" data-club="'+c.id+'" onerror="this.onerror=null;this.style.display=\'none\';this.insertAdjacentHTML(\'afterend\',\'<span class=mkt-badge-fallback>'+initials(c.code)+'</span>\');">';
+  }
   function paint(){
     var box=document.getElementById("marketList");
     if(!box) return;
@@ -91,11 +96,11 @@
       rows.push({c:c,s:s});
     }
     rows.sort(function(a,b){ return Math.abs(b.s.chg)-Math.abs(a.s.chg); });
-    var html='<div class="mkt-live">LIVE · '+rows.length+' clubs · updates every 2s</div>';
+    var html='<div class="mkt-live">LIVE · '+rows.length+' clubs · official badges</div>';
     for(var r=0;r<rows.length;r++){
       var c=rows[r].c, s=rows[r].s, up=s.chg>=0;
       html+='<div class="mkt-row" onclick="(window.openBuyFromMarket&&openBuyFromMarket('+c.id+'))">'+
-        '<img class="mkt-badge" src="'+c.photo+'" alt="">'+
+        badge(c)+
         '<div><div class="mkt-name">'+c.code+'</div><div class="mkt-sub">'+c.league+'</div></div>'+
         '<div class="mkt-spark">'+spark(s.hist,up)+'</div>'+
         '<div><div class="mkt-price">'+fmt(s.price)+'</div><div class="mkt-chg '+(up?"up":"down")+'">'+(up?"+":"")+s.chg.toFixed(2)+'%</div></div></div>';
