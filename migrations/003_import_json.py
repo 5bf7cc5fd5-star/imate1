@@ -34,7 +34,7 @@ def apply(conn, data_dir: Path):
                 ),
             )
             for i, t in enumerate(u.get("transactions") or []):
-                tid = f"{uid}-tx-{i}-" + str(t.get("date") or i)
+                tid = "%s-tx-%s-%s" % (uid, i, t.get("date") or i)
                 conn.execute(
                     "INSERT OR IGNORE INTO transactions(id,user_id,at,type,amount,note,data,created_at) VALUES(?,?,?,?,?,?,?,?)",
                     (
@@ -50,7 +50,7 @@ def apply(conn, data_dir: Path):
                 )
         print("[migrate] imported users", len(raw))
     else:
-        print("[migrate] users already present", existing, — skip json overwrite")
+        print("[migrate] users already present", existing, "- skip json overwrite")
 
     wd_n = conn.execute("SELECT COUNT(*) FROM withdrawals").fetchone()[0]
     if wd_n == 0 and wd_file.exists():
@@ -73,6 +73,8 @@ def apply(conn, data_dir: Path):
                 ),
             )
         print("[migrate] imported withdrawals", len(raw))
+    else:
+        print("[migrate] withdrawals already present", wd_n)
 
     pool_n = conn.execute("SELECT COUNT(*) FROM pool_state").fetchone()[0]
     if pool_n == 0 and pool_file.exists():
@@ -89,10 +91,13 @@ def apply(conn, data_dir: Path):
                 ),
             )
             for e in p.get("ledger") or []:
+                eid = e.get("id") or ""
+                if not eid:
+                    continue
                 conn.execute(
                     "INSERT OR IGNORE INTO pool_ledger(id,at,type,amount,balance_before,balance_after,note,meta,created_at) VALUES(?,?,?,?,?,?,?,?,?)",
                     (
-                        e.get("id") or "",
+                        eid,
                         e.get("at"),
                         e.get("type"),
                         float(e.get("amount") or 0),
@@ -104,3 +109,5 @@ def apply(conn, data_dir: Path):
                     ),
                 )
             print("[migrate] imported pool")
+    else:
+        print("[migrate] pool already present", pool_n)
