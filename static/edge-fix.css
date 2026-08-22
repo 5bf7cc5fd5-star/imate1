@@ -9,132 +9,68 @@ html, body {
   height: 100% !important;
   height: 100dvh !important;
 }
-.space-bg,
-.space-bg *,
-.warp-img,
-.warp-stars,
-#particleCanvas,
-#leagueFx,
-.league-fx,
-.ucl-stars,
-.ucl-title,
-.ucl-bg,
-img[src*="ucl"],
-img[src*="wallpaper"],
-img[src*="stadium"] {
+.space-bg, .space-bg *, .warp-img, .warp-stars, #particleCanvas,
+#leagueFx, .league-fx, .ucl-stars, .ucl-title, .ucl-bg,
+img[src*="ucl"], img[src*="wallpaper"], img[src*="stadium"] {
   display: none !important;
   opacity: 0 !important;
   visibility: hidden !important;
-  pointer-events: none !important;
-  background: none !important;
 }
 #mainApp, .app, .app-shell {
   position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 56px !important;
-  width: 100% !important;
-  max-width: none !important;
-  margin: 0 !important;
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
+  top: 0 !important; left: 0 !important; right: 0 !important; bottom: 56px !important;
+  width: 100% !important; max-width: none !important;
+  overflow-x: hidden !important; overflow-y: auto !important;
   background: #07140f !important;
   z-index: 2 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  transform: none !important;
+  margin: 0 !important; border-radius: 0 !important; transform: none !important;
 }
-.page,
-#home, #market, #machines, #team, #my, #account, #income {
-  width: 100% !important;
-  max-width: none !important;
-  background: #07140f !important;
-  min-height: 100% !important;
+.page, #home, #market, #machines, #team, #my, #account, #income {
+  width: 100% !important; max-width: none !important;
+  background: #07140f !important; min-height: 100% !important;
 }
-#authScreen {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 20 !important;
-  background: #f4f6f8 !important;
-  overflow-y: auto !important;
-}
+#authScreen { position: fixed !important; inset: 0 !important; z-index: 20 !important; background: #f4f6f8 !important; overflow-y: auto !important; }
 body.auth-open nav.bottom { display: none !important; }
-@media (min-width: 768px) {
-  .app, #mainApp, #authScreen {
-    max-width: none !important;
-    width: 100% !important;
-    margin: 0 !important;
-    transform: none !important;
-  }
-}
 nav.bottom {
-  position: fixed !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  top: auto !important;
-  width: 100% !important;
-  max-width: none !important;
-  height: 56px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  align-items: stretch !important;
-  justify-content: space-between !important;
-  background: #0b0d10 !important;
-  border-top: 1px solid #1a1f27 !important;
-  border-radius: 0 !important;
-  z-index: 2147483647 !important;
-  transform: none !important;
+  position: fixed !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+  width: 100% !important; max-width: none !important; height: 56px !important;
+  margin: 0 !important; padding: 0 !important;
+  display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important;
+  align-items: stretch !important; justify-content: space-between !important;
+  background: #0b0d10 !important; border-top: 1px solid #1a1f27 !important;
+  z-index: 2147483647 !important; transform: none !important; border-radius: 0 !important;
 }
-nav.bottom > .nav,
-nav.bottom button.nav {
-  position: relative !important;
-  left: auto !important;
-  right: auto !important;
-  top: 0 !important;
-  flex: 1 1 0 !important;
-  height: 56px !important;
-  margin: 0 !important;
-  padding: 6px 2px 8px !important;
-  border: 0 !important;
-  background: transparent !important;
-  color: #8b93a0 !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
-  transform: none !important;
-  white-space: nowrap !important;
+nav.bottom > .nav, nav.bottom button.nav {
+  position: relative !important; flex: 1 1 0 !important; height: 56px !important;
+  margin: 0 !important; padding: 6px 2px 8px !important; border: 0 !important;
+  background: transparent !important; color: #8b93a0 !important;
+  font-size: 11px !important; font-weight: 700 !important;
+  display: flex !important; flex-direction: column !important;
+  align-items: center !important; justify-content: flex-end !important;
+  transform: none !important; white-space: nowrap !important;
 }
 nav.bottom > .nav.active { color: #2ee56a !important; }
 nav.bottom .nav-center-btn {
-  width: 40px !important;
-  height: 40px !important;
-  margin: 0 0 2px !important;
-  border-radius: 50% !important;
-  background: #18c15a !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  transform: none !important;
+  width: 40px !important; height: 40px !important; margin: 0 0 2px !important;
+  border-radius: 50% !important; background: #18c15a !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
 }
-.mkt-row {
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  align-items: center !important;
-  gap: 10px !important;
-  width: 100% !important;
-  padding: 12px 0 !important;
-  border-bottom: 1px solid #163326 !important;
-}
+.mkt-row { display: flex !important; flex-wrap: nowrap !important; align-items: center !important; gap: 10px !important; width: 100% !important; padding: 12px 0 !important; border-bottom: 1px solid #163326 !important; }
 .mkt-badge { width: 36px !important; height: 36px !important; flex: 0 0 36px !important; border-radius: 50% !important; }
-.mkt-row > div:nth-child(2) { flex: 1 1 auto !important; min-width: 0 !important; }
-.mkt-name, .mkt-sub { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-.mkt-spark { flex: 0 0 72px !important; width: 72px !important; height: 28px !important; }
-.mkt-row > div:last-child { flex: 0 0 auto !important; text-align: right !important; }
+.lg-table { width: 100%; color: #fff; font-size: 12px; }
+.lg-head, .lg-row {
+  display: grid;
+  grid-template-columns: 1.15fr 1.25fr 0.8fr 0.75fr;
+  gap: 6px;
+  align-items: center;
+  padding: 10px 4px;
+  border-bottom: 1px solid #163326;
+}
+.lg-head { color: #9aa3ad; font-weight: 700; font-size: 11px; text-transform: none; }
+.lg-name { font-weight: 700; color: #fff; }
+.lg-shown { color: #b8c0c8; }
+.lg-net, .lg-rev { text-align: right; font-weight: 700; white-space: nowrap; }
+.lg-rev { color: #2ee56a; }
+@media (max-width: 380px) {
+  .lg-head, .lg-row { grid-template-columns: 1.1fr 1fr 0.7fr 0.7fr; font-size: 11px; }
+}

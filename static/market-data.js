@@ -1,4 +1,4 @@
-/* Own Club live market — clubs on Market tab, leagues on Home */
+/* Own Club live market — clubs on Market tab, league table on Home */
 (function(){
   var CLUBS = [
     {id:1,code:"Manchester City",league:"Premier League",mv:5.0e9,photo:"https://crests.football-data.org/65.png"},
@@ -35,15 +35,15 @@
     {id:32,code:"Ipswich Town",league:"Championship",mv:0.25e9,photo:"https://crests.football-data.org/349.png"}
   ];
   var LEAGUES = [
-    {id:"pl", name:"Premier League", country:"England", rev:8.30e9, value:12.00e9, net:25.50e9},
-    {id:"ucl", name:"Champions League", country:"UEFA", rev:5.20e9, value:5.20e9, net:18.00e9},
-    {id:"laliga", name:"La Liga", country:"Spain", rev:3.90e9, value:4.80e9, net:16.00e9},
-    {id:"seriea", name:"Serie A", country:"Italy", rev:2.60e9, value:3.40e9, net:8.50e9},
-    {id:"ligue1", name:"Ligue 1", country:"France", rev:2.20e9, value:2.80e9, net:7.20e9},
-    {id:"bundes", name:"Bundesliga", country:"Germany", rev:5.00e9, value:5.60e9, net:12.40e9},
-    {id:"saudi", name:"Saudi", country:"Saudi Pro League", rev:2.40e9, value:3.10e9, net:6.80e9},
-    {id:"mls", name:"MLS", country:"United States", rev:2.00e9, value:2.50e9, net:5.40e9},
-    {id:"champ", name:"Championship", country:"England", rev:0.85e9, value:1.10e9, net:2.20e9}
+    {id:"pl", name:"Premier League", shown:"English \u00b7 Revenue", net:3.90e9, rev:3.90e9},
+    {id:"ucl", name:"Champions League", shown:"UEFA \u00b7 Revenue", net:5.20e9, rev:5.20e9},
+    {id:"laliga", name:"La Liga", shown:"Spain \u00b7 Revenue", net:3.90e9, rev:3.90e9},
+    {id:"seriea", name:"Serie A", shown:"Italy \u00b7 Revenue", net:3.90e9, rev:2.60e9},
+    {id:"ligue1", name:"Ligue 1", shown:"France \u00b7 Revenue", net:3.90e9, rev:2.20e9},
+    {id:"bundes", name:"Bundesliga", shown:"Germany \u00b7 Revenue", net:3.90e9, rev:5.00e9},
+    {id:"saudi", name:"Saudi Pro League", shown:"Saudi \u00b7 Revenue", net:3.90e9, rev:2.40e9},
+    {id:"mls", name:"MLS", shown:"United States \u00b7 Revenue", net:3.90e9, rev:2.00e9},
+    {id:"champ", name:"Championship", shown:"England \u00b7 Revenue", net:3.90e9, rev:0.85e9}
   ];
   function fmt(n){
     if(n>=1e9) return "$"+(n/1e9).toFixed(2)+"B";
@@ -51,7 +51,6 @@
     return "$"+n.toFixed(0);
   }
   var st = {};
-  var lst = {};
   function seed(){
     for(var i=0;i<CLUBS.length;i++){
       var c=CLUBS[i];
@@ -59,13 +58,6 @@
       var hist=[], p=c.mv;
       for(var h=0;h<24;h++){ p=p*(1+(Math.random()-0.48)*0.012); hist.push(p); }
       st[c.id]={price:p,open:c.mv,base:c.mv,hist:hist,chg:((p-c.mv)/c.mv)*100};
-    }
-    for(var j=0;j<LEAGUES.length;j++){
-      var L=LEAGUES[j];
-      if(lst[L.id]) continue;
-      var h2=[], p2=L.value;
-      for(var k=0;k<24;k++){ p2=p2*(1+(Math.random()-0.48)*0.008); h2.push(p2); }
-      lst[L.id]={price:p2,open:L.value,base:L.value,hist:h2,chg:((p2-L.value)/L.value)*100};
     }
   }
   function spark(hist,up){
@@ -112,19 +104,18 @@
       box.id="homeMarkets";
       home.appendChild(box);
     }
-    seed();
-    var html='<div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px"><h3 style="margin:0;color:#fff;font-size:18px">Market</h3><span style="color:#8b93a0;font-size:12px">Net worth · League value</span></div>';
+    var html='<div style="margin:12px 0 8px"><h3 style="margin:0;color:#fff;font-size:18px">Market</h3></div>';
+    html+='<div class="lg-table">';
+    html+='<div class="lg-head"><span>League</span><span>Shown as</span><span>Networth</span><span>Revenue</span></div>';
     for(var i=0;i<LEAGUES.length;i++){
-      var L=LEAGUES[i], s=lst[L.id], up=s.chg>=0;
-      html+='<div class="mkt-row" onclick="(window.goPage&&goPage(\'market\'))">'+
-        '<div style="flex:1;min-width:0">'+
-          '<div class="mkt-name">'+L.name+'</div>'+
-          '<div class="mkt-sub">Net worth '+fmt(L.net)+'</div>'+
-          '<div class="mkt-sub">Revenue '+fmt(L.rev)+'</div>'+
-        '</div>'+
-        '<div class="mkt-spark">'+spark(s.hist,up)+'</div>'+
-        '<div><div class="mkt-price">'+fmt(s.price)+'</div><div class="mkt-sub">League value</div><div class="mkt-chg '+(up?"up":"down")+'">'+(up?"+":"")+s.chg.toFixed(2)+'%</div></div></div>';
+      var L=LEAGUES[i];
+      html+='<div class="lg-row" onclick="(window.goPage&&goPage(\'market\'))">'+
+        '<span class="lg-name">'+L.name+'</span>'+
+        '<span class="lg-shown">'+L.shown+'</span>'+
+        '<span class="lg-net">'+fmt(L.net)+'</span>'+
+        '<span class="lg-rev">'+fmt(L.rev)+'</span></div>';
     }
+    html+='</div>';
     box.innerHTML=html;
   }
   function tick(){
@@ -134,14 +125,6 @@
       var drift=(s.base-s.price)/s.base*0.08;
       var shock=(Math.random()-0.5)*0.018;
       s.price=Math.max(s.base*0.82, Math.min(s.base*1.22, s.price*(1+drift+shock)));
-      s.hist.push(s.price); if(s.hist.length>28) s.hist.shift();
-      s.chg=((s.price-s.open)/s.open)*100;
-    });
-    Object.keys(lst).forEach(function(id){
-      var s=lst[id];
-      var drift=(s.base-s.price)/s.base*0.06;
-      var shock=(Math.random()-0.5)*0.010;
-      s.price=Math.max(s.base*0.92, Math.min(s.base*1.10, s.price*(1+drift+shock)));
       s.hist.push(s.price); if(s.hist.length>28) s.hist.shift();
       s.chg=((s.price-s.open)/s.open)*100;
     });
