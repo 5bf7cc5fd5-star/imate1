@@ -1,0 +1,19 @@
+{
+  "balance": 100000000.0,
+  "currency": "USD",
+  "seed": "usd_100m_2026_08_22",
+  "updated_at": "2026-08-22T14:54:00+00:00",
+  "notes": "Company pool — Inventory. Opening 100,000,000 USD.",
+  "ledger": [
+    {
+      "id": "pl_open100m",
+      "at": "2026-08-22T14:54:00+00:00",
+      "type": "opening",
+      "amount": 100000000.0,
+      "balance_before": 0.0,
+      "balance_after": 100000000.0,
+      "note": "Company pool opening balance 100,000,000 USD",
+      "meta": {}
+    }
+  ]
+}

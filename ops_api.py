@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone
 from pathlib import Path
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -15,6 +15,8 @@ WITHDRAWALS_FILE = DATA_DIR / "withdrawals.json"
 WITHDRAW_RULES_EFFECTIVE = "2026-08-15"
 VIP_DAILY_CAPS = {1: 5000.0, 2: 7500.0, 3: 10000.0, 4: 12500.0}
 WITHDRAW_FEE_PCT = 0.05
+POOL_SEED = "usd_100m_2026_08_22"
+POOL_OPENING_USD = 100_000_000.00
 
 
 def _now():
@@ -39,13 +41,41 @@ def get_pool():
     p = _load(POOL_FILE, None)
     if not p:
         p = {
-            "balance": 0.0,
-            "currency": "UGX",
+            "balance": POOL_OPENING_USD,
+            "currency": "USD",
             "updated_at": _now(),
-            "ledger": [],
+            "seed": POOL_SEED,
+            "ledger": [{
+                "id": "pl_open100m",
+                "at": _now(),
+                "type": "opening",
+                "amount": POOL_OPENING_USD,
+                "balance_before": 0.0,
+                "balance_after": POOL_OPENING_USD,
+                "note": "Company pool opening balance 100,000,000 USD",
+                "meta": {},
+            }],
             "notes": "Company pool — Inventory. Deposits pull from pool into wallets; approved withdrawals return to pool.",
         }
         _save(POOL_FILE, p)
+        return p
+    if p.get("seed") != POOL_SEED:
+        before = float(p.get("balance") or 0)
+        p["balance"] = POOL_OPENING_USD
+        p["currency"] = "USD"
+        p["seed"] = POOL_SEED
+        p.setdefault("ledger", []).insert(0, {
+            "id": "pl_set100m",
+            "at": _now(),
+            "type": "adjust",
+            "amount": round(POOL_OPENING_USD - before, 2),
+            "balance_before": before,
+            "balance_after": POOL_OPENING_USD,
+            "note": "Admin set company pool to 100,000,000 USD",
+            "meta": {},
+        })
+        save_pool(p)
+    p["currency"] = "USD"
     return p
 
 
@@ -130,6 +160,7 @@ def withdraw_rules_payload(user=None):
         "effective_from": WITHDRAW_RULES_EFFECTIVE,
         "fee_pct": WITHDRAW_FEE_PCT,
         "vip_daily_caps": VIP_DAILY_CAPS,
+        "pool_currency": "USD",
         "flow": [
             "Member requests withdraw → amount + 5% fee reserved from wallet",
             "Admin: Under Review → Reviewed → Disbursed",
