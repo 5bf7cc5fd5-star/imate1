@@ -1,4 +1,4 @@
-/* Full-bleed at every font size and viewport — never a 430px center strip */
+/* Fill screen down to locked nav — hide stadium wallpaper behind the app */
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -13,40 +13,50 @@ html, body {
   min-height: 100% !important;
   min-height: 100dvh !important;
 }
-.space-bg, .space-bg .warp, .space-bg .warp-img {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  max-width: none !important;
+
+/* Hide decorative stadium / space wallpaper so it never shows under content */
+.space-bg,
+.space-bg .warp,
+.space-bg .warp-img,
+img[src*="ucl"],
+img[src*="wallpaper"],
+img[src*="stadium"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
-.app, #mainApp, .app-shell, #authScreen, .page, .content, main, section {
+
+.app, #mainApp, .app-shell, #authScreen {
+  position: relative !important;
+  z-index: 2 !important;
   width: 100% !important;
   max-width: none !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
+  min-height: 100dvh !important;
+  margin: 0 !important;
   left: 0 !important;
   right: 0 !important;
+  background: #07140f !important;
   border-radius: 0 !important;
   box-shadow: none !important;
-  box-sizing: border-box !important;
 }
-.content { padding: 0 16px 72px !important; }
-#mainApp { padding-bottom: 72px !important; min-height: 100dvh !important; }
+#mainApp {
+  padding-bottom: 64px !important;
+  background: #07140f !important;
+}
+.page, .content, main, section, #home, #market, #shares, #team, #account {
+  width: 100% !important;
+  max-width: none !important;
+  background: #07140f !important;
+  min-height: calc(100dvh - 64px) !important;
+}
+.content { padding: 0 16px 16px !important; }
 
 @media (min-width: 768px) {
-  .app, #mainApp, #authScreen, .wiyak-auth {
+  .app, #mainApp, #authScreen {
     max-width: none !important;
     width: 100% !important;
     margin: 0 !important;
-    left: 0 !important;
-    transform: none !important;
-  }
-  nav.bottom {
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    max-width: none !important;
     transform: none !important;
   }
 }
@@ -73,7 +83,6 @@ nav.bottom {
   z-index: 2147483647 !important;
   transform: none !important;
 }
-
 nav.bottom > .nav,
 nav.bottom button.nav {
   position: relative !important;
@@ -81,8 +90,6 @@ nav.bottom button.nav {
   right: auto !important;
   top: 0 !important;
   flex: 1 1 0 !important;
-  width: auto !important;
-  max-width: none !important;
   height: 56px !important;
   margin: 0 !important;
   padding: 6px 2px 8px !important;
@@ -99,7 +106,6 @@ nav.bottom button.nav {
   white-space: nowrap !important;
 }
 nav.bottom > .nav.active { color: #2ee56a !important; }
-nav.bottom > .nav.nav-center { top: 0 !important; transform: none !important; }
 nav.bottom .nav-center-btn {
   width: 40px !important;
   height: 40px !important;
@@ -120,11 +126,9 @@ nav.bottom .nav-center-btn {
   width: 100% !important;
   padding: 12px 0 !important;
   border-bottom: 1px solid #163326 !important;
-  box-sizing: border-box !important;
 }
 .mkt-badge { width: 36px !important; height: 36px !important; flex: 0 0 36px !important; border-radius: 50% !important; }
 .mkt-row > div:nth-child(2) { flex: 1 1 auto !important; min-width: 0 !important; }
 .mkt-name, .mkt-sub { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
 .mkt-spark { flex: 0 0 72px !important; width: 72px !important; height: 28px !important; }
 .mkt-row > div:last-child { flex: 0 0 auto !important; text-align: right !important; }
-.mkt-cards { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; width: 100% !important; }
