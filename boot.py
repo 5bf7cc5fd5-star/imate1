@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 from pathlib import Path
-import runpy, subprocess, sys, base64
+import runpy, subprocess, sys, base64, re
 
 root = Path(__file__).resolve().parent
 (root / "static").mkdir(exist_ok=True)
 (root / "data").mkdir(exist_ok=True)
 
-# Permanent logo install from b64 if present
-for b64name, outname in (("static/logo.b64", "own-club-logo.jpg"), ("static/logo.b64", "static/own-club-logo.jpg")):
-    bp = root / "static" / "logo.b64"
-    if bp.exists():
-        try:
-            data = base64.b64decode(bp.read_text().strip())
-            (root / outname).write_bytes(data)
-            print("logo written", outname, len(data))
-        except Exception as e:
-            print("logo decode", e)
+bp = root / "static" / "logo.b64"
+if bp.exists():
+    try:
+        data = base64.b64decode(bp.read_text().strip())
+        (root / "own-club-logo.jpg").write_bytes(data)
+        (root / "static" / "own-club-logo.jpg").write_bytes(data)
+        print("logo written", len(data))
+    except Exception as e:
+        print("logo decode", e)
 
 try:
     import persist; persist.init()
@@ -25,26 +24,47 @@ except Exception as e:
 for script in ("inject_ops.py", "fix_admin_phone.py", "migrate.py"):
     p = root / script
     if p.exists():
-        try: subprocess.check_call([sys.executable, str(p)], cwd=str(root))
-        except Exception as e: print(script, "failed", e)
+        try:
+            subprocess.check_call([sys.executable, str(p)], cwd=str(root))
+        except Exception as e:
+            print(script, "failed", e)
 
-TAG = '<script src="/static/login-tight.js?v=37"></script>'
+srv = root / "server.py"
+if srv.exists():
+    st = srv.read_text(encoding="utf-8", errors="replace")
+    needle = 'if path.startswith("/static/"):'
+    patch = '''if path in ("/own-club-logo.jpg", "/own-club-logo.jpeg", "/logo.jpg"):
+            p = Path(__file__).parent / "own-club-logo.jpg"
+            if not p.is_file():
+                p = Path(__file__).parent / "static" / "own-club-logo.jpg"
+            if p.is_file():
+                return self._serve_file(str(p), "image/jpeg", absolute=True)
+        if path.startswith("/static/"):'''
+    if 'if path in ("/own-club-logo.jpg"' not in st and needle in st:
+        srv.write_text(st.replace(needle, patch, 1), encoding="utf-8")
+        print("server logo route patched")
+
+INJECT = [
+    '<link rel="stylesheet" href="/static/app-shell-fix.css?v=48">',
+    '<script src="/static/login-tight.js?v=48"></script>',
+    '<script src="/static/app-shell-fix.js?v=48"></script>',
+]
+block = "\n".join(INJECT)
 for name in ("index.html", "frontend.html"):
     p = root / name
     if not p.exists():
         continue
     t = p.read_text(encoding="utf-8", errors="replace")
-    # strip older login-tight tags then inject latest
-    import re
-    t2 = re.sub(r'<script[^>]*login-tight\.js[^>]*></script>', '', t)
-    if "login-tight.js?v=37" not in t2:
-        if "</body>" in t2:
-            t2 = t2.replace("</body>", TAG + "\n</body>", 1)
-        else:
-            t2 += "\n" + TAG
+    t2 = re.sub(r'<script[^>]*login-tight\\.js[^>]*></script>', '', t)
+    t2 = re.sub(r'<link[^>]*app-shell-fix\\.css[^>]*>', '', t2)
+    t2 = re.sub(r'<script[^>]*app-shell-fix\\.js[^>]*></script>', '', t2)
+    if "</body>" in t2:
+        t2 = t2.replace("</body>", block + "\n</body>", 1)
+    else:
+        t2 += "\n" + block
     if t2 != t:
         p.write_text(t2, encoding="utf-8")
-        print("injected v37", name)
+        print("injected v48", name)
 
 print("boot starting server")
 runpy.run_path(str(root / "server.py"), run_name="__main__")
