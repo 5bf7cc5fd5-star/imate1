@@ -12,9 +12,18 @@ if bp.exists():
         data = base64.b64decode(bp.read_text().strip())
         (root / "own-club-logo.jpg").write_bytes(data)
         (root / "static" / "own-club-logo.jpg").write_bytes(data)
-        print("logo written", len(data))
+        print("logo written from b64", len(data))
     except Exception as e:
         print("logo decode", e)
+
+src = root / "own-club-logo.jpg"
+dst = root / "static" / "own-club-logo.jpg"
+if src.exists() and not dst.exists():
+    dst.write_bytes(src.read_bytes())
+    print("logo copied to static", dst.stat().st_size)
+elif src.exists():
+    dst.write_bytes(src.read_bytes())
+    print("logo refreshed in static", dst.stat().st_size)
 
 try:
     import persist; persist.init()
