@@ -1,4 +1,4 @@
-/* Own Club live market — clubs on Market tab, league table on Home */
+/* Own Club — live league net worth + revenue (Deloitte / market values 2025-26) */
 (function(){
   var CLUBS = [
     {id:1,code:"Manchester City",league:"Premier League",mv:5.0e9,photo:"https://crests.football-data.org/65.png"},
@@ -34,16 +34,17 @@
     {id:31,code:"Southampton",league:"Championship",mv:0.38e9,photo:"https://crests.football-data.org/340.png"},
     {id:32,code:"Ipswich Town",league:"Championship",mv:0.25e9,photo:"https://crests.football-data.org/349.png"}
   ];
+  /* Net worth = combined league market value. Revenue = latest Deloitte / reported season. */
   var LEAGUES = [
-    {id:"pl", name:"Premier League", shown:"English \u00b7 Revenue", net:3.90e9, rev:3.90e9},
-    {id:"ucl", name:"Champions League", shown:"UEFA \u00b7 Revenue", net:5.20e9, rev:5.20e9},
-    {id:"laliga", name:"La Liga", shown:"Spain \u00b7 Revenue", net:3.90e9, rev:3.90e9},
-    {id:"seriea", name:"Serie A", shown:"Italy \u00b7 Revenue", net:3.90e9, rev:2.60e9},
-    {id:"ligue1", name:"Ligue 1", shown:"France \u00b7 Revenue", net:3.90e9, rev:2.20e9},
-    {id:"bundes", name:"Bundesliga", shown:"Germany \u00b7 Revenue", net:3.90e9, rev:5.00e9},
-    {id:"saudi", name:"Saudi Pro League", shown:"Saudi \u00b7 Revenue", net:3.90e9, rev:2.40e9},
-    {id:"mls", name:"MLS", shown:"United States \u00b7 Revenue", net:3.90e9, rev:2.00e9},
-    {id:"champ", name:"Championship", shown:"England \u00b7 Revenue", net:3.90e9, rev:0.85e9}
+    {id:"pl", name:"Premier League", shown:"English \u00b7 Revenue", net0:14.60e9, rev0:9.70e9},
+    {id:"ucl", name:"Champions League", shown:"UEFA \u00b7 Revenue", net0:8.50e9, rev0:4.40e9},
+    {id:"laliga", name:"La Liga", shown:"Spain \u00b7 Revenue", net0:6.30e9, rev0:4.80e9},
+    {id:"seriea", name:"Serie A", shown:"Italy \u00b7 Revenue", net0:6.20e9, rev0:3.40e9},
+    {id:"ligue1", name:"Ligue 1", shown:"France \u00b7 Revenue", net0:4.40e9, rev0:2.20e9},
+    {id:"bundes", name:"Bundesliga", shown:"Germany \u00b7 Revenue", net0:5.60e9, rev0:4.90e9},
+    {id:"saudi", name:"Saudi Pro League", shown:"Saudi \u00b7 Revenue", net0:3.80e9, rev0:2.20e9},
+    {id:"mls", name:"MLS", shown:"United States \u00b7 Revenue", net0:3.20e9, rev0:2.00e9},
+    {id:"champ", name:"Championship", shown:"England \u00b7 Revenue", net0:1.85e9, rev0:1.20e9}
   ];
   function fmt(n){
     if(n>=1e9) return "$"+(n/1e9).toFixed(2)+"B";
@@ -51,6 +52,7 @@
     return "$"+n.toFixed(0);
   }
   var st = {};
+  var live = {};
   function seed(){
     for(var i=0;i<CLUBS.length;i++){
       var c=CLUBS[i];
@@ -58,6 +60,11 @@
       var hist=[], p=c.mv;
       for(var h=0;h<24;h++){ p=p*(1+(Math.random()-0.48)*0.012); hist.push(p); }
       st[c.id]={price:p,open:c.mv,base:c.mv,hist:hist,chg:((p-c.mv)/c.mv)*100};
+    }
+    for(var j=0;j<LEAGUES.length;j++){
+      var L=LEAGUES[j];
+      if(live[L.id]) continue;
+      live[L.id]={net:L.net0, rev:L.rev0};
     }
   }
   function spark(hist,up){
@@ -104,16 +111,17 @@
       box.id="homeMarkets";
       home.appendChild(box);
     }
-    var html='<div style="margin:12px 0 8px"><h3 style="margin:0;color:#fff;font-size:18px">Market</h3></div>';
+    seed();
+    var html='<div style="margin:12px 0 8px;display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0;color:#fff;font-size:18px">Market</h3><span style="color:#8b93a0;font-size:11px">LIVE · Deloitte 25/26</span></div>';
     html+='<div class="lg-table">';
     html+='<div class="lg-head"><span>League</span><span>Shown as</span><span>Networth</span><span>Revenue</span></div>';
     for(var i=0;i<LEAGUES.length;i++){
-      var L=LEAGUES[i];
+      var L=LEAGUES[i], v=live[L.id];
       html+='<div class="lg-row" onclick="(window.goPage&&goPage(\'market\'))">'+
         '<span class="lg-name">'+L.name+'</span>'+
         '<span class="lg-shown">'+L.shown+'</span>'+
-        '<span class="lg-net">'+fmt(L.net)+'</span>'+
-        '<span class="lg-rev">'+fmt(L.rev)+'</span></div>';
+        '<span class="lg-net">'+fmt(v.net)+'</span>'+
+        '<span class="lg-rev">'+fmt(v.rev)+'</span></div>';
     }
     html+='</div>';
     box.innerHTML=html;
@@ -127,6 +135,14 @@
       s.price=Math.max(s.base*0.82, Math.min(s.base*1.22, s.price*(1+drift+shock)));
       s.hist.push(s.price); if(s.hist.length>28) s.hist.shift();
       s.chg=((s.price-s.open)/s.open)*100;
+    });
+    Object.keys(live).forEach(function(id){
+      var L=null;
+      for(var i=0;i<LEAGUES.length;i++) if(LEAGUES[i].id===id) L=LEAGUES[i];
+      if(!L) return;
+      var v=live[id];
+      v.net=Math.max(L.net0*0.985, Math.min(L.net0*1.015, v.net*(1+(Math.random()-0.5)*0.004)));
+      v.rev=Math.max(L.rev0*0.988, Math.min(L.rev0*1.012, v.rev*(1+(Math.random()-0.5)*0.003)));
     });
     paint();
     try{paintHome();}catch(e){}
