@@ -1,1 +1,1 @@
-REDEPLOY 2026-08-22-16-22 solara-fullbleed
+REDEPLOY 2026-08-22-16-34 lock-bottom-nav
