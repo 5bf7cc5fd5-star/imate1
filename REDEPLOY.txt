@@ -1,1 +1,1 @@
-REDEPLOY 2026-08-22-15-32-v8 iphone-nav-row
+REDEPLOY 2026-08-22-15-40-v9 html-rewrite-nav-row
