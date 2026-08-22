@@ -30,13 +30,39 @@ if sp.exists():
     new = """try:\n    import persist as _persist\n    DATA_DIR = _persist.init()\nexcept Exception:\n    DATA_DIR = Path(__file__).parent / \"data\"\n    DATA_DIR.mkdir(exist_ok=True)"""
     if old in t and "import persist as _persist" not in t:
         t = t.replace(old, new, 1)
-        print("server DATA_DIR -> persist")
-    old_save = """def save_json(path, data):\n    with open(path, \"w\", encoding=\"utf-8\") as f:\n        json.dump(data, f, indent=2, ensure_ascii=False)"""
-    new_save = """def save_json(path, data):\n    try:\n        import persist as _p\n        _p.backup(Path(path))\n    except Exception:\n        pass\n    tmp = Path(str(path) + \".tmp\")\n    with open(tmp, \"w\", encoding=\"utf-8\") as f:\n        json.dump(data, f, indent=2, ensure_ascii=False)\n    tmp.replace(Path(path))"""
-    if old_save in t and "_p.backup" not in t:
-        t = t.replace(old_save, new_save, 1)
-        print("server save_json safe")
     sp.write_text(t, encoding="utf-8")
+
+INJECT = """
+<link rel=\"stylesheet\" href=\"/static/login-tight.css?v=29\">
+<link rel=\"stylesheet\" href=\"/static/edge-fix.css?v=29\">
+<script src=\"/static/login-tight.js?v=29\"></script>
+<script src=\"/static/market-data.js?v=29\"></script>
+<script src=\"/static/lock-nav.js?v=29\"></script>
+<script src=\"/static/nav-rules.js?v=29\"></script>
+<script src=\"/static/member-id.js?v=29\"></script>
+<script src=\"/static/tx-history.js?v=29\"></script>
+<style id=\"fullbleed-29\">
+#authScreen,.auth-screen{justify-content:flex-start!important;padding-top:48px!important;background:#f0f2f5!important;}
+#authScreen .auth-logo{margin:0 0 14px!important;}
+#authScreen .tabs{margin:0 0 8px!important;}
+</style>
+"""
+
+def inject_once(text, needle, blob):
+    if needle in text:
+        return text
+    if "</body>" in text:
+        return text.replace("</body>", blob + "\n</body>", 1)
+    return text + blob
+
+for name in ("index.html", "frontend.html"):
+    p = root / name
+    if p.exists():
+        old = p.read_text(encoding="utf-8", errors="replace")
+        new = inject_once(old, "login-tight.css?v=29", INJECT)
+        if new != old:
+            p.write_text(new, encoding="utf-8")
+            print("login tight", name)
 
 print("boot starting server")
 runpy.run_path(str(root / "server.py"), run_name="__main__")
