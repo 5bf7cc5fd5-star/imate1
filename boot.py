@@ -16,10 +16,10 @@ if inj.exists():
         print("inject_ops failed", e)
 
 INJECT = """
-<link rel=\"stylesheet\" href=\"/static/edge-fix.css?v=16\">
-<script src=\"/static/market-data.js?v=16\"></script>
-<script src=\"/static/lock-nav.js?v=16\"></script>
-<style id=\"fullbleed-16\">
+<link rel=\"stylesheet\" href=\"/static/edge-fix.css?v=17\">
+<script src=\"/static/market-data.js?v=17\"></script>
+<script src=\"/static/lock-nav.js?v=17\"></script>
+<style id=\"fullbleed-17\">
 html,body{
   background:#07140f!important;
   overflow:hidden!important;
@@ -52,6 +52,7 @@ nav.bottom{
   background:#0b0d10!important;margin:0!important;
 }
 body.auth-open nav.bottom{display:none!important;}
+#homeMarkets .mkt-row{padding:14px 0!important;}
 @media (min-width:768px){
   .app,#mainApp,#authScreen,nav.bottom{
     max-width:none!important;width:100%!important;margin:0!important;transform:none!important;
@@ -65,9 +66,7 @@ def fix_html(text):
     text = text.replace("top:-14px;", "top:0!important;")
     text = text.replace("max-width:430px", "max-width:none")
     text = text.replace("width:430px", "width:100%")
-    for old_id in ("fullbleed-14", "fullbleed-15"):
-        pass
-    if "fullbleed-16" not in text:
+    if "fullbleed-17" not in text:
         if "</body>" in text:
             text = text.replace("</body>", INJECT + "\n</body>", 1)
         elif "</head>" in text:
