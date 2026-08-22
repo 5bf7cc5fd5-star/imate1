@@ -16,10 +16,10 @@ if inj.exists():
         print("inject_ops failed", e)
 
 INJECT = """
-<link rel=\"stylesheet\" href=\"/static/edge-fix.css?v=17\">
-<script src=\"/static/market-data.js?v=17\"></script>
-<script src=\"/static/lock-nav.js?v=17\"></script>
-<style id=\"fullbleed-17\">
+<link rel=\"stylesheet\" href=\"/static/edge-fix.css?v=18\">
+<script src=\"/static/market-data.js?v=18\"></script>
+<script src=\"/static/lock-nav.js?v=18\"></script>
+<style id=\"fullbleed-18\">
 html,body{
   background:#07140f!important;
   overflow:hidden!important;
@@ -66,7 +66,7 @@ def fix_html(text):
     text = text.replace("top:-14px;", "top:0!important;")
     text = text.replace("max-width:430px", "max-width:none")
     text = text.replace("width:430px", "width:100%")
-    if "fullbleed-17" not in text:
+    if "fullbleed-18" not in text:
         if "</body>" in text:
             text = text.replace("</body>", INJECT + "\n</body>", 1)
         elif "</head>" in text:
