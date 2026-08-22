@@ -12,25 +12,22 @@ if bp.exists():
         data = base64.b64decode(bp.read_text().strip())
         (root / "own-club-logo.jpg").write_bytes(data)
         (root / "static" / "own-club-logo.jpg").write_bytes(data)
-        print("logo written from b64", len(data))
+        print("logo written", len(data))
     except Exception as e:
         print("logo decode", e)
 
 src = root / "own-club-logo.jpg"
 dst = root / "static" / "own-club-logo.jpg"
-if src.exists() and not dst.exists():
+if src.exists():
     dst.write_bytes(src.read_bytes())
     print("logo copied to static", dst.stat().st_size)
-elif src.exists():
-    dst.write_bytes(src.read_bytes())
-    print("logo refreshed in static", dst.stat().st_size)
 
 try:
     import persist; persist.init()
 except Exception as e:
     print("persist init", e)
 
-for script in ("inject_ops.py", "fix_admin_phone.py", "migrate.py"):
+for script in ("inject_ops.py", "fix_admin_phone.py", "patch_phones.py", "migrate.py"):
     p = root / script
     if p.exists():
         try:
@@ -54,9 +51,9 @@ if srv.exists():
         print("server logo route patched")
 
 INJECT = [
-    '<link rel="stylesheet" href="/static/app-shell-fix.css?v=48">',
-    '<script src="/static/login-tight.js?v=48"></script>',
-    '<script src="/static/app-shell-fix.js?v=48"></script>',
+    '<link rel="stylesheet" href="/static/app-shell-fix.css?v=49">',
+    '<script src="/static/login-tight.js?v=49"></script>',
+    '<script src="/static/app-shell-fix.js?v=49"></script>',
 ]
 block = "\n".join(INJECT)
 for name in ("index.html", "frontend.html"):
@@ -73,7 +70,7 @@ for name in ("index.html", "frontend.html"):
         t2 += "\n" + block
     if t2 != t:
         p.write_text(t2, encoding="utf-8")
-        print("injected v48", name)
+        print("injected v49", name)
 
 print("boot starting server")
 runpy.run_path(str(root / "server.py"), run_name="__main__")
