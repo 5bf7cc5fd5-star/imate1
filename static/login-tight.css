@@ -1,0 +1,80 @@
+/* Facebook-like compact login: small gap under logo */
+#authScreen,
+.auth-screen {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 0 !important;
+  padding: 48px 20px 24px !important;
+  min-height: 100dvh !important;
+  height: auto !important;
+  background: #f0f2f5 !important;
+  overflow-y: auto !important;
+}
+#authScreen .auth-bg,
+#authScreen .auth-hero,
+#authScreen .spacer,
+#authScreen .auth-gap {
+  display: none !important;
+  height: 0 !important;
+  flex: 0 !important;
+}
+#authScreen .auth-center,
+#authScreen .auth-card,
+#authScreen .login-wrap,
+#authScreen form {
+  width: 100% !important;
+  max-width: 396px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  position: relative !important;
+  top: 0 !important;
+  transform: none !important;
+}
+#authScreen .auth-logo,
+#authScreen .brand,
+#authScreen h1 {
+  margin: 0 0 14px !important;
+  padding: 0 !important;
+  text-align: center !important;
+}
+#authScreen .auth-logo h1,
+#authScreen h1 {
+  font-size: 28px !important;
+  letter-spacing: 0.5px !important;
+  line-height: 1.1 !important;
+}
+#authScreen .auth-logo p,
+#authScreen .auth-sub {
+  margin: 4px 0 0 !important;
+  font-size: 12px !important;
+  letter-spacing: 1px !important;
+}
+#authScreen .tabs {
+  margin: 0 0 8px !important;
+  gap: 0 !important;
+}
+#authScreen input,
+#authScreen select,
+#authScreen textarea {
+  margin: 0 0 10px !important;
+  padding: 14px 16px !important;
+  border-radius: 8px !important;
+  min-height: 48px !important;
+}
+#authScreen .btn,
+#authScreen button.btn,
+#authScreen button[type="submit"] {
+  margin: 4px 0 8px !important;
+  min-height: 48px !important;
+  border-radius: 8px !important;
+}
+#authScreen .auth-links,
+#authScreen .muted {
+  margin: 4px 0 !important;
+}
