@@ -1,4 +1,4 @@
-const CACHE = "ownclub-v5-wiyak-market";
+const CACHE = "ownclub-v7-nav-baseline";
 const ASSETS = ["/", "/manifest.json"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
