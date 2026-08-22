@@ -1,305 +1,143 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Own Club Console</title>
-<meta name="theme-color" content="#440099">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--f-purple:#440099;--f-purple-deep:#320070;--f-purple-soft:#f3e9ff;--f-bg:#f5f6f8;--f-card:#fff;--f-border:#e8eaed;--f-text:#2E2D2C;--f-muted:#6b7280;--f-ok:#16a34a;--f-bad:#dc2626;--f-wait:#d97706;--side:248px}
-*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:Inter,system-ui,sans-serif;background:var(--f-bg);color:var(--f-text)}
-button,input,select{font:inherit}
-.login-shell{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a0670,#440099 50%,#78C4DD);padding:24px}
-.login-card{width:min(400px,100%);background:#fff;border-radius:16px;padding:32px 28px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
-.login-logo{width:48px;height:48px;border-radius:12px;background:var(--f-purple);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;margin-bottom:16px}
-.login-card h1{margin:0 0 4px;font-size:22px;font-weight:800}
-.login-card .sub{margin:0 0 22px;color:var(--f-muted);font-size:13px}
-.login-card label{display:block;font-size:12px;font-weight:600;color:#4b5563;margin-bottom:6px}
-.login-card input{width:100%;padding:12px 14px;border:1px solid var(--f-border);border-radius:10px;margin-bottom:14px;outline:none}
-.login-card input:focus{border-color:var(--f-purple);box-shadow:0 0 0 3px rgba(68,0,153,.12)}
-.btn-primary{width:100%;border:0;background:var(--f-purple);color:#fff;padding:12px;border-radius:10px;font-weight:700;cursor:pointer}
-.shell{display:flex;min-height:100vh}
-.sidebar{width:var(--side);background:#fff;border-right:1px solid var(--f-border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
-.side-head{padding:18px 16px;border-bottom:1px solid var(--f-border);display:flex;align-items:center;gap:12px}
-.side-head .mark{width:36px;height:36px;border-radius:10px;background:var(--f-purple);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
-.side-head b{display:block;font-size:14px}.side-head small{color:var(--f-muted);font-size:11px}
-.side-nav{padding:12px 10px;flex:1;overflow:auto}
-.side-nav .sec{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;padding:10px 12px 6px;font-weight:700}
-.side-nav button{width:100%;display:flex;align-items:center;gap:10px;text-align:left;border:0;background:transparent;padding:10px 12px;border-radius:10px;color:#374151;font-size:13px;font-weight:500;cursor:pointer;margin:2px 0}
-.side-nav button.on,.side-nav button:hover{background:var(--f-purple-soft);color:var(--f-purple);font-weight:700}
-.side-foot{padding:12px;border-top:1px solid var(--f-border);font-size:12px;color:var(--f-muted)}
-.content{flex:1;min-width:0;display:flex;flex-direction:column}
-.topbar{height:56px;background:#fff;border-bottom:1px solid var(--f-border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:10}
-.topbar .actions{display:flex;gap:8px;align-items:center}
-.chip{border:1px solid var(--f-border);background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer}
-.chip-p{background:var(--f-purple);color:#fff;border-color:var(--f-purple)}
-.page{padding:20px;max-width:1280px}
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
-.kpi{background:var(--f-card);border:1px solid var(--f-border);border-radius:14px;padding:16px}
-.kpi .lbl{font-size:12px;color:var(--f-muted);font-weight:600}.kpi .val{font-size:22px;font-weight:800;margin-top:8px}
-.card{background:var(--f-card);border:1px solid var(--f-border);border-radius:14px;padding:18px;margin-bottom:14px}
-.card h3{margin:0 0 14px;font-size:15px;font-weight:700}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--f-muted);padding:10px 8px;border-bottom:1px solid var(--f-border);font-weight:700}
-td{padding:12px 8px;border-bottom:1px solid var(--f-border);vertical-align:middle}
+:root{--p:#440099;--ps:#f3e9ff;--bg:#f5f6f8;--c:#fff;--b:#e8eaed;--t:#2E2D2C;--m:#6b7280;--side:248px}
+*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--t)}
+button,input,select,textarea{font:inherit}
+.login-shell{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#2a0670,#440099);padding:24px}
+.login-card{width:min(400px,100%);background:#fff;border-radius:16px;padding:32px 28px}
+.login-card h1{margin:0 0 4px;font-size:22px}.login-card .sub{margin:0 0 22px;color:var(--m);font-size:13px}
+.login-card label{display:block;font-size:12px;font-weight:600;margin-bottom:6px}
+.login-card input{width:100%;padding:12px;border:1px solid var(--b);border-radius:10px;margin-bottom:14px}
+.btn-primary{width:100%;border:0;background:var(--p);color:#fff;padding:12px;border-radius:10px;font-weight:700;cursor:pointer}
+.shell{display:flex;min-height:100vh}.sidebar{width:var(--side);background:#fff;border-right:1px solid var(--b);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.side-head{padding:18px 16px;border-bottom:1px solid var(--b);display:flex;gap:12px;align-items:center}
+.side-head .mark{width:36px;height:36px;border-radius:10px;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+.side-nav{padding:12px 10px;flex:1;overflow:auto}.side-nav .sec{font-size:10px;text-transform:uppercase;color:#9ca3af;padding:10px 12px 6px;font-weight:700}
+.side-nav button{width:100%;text-align:left;border:0;background:transparent;padding:10px 12px;border-radius:10px;color:#374151;font-size:13px;cursor:pointer;margin:2px 0}
+.side-nav button.on,.side-nav button:hover{background:var(--ps);color:var(--p);font-weight:700}
+.content{flex:1;min-width:0}.topbar{height:56px;background:#fff;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:10}
+.chip{border:1px solid var(--b);background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer}.chip-p{background:var(--p);color:#fff;border-color:var(--p)}
+.page{padding:20px;max-width:1280px}.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.kpi{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:16px}.kpi .lbl{font-size:12px;color:var(--m);font-weight:600}.kpi .val{font-size:22px;font-weight:800;margin-top:8px}
+.card{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:18px;margin-bottom:14px}.card h3{margin:0 0 14px;font-size:15px}
+table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--m);padding:10px 8px;border-bottom:1px solid var(--b)}td{padding:12px 8px;border-bottom:1px solid var(--b)}
 .badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}
 .badge-ok{background:#dcfce7;color:#166534}.badge-bad{background:#fee2e2;color:#991b1b}.badge-wait{background:#fef3c7;color:#92400e}
 .badge-l1{background:#ede9fe;color:#5b21b6}.badge-l2{background:#e0f2fe;color:#075985}.badge-l3{background:#fce7f3;color:#9d174d}.badge-root{background:#fef3c7;color:#92400e}
-.row-actions{display:flex;gap:6px;flex-wrap:wrap}
-.row-actions button{border:0;border-radius:8px;padding:7px 11px;font-size:12px;font-weight:700;cursor:pointer}
-.btn-ok{background:#16a34a;color:#fff}.btn-bad{background:#dc2626;color:#fff}
-.hidden{display:none!important}
-.toast{position:fixed;right:18px;bottom:18px;background:#111;color:#fff;padding:11px 14px;border-radius:10px;display:none;z-index:50;font-size:13px}
-.empty{color:var(--f-muted);font-size:13px;padding:18px 0}
-.tree-node{border:1px solid var(--f-border);border-radius:12px;padding:12px;margin:8px 0;background:#fafafa}
-.tree-node .meta{font-size:12px;color:var(--f-muted);margin-top:4px}
-.tree-children{margin-left:18px;border-left:2px solid #e9d5ff;padding-left:12px}
-@media(max-width:960px){.sidebar{display:none}.kpis{grid-template-columns:1fr 1fr}}
-</style>
-</head>
-<body>
-<div id="app">
-  <div class="login-shell" id="loginView">
-    <div class="login-card">
-      <div class="login-logo">OC</div>
-      <h1>Console</h1>
-      <p class="sub">Own Club — Share Market · KMK Holding Co.</p>
-      <label for="email">Email</label>
-      <input id="email" type="email" autocomplete="username" placeholder="you@email.com">
-      <label for="pass">Password</label>
-      <input id="pass" type="password" autocomplete="current-password" placeholder="Password">
-      <button class="btn-primary" type="button" onclick="doLogin()">Sign in</button>
-    </div>
-  </div>
-  <div class="shell hidden" id="shellView">
-    <aside class="sidebar">
-      <div class="side-head"><div class="mark">OC</div><div><b>Own Club</b><small>Share Market</small></div></div>
-      <nav class="side-nav">
-        <div class="sec">Main</div>
-        <button type="button" class="on" data-page="dashboard" onclick="goPage('dashboard',this)">Dashboard</button>
-        <button type="button" data-page="deposits" onclick="goPage('deposits',this)">Deposits</button>
-        <button type="button" data-page="withdrawals" onclick="goPage('withdrawals',this)">Withdrawals</button>
-        <div class="sec">People</div>
-        <button type="button" data-page="members" onclick="goPage('members',this)">Members</button>
-        <button type="button" data-page="referrals" onclick="goPage('referrals',this)">Referrals / Levels</button>
-        <div class="sec">Support</div>
-        <button type="button" onclick="location.href='/'">Member app</button>
-        <button type="button" onclick="logout()">Logout</button>
-      </nav>
-      <div class="side-foot">KMK Holding · Est. 2018</div>
-    </aside>
-    <div class="content">
-      <header class="topbar">
-        <div id="crumb"><b>Dashboard</b></div>
-        <div class="actions">
-          <button class="chip" type="button" onclick="refreshAll()">Refresh</button>
-          <button class="chip chip-p" type="button" onclick="logout()">Logout</button>
-        </div>
-      </header>
-      <main class="page">
-        <section id="page-dashboard">
-          <div class="kpis">
-            <div class="kpi"><div class="lbl">Members</div><div class="val" id="kUsers">0</div></div>
-            <div class="kpi"><div class="lbl">Net deposits</div><div class="val" id="kInv">UGX 0</div></div>
-            <div class="kpi"><div class="lbl">Pending withdrawals</div><div class="val" id="kPwd">0</div></div>
-            <div class="kpi"><div class="lbl">Level 1 referrals</div><div class="val" id="kL1">0</div></div>
-          </div>
-          <div class="card"><h3>Operations</h3><p class="empty" style="padding-top:0">Approve deposits after TxID check. Withdrawals: Under Review → Reviewed → Disbursed.</p></div>
-        </section>
-        <section id="page-deposits" class="hidden"><div class="card"><h3>Deposit requests</h3><div id="depTable"><div class="empty">Loading…</div></div></div></section>
-        <section id="page-withdrawals" class="hidden"><div class="card"><h3>Withdrawal requests</h3><div id="wdTable"><div class="empty">Loading…</div></div></div></section>
-        <section id="page-members" class="hidden"><div class="card"><h3>Members</h3><div id="memTable"><div class="empty">Loading…</div></div></div></section>
-        <section id="page-referrals" class="hidden">
-          <div class="card">
-            <h3>Referral tracking · automatic levels</h3>
-            <p class="empty" style="padding-top:0;padding-bottom:12px">
-              <b>Root</b> uses system code <code>IMXT2Y0M8D</code>. Anyone who joins with that code is <b>Level 1</b>.
-              People who join with a Level 1 member’s personal invite code are <b>Level 2</b>, and so on.
-            </p>
-            <div class="kpis" style="margin-bottom:12px">
-              <div class="kpi"><div class="lbl">Level 1</div><div class="val" id="refL1">0</div></div>
-              <div class="kpi"><div class="lbl">Level 2</div><div class="val" id="refL2">0</div></div>
-              <div class="kpi"><div class="lbl">Level 3+</div><div class="val" id="refL3">0</div></div>
-              <div class="kpi"><div class="lbl">With shares bought</div><div class="val" id="refBuy">0</div></div>
-            </div>
-            <div id="refTable"></div>
-            <h3 style="margin-top:20px">Tree (who invited who)</h3>
-            <div id="refTree"></div>
-          </div>
-        </section>
-      </main>
-    </div>
-  </div>
+.row-actions{display:flex;gap:6px;flex-wrap:wrap}.row-actions button{border:0;border-radius:8px;padding:7px 11px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-ok{background:#16a34a;color:#fff}.btn-bad{background:#dc2626;color:#fff}.btn-neu{background:#e5e7eb;color:#111}
+.hidden{display:none!important}.toast{position:fixed;right:18px;bottom:18px;background:#111;color:#fff;padding:11px 14px;border-radius:10px;display:none;z-index:50;font-size:13px}
+.empty{color:var(--m);font-size:13px;padding:18px 0}.tree-node{border:1px solid var(--b);border-radius:12px;padding:12px;margin:8px 0;background:#fafafa}.tree-children{margin-left:18px;border-left:2px solid #e9d5ff;padding-left:12px}
+.field{margin-bottom:12px}.field label{display:block;font-size:12px;font-weight:600;margin-bottom:6px}.field input,.field textarea{width:100%;padding:10px 12px;border:1px solid var(--b);border-radius:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:960px){.sidebar{display:none}.kpis,.grid2{grid-template-columns:1fr}}
+</style></head><body>
+<div id="loginView" class="login-shell"><div class="login-card"><h1>Console</h1><p class="sub">Own Club · KMK Holding</p>
+<label>Email</label><input id="email" type="email"><label>Password</label><input id="pass" type="password">
+<button class="btn-primary" onclick="doLogin()">Sign in</button></div></div>
+<div id="shellView" class="shell hidden">
+<aside class="sidebar"><div class="side-head"><div class="mark">OC</div><div><b>Own Club</b><small style="color:#6b7280;font-size:11px">Share Market</small></div></div>
+<nav class="side-nav">
+<div class="sec">Main</div>
+<button class="on" data-page="dashboard" onclick="goPage('dashboard',this)">Dashboard</button>
+<button data-page="deposits" onclick="goPage('deposits',this)">Deposits</button>
+<button data-page="withdrawals" onclick="goPage('withdrawals',this)">Withdrawals</button>
+<div class="sec">Inventory</div>
+<button data-page="pool" onclick="goPage('pool',this)">Company Pool</button>
+<div class="sec">People</div>
+<button data-page="members" onclick="goPage('members',this)">Members</button>
+<button data-page="referrals" onclick="goPage('referrals',this)">Referrals / Levels</button>
+<button data-page="credit" onclick="goPage('credit',this)">Credit wallet</button>
+<div class="sec">Rules</div>
+<button data-page="rules" onclick="goPage('rules',this)">Withdraw rules</button>
+<button onclick="location.href='/'">Member app</button>
+<button onclick="logout()">Logout</button>
+</nav></aside>
+<div class="content"><header class="topbar"><div id="crumb"><b>Dashboard</b></div>
+<div><button class="chip" onclick="refreshAll()">Refresh</button> <button class="chip chip-p" onclick="logout()">Logout</button></div></header>
+<main class="page">
+<section id="page-dashboard"><div class="kpis">
+<div class="kpi"><div class="lbl">Members</div><div class="val" id="kUsers">0</div></div>
+<div class="kpi"><div class="lbl">Net invested</div><div class="val" id="kInv">UGX 0</div></div>
+<div class="kpi"><div class="lbl">Company pool</div><div class="val" id="kPool">UGX 0</div></div>
+<div class="kpi"><div class="lbl">Pending WD</div><div class="val" id="kPwd">0</div></div>
 </div>
+<div class="card"><h3>Operations</h3><p class="empty" style="padding-top:0">
+<b>Deposit approve:</b> Company Pool ↓ → member wallet ↑.<br>
+<b>Withdraw approve/disburse:</b> member wallet already ↓ → Company Pool ↑.<br>
+Rules from <b>15 Aug 2026</b>. Track inviters under Referrals.
+</p></div></section>
+<section id="page-deposits" class="hidden"><div class="card"><h3>Deposits</h3><div id="depTable"></div></div></section>
+<section id="page-withdrawals" class="hidden"><div class="card"><h3>Withdrawals</h3><div id="wdTable"></div></div></section>
+<section id="page-pool" class="hidden">
+<div class="kpis"><div class="kpi"><div class="lbl">Pool balance</div><div class="val" id="poolBal">0</div></div>
+<div class="kpi"><div class="lbl">Ledger rows</div><div class="val" id="poolN">0</div></div>
+<div class="kpi"><div class="lbl">Updated</div><div class="val" id="poolAt" style="font-size:13px">—</div></div>
+<div class="kpi"><div class="lbl">Currency</div><div class="val" id="poolCur">UGX</div></div></div>
+<div class="card grid2"><div><h3>Set balance</h3>
+<div class="field"><label>Balance</label><input id="poolSetBal" type="number" step="0.01"></div>
+<div class="field"><label>Note</label><input id="poolSetNote"></div>
+<button class="chip chip-p" onclick="setPool()">Save</button></div>
+<div><h3>Adjust (+/−)</h3>
+<div class="field"><label>Amount</label><input id="poolAdjAmt" type="number" step="0.01"></div>
+<div class="field"><label>Note</label><input id="poolAdjNote"></div>
+<button class="chip chip-p" onclick="adjPool()">Post</button></div></div>
+<div class="card"><h3>Inventory ledger</h3><div id="poolLedger"></div></div>
+</section>
+<section id="page-members" class="hidden"><div class="card"><h3>Members</h3><div id="memTable"></div></div></section>
+<section id="page-referrals" class="hidden"><div class="card">
+<h3>Who invited who</h3>
+<p class="empty" style="padding:0 0 12px">Root code <code>IMXT2Y0M8D</code> → Level 1. Their codes → Level 2, etc.</p>
+<div class="kpis"><div class="kpi"><div class="lbl">L1</div><div class="val" id="refL1">0</div></div><div class="kpi"><div class="lbl">L2</div><div class="val" id="refL2">0</div></div><div class="kpi"><div class="lbl">L3+</div><div class="val" id="refL3">0</div></div><div class="kpi"><div class="lbl">With shares</div><div class="val" id="refBuy">0</div></div></div>
+<div id="refTable"></div><h3 style="margin-top:16px">Tree</h3><div id="refTree"></div>
+</div></section>
+<section id="page-credit" class="hidden"><div class="grid2">
+<div class="card"><h3>Credit one client</h3>
+<div class="field"><label>Email / phone / id</label><input id="crId"></div>
+<div class="field"><label>Amount</label><input id="crAmt" type="number" step="0.01"></div>
+<div class="field"><label>Note</label><input id="crNote"></div>
+<button class="chip chip-p" onclick="creditOne()">Credit</button></div>
+<div class="card"><h3>Bulk credit</h3>
+<p class="empty" style="padding:0 0 8px">Lines: <code>email,amount,note</code></p>
+<textarea id="crBulk" rows="8" style="width:100%;padding:10px;border:1px solid #e8eaed;border-radius:10px"></textarea>
+<button class="chip chip-p" style="margin-top:10px" onclick="creditBulk()">Run bulk</button>
+<div id="crBulkOut" style="margin-top:10px;font-size:12px"></div></div>
+</div></section>
+<section id="page-rules" class="hidden"><div class="card"><h3>Withdraw rules · 15 Aug 2026</h3><div id="rulesBox"></div></div></section>
+</main></div></div>
 <div class="toast" id="toast"></div>
 <script>
-var TOKEN = localStorage.getItem("oc_sys_token") || "";
-var DEPOSITS = [], WITHDRAWALS = [], USERS = [];
-var ROOT_CODE = "IMXT2Y0M8D";
-
-function toast(m){ var t=document.getElementById("toast"); t.textContent=m; t.style.display="block"; setTimeout(function(){t.style.display="none"},2600); }
-function money(n){ return "UGX "+Number(n||0).toLocaleString(); }
-function api(path, method, body){
-  var o={method:method||"GET", headers:{"Content-Type":"application/json"}};
-  if(TOKEN) o.headers.Authorization="Bearer "+TOKEN;
-  if(body) o.body=JSON.stringify(body);
-  return fetch(path,o).then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error||("HTTP "+r.status)); return j; }); });
-}
-function doLogin(){
-  var email=document.getElementById("email").value.trim();
-  var pass=document.getElementById("pass").value;
-  api("/api/login","POST",{identifier:email,password:pass}).then(function(r){
-    if(!(r.user && (r.user.is_admin || r.user.is_support))) throw new Error("System access only");
-    TOKEN=r.token; localStorage.setItem("oc_sys_token", TOKEN); showShell();
-  }).catch(function(e){ toast(e.message); });
-}
-function logout(){ TOKEN=""; localStorage.removeItem("oc_sys_token"); location.reload(); }
-function showShell(){ document.getElementById("loginView").classList.add("hidden"); document.getElementById("shellView").classList.remove("hidden"); refreshAll(); }
-function goPage(name, btn){
-  ["dashboard","deposits","withdrawals","members","referrals"].forEach(function(p){ document.getElementById("page-"+p).classList.toggle("hidden", p!==name); });
-  document.querySelectorAll(".side-nav button[data-page]").forEach(function(b){ b.classList.remove("on"); });
-  if(btn) btn.classList.add("on");
-  var labels={dashboard:"Dashboard",deposits:"Deposits",withdrawals:"Withdrawals",members:"Members",referrals:"Referrals / Levels"};
-  document.getElementById("crumb").innerHTML="<b>"+(labels[name]||"Dashboard")+"</b>";
-}
-function badge(st){ st=String(st||"").toLowerCase(); if(/confirm|disburse|approv|ok|paid/.test(st)) return "badge-ok"; if(/reject|fail|cancel/.test(st)) return "badge-bad"; return "badge-wait"; }
-
-function normCode(c){ return String(c||"").trim().toUpperCase(); }
-function userCode(u){ return normCode(u.inviteCode||u.invite_code||u.referralCode||u.code); }
-function usedCode(u){ return normCode(u.referredBy||u.referred_by||u.invitedBy||u.invited_by||u.parentCode||u.usedInvite||u.signup_invite||u.inviteUsed); }
-function sharesCount(u){ return (u.machines&&u.machines.length)||u.shares||u.share_count||0; }
-
-/** Build map inviteCode -> user, then walk up to classify levels */
-function classifyLevels(users){
-  var byCode = {};
-  users.forEach(function(u){ var c=userCode(u); if(c) byCode[c]=u; });
-  var levelOf = {};
-  function levelFor(u, depth){
-    if(depth>20) return 99;
-    var id = u.id || u.email || userCode(u);
-    if(levelOf[id]!=null) return levelOf[id];
-    if(u.is_admin || u.isAdmin || (u.email||"").toLowerCase()==="k_hmed@yahoo.com"){ levelOf[id]=0; return 0; }
-    var used = usedCode(u);
-    if(!used){ levelOf[id]=1; return 1; } // unknown parent → treat as L1
-    if(used === ROOT_CODE){ levelOf[id]=1; return 1; }
-    var parent = byCode[used];
-    if(!parent){ levelOf[id]=1; return 1; }
-    var pl = levelFor(parent, depth+1);
-    levelOf[id] = pl + 1;
-    return levelOf[id];
-  }
-  users.forEach(function(u){ levelFor(u,0); });
-  return { levelOf: levelOf, byCode: byCode };
-}
-
-function renderReferrals(){
-  var cls = classifyLevels(USERS);
-  var rows = USERS.map(function(u){
-    var id = u.id || u.email || userCode(u);
-    var lv = cls.levelOf[id];
-    if(lv==null) lv = 1;
-    return { u:u, level:lv, code:userCode(u), used:usedCode(u), shares:sharesCount(u) };
-  }).sort(function(a,b){ return a.level - b.level || String(a.u.name||"").localeCompare(String(b.u.name||"")); });
-
-  var c1=0,c2=0,c3=0,cb=0;
-  rows.forEach(function(r){
-    if(r.level===0) return;
-    if(r.level===1) c1++; else if(r.level===2) c2++; else c3++;
-    if(r.shares>0) cb++;
-  });
-  document.getElementById("refL1").textContent=c1;
-  document.getElementById("refL2").textContent=c2;
-  document.getElementById("refL3").textContent=c3;
-  document.getElementById("refBuy").textContent=cb;
-  document.getElementById("kL1").textContent=c1;
-
-  var h="<table><thead><tr><th>Level</th><th>Name</th><th>Phone</th><th>Email</th><th>Their invite code</th><th>Joined via</th><th>Shares</th></tr></thead><tbody>";
-  rows.forEach(function(r){
-    var lv = r.level;
-    var badgeCls = lv===0?"badge-root": lv===1?"badge-l1": lv===2?"badge-l2":"badge-l3";
-    var label = lv===0?"ROOT": ("L"+lv);
-    var inviter = r.used || "—";
-    if(r.used === ROOT_CODE) inviter = ROOT_CODE+" (system)";
-    else if(cls.byCode[r.used]) inviter = (cls.byCode[r.used].name||r.used)+" · "+r.used;
-    h+="<tr><td><span class='badge "+badgeCls+"'>"+label+"</span></td><td>"+(r.u.name||"—")+"</td><td>"+(r.u.phone||"—")+"</td><td>"+(r.u.email||"—")+"</td><td><code>"+(r.code||"—")+"</code></td><td>"+inviter+"</td><td>"+r.shares+"</td></tr>";
-  });
-  document.getElementById("refTable").innerHTML=h+"</tbody></table>";
-
-  // Tree: children of each code
-  var children = {};
-  rows.forEach(function(r){
-    if(r.level===0) return;
-    var parentKey = r.used || ROOT_CODE;
-    if(!children[parentKey]) children[parentKey]=[];
-    children[parentKey].push(r);
-  });
-  function renderNode(code, depth){
-    var list = children[code]||[];
-    if(!list.length) return depth===0 ? "<div class='empty'>No referrals yet under "+code+"</div>" : "";
-    var out = "";
-    list.forEach(function(r){
-      out += "<div class='tree-node'><b>"+(r.u.name||"Member")+"</b> <span class='badge "+(r.level===1?"badge-l1":r.level===2?"badge-l2":"badge-l3")+"'>L"+r.level+"</span>";
-      out += "<div class='meta'>"+(r.u.phone||"")+" · "+(r.u.email||"")+" · code <code>"+(r.code||"—")+"</code> · shares "+r.shares+"</div>";
-      if(r.code && children[r.code]) out += "<div class='tree-children'>"+renderNode(r.code, depth+1)+"</div>";
-      out += "</div>";
-    });
-    return out;
-  }
-  document.getElementById("refTree").innerHTML = renderNode(ROOT_CODE, 0);
-}
-
-function refreshAll(){
-  api("/api/admin/stats").then(function(s){
-    document.getElementById("kUsers").textContent=s.users||s.total_users||0;
-    document.getElementById("kInv").textContent=money(s.invested||s.total_invested||0);
-    document.getElementById("kPwd").textContent=s.pending_withdrawals||s.pending_wd||0;
-  }).catch(function(){});
-  api("/api/admin/deposits").then(function(r){ DEPOSITS=r.deposits||r.items||[]; renderDeposits(); }).catch(function(e){ document.getElementById("depTable").innerHTML="<div class='empty'>"+e.message+"</div>"; });
-  api("/api/admin/withdrawals").then(function(r){ WITHDRAWALS=r.withdrawals||r.items||[]; renderWithdrawals(); }).catch(function(e){ document.getElementById("wdTable").innerHTML="<div class='empty'>"+e.message+"</div>"; });
-  api("/api/admin/users").then(function(r){
-    USERS=r.users||r.items||[];
-    renderMembers();
-    renderReferrals();
-  }).catch(function(e){ document.getElementById("memTable").innerHTML="<div class='empty'>"+e.message+"</div>"; });
-}
-function renderDeposits(){
-  if(!DEPOSITS.length){ document.getElementById("depTable").innerHTML="<div class='empty'>No deposit requests.</div>"; return; }
-  var h="<table><thead><tr><th>Date</th><th>Member</th><th>Phone</th><th>Amount</th><th>TxID</th><th>Status</th><th></th></tr></thead><tbody>";
-  DEPOSITS.forEach(function(d){
-    var tx=d.txid||d.tx_id||d.reference||"—"; var st=d.status||"pending"; var id=d.id||d.deposit_id||"";
-    h+="<tr><td>"+(d.date||d.created_at||"—")+"</td><td>"+(d.name||d.user||"—")+"</td><td>"+(d.phone||"—")+"</td><td>"+money(d.amount)+"</td><td>"+tx+"</td><td><span class='badge "+badge(st)+"'>"+st+"</span></td><td class='row-actions'>";
-    if(/pend|submit/i.test(st)){ h+="<button class='btn-ok' type='button' onclick='depAct(\""+id+"\",\"confirm\")'>Approve</button><button class='btn-bad' type='button' onclick='depAct(\""+id+"\",\"reject\")'>Reject</button>"; }
-    h+="</td></tr>";
-  });
-  document.getElementById("depTable").innerHTML=h+"</tbody></table>";
-}
-function renderWithdrawals(){
-  if(!WITHDRAWALS.length){ document.getElementById("wdTable").innerHTML="<div class='empty'>No withdrawal requests.</div>"; return; }
-  var h="<table><thead><tr><th>Date</th><th>Member</th><th>Amount</th><th>TxID</th><th>Status</th><th></th></tr></thead><tbody>";
-  WITHDRAWALS.forEach(function(w){
-    var st=w.status||"under_review"; var id=w.id||w.withdrawal_id||"";
-    h+="<tr><td>"+(w.date||w.created_at||"—")+"</td><td>"+(w.name||w.user||"—")+"</td><td>"+money(w.amount)+"</td><td>"+(w.txid||w.system_txid||"—")+"</td><td><span class='badge "+badge(st)+"'>"+st+"</span></td><td class='row-actions'>";
-    if(/review|pend/i.test(st)&&!/reviewed/i.test(st)){ h+="<button class='btn-ok' type='button' onclick='wdAct(\""+id+"\",\"review\")'>Review</button><button class='btn-bad' type='button' onclick='wdAct(\""+id+"\",\"reject\")'>Reject</button>"; }
-    else if(/reviewed/i.test(st)){ h+="<button class='btn-ok' type='button' onclick='wdAct(\""+id+"\",\"disburse\")'>Disburse</button>"; }
-    h+="</td></tr>";
-  });
-  document.getElementById("wdTable").innerHTML=h+"</tbody></table>";
-}
-function renderMembers(){
-  if(!USERS.length){ document.getElementById("memTable").innerHTML="<div class='empty'>No members yet.</div>"; return; }
-  var cls=classifyLevels(USERS);
-  var h="<table><thead><tr><th>Level</th><th>Name</th><th>Phone</th><th>Email</th><th>Balance</th><th>Shares</th><th>Invite code</th></tr></thead><tbody>";
-  USERS.forEach(function(u){
-    var id=u.id||u.email||userCode(u); var lv=cls.levelOf[id]; if(lv==null) lv=1;
-    var badgeCls=lv===0?"badge-root":lv===1?"badge-l1":lv===2?"badge-l2":"badge-l3";
-    h+="<tr><td><span class='badge "+badgeCls+"'>"+(lv===0?"ROOT":"L"+lv)+"</span></td><td>"+(u.name||"—")+"</td><td>"+(u.phone||"—")+"</td><td>"+(u.email||"—")+"</td><td>"+money(u.balance)+"</td><td>"+sharesCount(u)+"</td><td><code>"+(userCode(u)||"—")+"</code></td></tr>";
-  });
-  document.getElementById("memTable").innerHTML=h+"</tbody></table>";
-}
-function depAct(id, action){ api("/api/admin/deposits/action","POST",{id:id,action:action}).then(function(){ toast("Deposit updated"); refreshAll(); }).catch(function(e){ toast(e.message); }); }
-function wdAct(id, action){ api("/api/admin/withdrawals/action","POST",{id:id,action:action}).then(function(){ toast("Withdrawal updated"); refreshAll(); }).catch(function(e){ toast(e.message); }); }
-if(TOKEN){ api("/api/me").then(function(r){ if(r.user&&(r.user.is_admin||r.user.is_support)) showShell(); }).catch(function(){ TOKEN=""; localStorage.removeItem("oc_sys_token"); }); }
-</script>
-</body>
-</html>
+var TOKEN=localStorage.getItem("oc_sys_token")||"";
+var DEPOSITS=[],WITHDRAWALS=[],USERS=[],ROOT_CODE="IMXT2Y0M8D";
+var PAGES=["dashboard","deposits","withdrawals","pool","members","referrals","credit","rules"];
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.style.display="block";setTimeout(function(){t.style.display="none"},2800)}
+function money(n){return "UGX "+Number(n||0).toLocaleString()}
+function api(path,method,body){var o={method:method||"GET",headers:{"Content-Type":"application/json"}};if(TOKEN)o.headers.Authorization="Bearer "+TOKEN;if(body!==undefined&&method&&method!=="GET")o.body=JSON.stringify(body);return fetch(path,o).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||("HTTP "+r.status));return j})})}
+function doLogin(){api("/api/login","POST",{identifier:document.getElementById("email").value.trim(),password:document.getElementById("pass").value}).then(function(r){if(!(r.user&&(r.user.is_admin||r.user.is_support)))throw new Error("System only");TOKEN=r.token;localStorage.setItem("oc_sys_token",TOKEN);showShell()}).catch(function(e){toast(e.message)})}
+function logout(){TOKEN="";localStorage.removeItem("oc_sys_token");location.reload()}
+function showShell(){document.getElementById("loginView").classList.add("hidden");document.getElementById("shellView").classList.remove("hidden");refreshAll()}
+function goPage(name,btn){PAGES.forEach(function(p){var el=document.getElementById("page-"+p);if(el)el.classList.toggle("hidden",p!==name)});document.querySelectorAll(".side-nav button[data-page]").forEach(function(b){b.classList.remove("on")});if(btn)btn.classList.add("on");document.getElementById("crumb").innerHTML="<b>"+name+"</b>";if(name==="pool")loadPool();if(name==="rules")loadRules()}
+function badge(st){st=String(st||"").toLowerCase();if(/confirm|disburse|approv|ok|paid/.test(st))return"badge-ok";if(/reject|fail|cancel/.test(st))return"badge-bad";return"badge-wait"}
+function normCode(c){return String(c||"").trim().toUpperCase()}
+function userCode(u){return normCode(u.inviteCode||u.invite_code||u.referralCode||u.code)}
+function usedCode(u){return normCode(u.referredBy||u.referred_by||u.invitedBy||u.invited_by||u.parentCode||u.usedInvite||u.signup_invite||u.inviteUsed)}
+function sharesCount(u){return (u.machines&&u.machines.length)||u.shares||0}
+function classifyLevels(users){var byCode={},levelOf={};users.forEach(function(u){var c=userCode(u);if(c)byCode[c]=u});function levelFor(u,d){if(d>20)return 99;var id=u.id||u.email||userCode(u);if(levelOf[id]!=null)return levelOf[id];if(u.is_admin||(u.email||"").toLowerCase()==="k_hmed@yahoo.com"){levelOf[id]=0;return 0}var used=usedCode(u);if(!used||used===ROOT_CODE){levelOf[id]=1;return 1}var parent=byCode[used];if(!parent){levelOf[id]=1;return 1}levelOf[id]=levelFor(parent,d+1)+1;return levelOf[id]}users.forEach(function(u){levelFor(u,0)});return{levelOf:levelOf,byCode:byCode}}
+function renderReferrals(){var cls=classifyLevels(USERS);var rows=USERS.map(function(u){var id=u.id||u.email||userCode(u);return{u:u,level:cls.levelOf[id]==null?1:cls.levelOf[id],code:userCode(u),used:usedCode(u),shares:sharesCount(u)}}).sort(function(a,b){return a.level-b.level});var c1=0,c2=0,c3=0,cb=0;rows.forEach(function(r){if(r.level===0)return;if(r.level===1)c1++;else if(r.level===2)c2++;else c3++;if(r.shares>0)cb++});document.getElementById("refL1").textContent=c1;document.getElementById("refL2").textContent=c2;document.getElementById("refL3").textContent=c3;document.getElementById("refBuy").textContent=cb;var h="<table><thead><tr><th>Level</th><th>Name</th><th>Phone</th><th>Email</th><th>Invite code</th><th>Invited by</th><th>Shares</th></tr></thead><tbody>";rows.forEach(function(r){var inv=r.used===ROOT_CODE?ROOT_CODE+" (root)":(cls.byCode[r.used]?(cls.byCode[r.used].name||"")+" · "+r.used:(r.used||"—"));h+="<tr><td><span class='badge "+(r.level===0?"badge-root":r.level===1?"badge-l1":r.level===2?"badge-l2":"badge-l3")+"'>"+(r.level===0?"ROOT":"L"+r.level)+"</span></td><td>"+(r.u.name||"—")+"</td><td>"+(r.u.phone||"—")+"</td><td>"+(r.u.email||"—")+"</td><td><code>"+(r.code||"—")+"</code></td><td>"+inv+"</td><td>"+r.shares+"</td></tr>"});document.getElementById("refTable").innerHTML=h+"</tbody></table>";var children={};rows.forEach(function(r){if(r.level===0)return;var k=r.used||ROOT_CODE;if(!children[k])children[k]=[];children[k].push(r)});function rn(code,d){var list=children[code]||[];if(!list.length)return d===0?"<div class='empty'>No referrals under "+code+"</div>":"";var out="";list.forEach(function(r){out+="<div class='tree-node'><b>"+(r.u.name||"Member")+"</b> L"+r.level+" · <code>"+(r.code||"")+"</code><div style='font-size:12px;color:#6b7280'>"+(r.u.phone||"")+" · "+(r.u.email||"")+"</div>";if(r.code&&children[r.code])out+="<div class='tree-children'>"+rn(r.code,d+1)+"</div>";out+="</div>"});return out}document.getElementById("refTree").innerHTML=rn(ROOT_CODE,0)}
+function loadPool(){api("/api/admin/pool").then(function(p){document.getElementById("poolBal").textContent=money(p.balance);document.getElementById("kPool").textContent=money(p.balance);document.getElementById("poolN").textContent=(p.ledger||[]).length;document.getElementById("poolAt").textContent=(p.updated_at||"").toString().slice(0,19).replace("T"," ");document.getElementById("poolCur").textContent=p.currency||"UGX";var led=p.ledger||[];if(!led.length){document.getElementById("poolLedger").innerHTML="<div class='empty'>No ledger yet</div>";return}var h="<table><thead><tr><th>When</th><th>Type</th><th>Amount</th><th>After</th><th>Note</th></tr></thead><tbody>";led.slice(0,100).forEach(function(e){h+="<tr><td>"+(e.at||"").toString().slice(0,19).replace("T"," ")+"</td><td>"+e.type+"</td><td>"+money(e.amount)+"</td><td>"+money(e.balance_after)+"</td><td>"+(e.note||"")+"</td></tr>"});document.getElementById("poolLedger").innerHTML=h+"</tbody></table>"}).catch(function(e){document.getElementById("poolLedger").innerHTML="<div class='empty'>"+e.message+"</div>"})}
+function setPool(){api("/api/admin/pool/set","POST",{balance:Number(document.getElementById("poolSetBal").value),note:document.getElementById("poolSetNote").value||"set"}).then(function(){toast("Pool saved");loadPool()}).catch(function(e){toast(e.message)})}
+function adjPool(){api("/api/admin/pool/adjust","POST",{type:"adjust",amount:Number(document.getElementById("poolAdjAmt").value),note:document.getElementById("poolAdjNote").value||"adj"}).then(function(){toast("Posted");loadPool()}).catch(function(e){toast(e.message)})}
+function loadRules(){api("/api/admin/withdraw-rules").then(function(r){var caps=r.vip_daily_caps||{};var h="<p><b>Effective:</b> "+(r.effective_from||"2026-08-15")+" · Fee "+((r.fee_pct||0.05)*100)+"%</p><table><thead><tr><th>VIP</th><th>Max / day</th></tr></thead><tbody>";Object.keys(caps).sort().forEach(function(k){h+="<tr><td>VIP-"+k+"</td><td>"+money(caps[k])+"</td></tr>"});h+="</tbody></table><h3 style='margin-top:14px'>Deposit</h3><ul>"+(r.deposit_flow||[]).map(function(x){return"<li>"+x+"</li>"}).join("")+"</ul><h3>Withdraw</h3><ul>"+(r.flow||[]).map(function(x){return"<li>"+x+"</li>"}).join("")+"</ul>";document.getElementById("rulesBox").innerHTML=h}).catch(function(e){document.getElementById("rulesBox").innerHTML="<div class='empty'>"+e.message+"</div>"})}
+function creditOne(){api("/api/admin/credit","POST",{identifier:document.getElementById("crId").value.trim(),amount:Number(document.getElementById("crAmt").value),note:document.getElementById("crNote").value}).then(function(){toast("Credited");refreshAll()}).catch(function(e){toast(e.message)})}
+function creditBulk(){api("/api/admin/credit/bulk","POST",{lines:document.getElementById("crBulk").value}).then(function(r){var ok=(r.results||[]).filter(function(x){return x.ok}).length;var bad=(r.results||[]).filter(function(x){return!x.ok});document.getElementById("crBulkOut").innerHTML="<b>"+ok+" ok</b>, "+bad.length+" failed<br>"+bad.map(function(x){return(x.identifier||"")+" — "+x.error}).join("<br>");toast("Bulk done");refreshAll()}).catch(function(e){toast(e.message)})}
+function refreshAll(){api("/api/admin/stats").then(function(s){document.getElementById("kUsers").textContent=s.users||s.total_users||0;document.getElementById("kInv").textContent=money(s.invested||s.total_invested||0);document.getElementById("kPwd").textContent=s.pending_withdrawals||0}).catch(function(){});loadPool();api("/api/admin/deposits").then(function(r){DEPOSITS=r.deposits||[];renderDeposits()}).catch(function(e){document.getElementById("depTable").innerHTML="<div class='empty'>"+e.message+"</div>"});api("/api/admin/withdrawals").then(function(r){WITHDRAWALS=r.withdrawals||[];renderWithdrawals()}).catch(function(e){document.getElementById("wdTable").innerHTML="<div class='empty'>"+e.message+"</div>"});api("/api/admin/users").then(function(r){USERS=r.users||[];renderMembers();renderReferrals()}).catch(function(e){document.getElementById("memTable").innerHTML="<div class='empty'>"+e.message+"</div>"})}
+function renderDeposits(){if(!DEPOSITS.length){document.getElementById("depTable").innerHTML="<div class='empty'>No deposits</div>";return}var h="<table><thead><tr><th>Date</th><th>Member</th><th>Phone</th><th>Amount</th><th>TxID</th><th>Status</th><th></th></tr></thead><tbody>";DEPOSITS.forEach(function(d){var st=d.status||"pending",id=d.id||"",uid=d.user_id||"";h+="<tr><td>"+(d.date||d.created_at||"—")+"</td><td>"+(d.name||d.user_name||d.user||"—")+"</td><td>"+(d.phone||d.user_phone||"—")+"</td><td>"+money(d.amount)+"</td><td>"+(d.txid||d.tx_id||"—")+"</td><td><span class='badge "+badge(st)+"'>"+st+"</span></td><td class='row-actions'>";if(/pend|submit/i.test(st))h+="<button class='btn-ok' onclick='depAct(\""+id+"\",\""+uid+"\",\"confirm\")'>Approve → pool→wallet</button><button class='btn-bad' onclick='depAct(\""+id+"\",\""+uid+"\",\"reject\")'>Reject</button>";h+="</td></tr>"});document.getElementById("depTable").innerHTML=h+"</tbody></table>"}
+function renderWithdrawals(){if(!WITHDRAWALS.length){document.getElementById("wdTable").innerHTML="<div class='empty'>No withdrawals</div>";return}var h="<table><thead><tr><th>Date</th><th>Member</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>";WITHDRAWALS.forEach(function(w){var st=w.status||"pending",id=w.id||"";h+="<tr><td>"+(w.date||w.created_at||"—")+"</td><td>"+(w.name||w.user_name||w.user||"—")+"</td><td>"+money(w.amount)+"</td><td><span class='badge "+badge(st)+"'>"+st+"</span></td><td class='row-actions'>";if(/review|pend/i.test(st)&&!/reviewed|approv|disburse/i.test(st))h+="<button class='btn-neu' onclick='wdAct(\""+id+"\",\"review\")'>Review</button><button class='btn-ok' onclick='wdAct(\""+id+"\",\"approve\")'>Approve → pool</button><button class='btn-bad' onclick='wdAct(\""+id+"\",\"reject\")'>Reject</button>";else if(/reviewed|approv/i.test(st)&&!/disburse/i.test(st))h+="<button class='btn-ok' onclick='wdAct(\""+id+"\",\"disburse\")'>Disburse → pool</button>";h+="</td></tr>"});document.getElementById("wdTable").innerHTML=h+"</tbody></table>"}
+function renderMembers(){if(!USERS.length){document.getElementById("memTable").innerHTML="<div class='empty'>No members</div>";return}var cls=classifyLevels(USERS);var h="<table><thead><tr><th>Level</th><th>Name</th><th>Phone</th><th>Email</th><th>Balance</th><th>Shares</th><th>Code</th><th>Invited by</th></tr></thead><tbody>";USERS.forEach(function(u){var id=u.id||u.email||userCode(u),lv=cls.levelOf[id]==null?1:cls.levelOf[id],used=usedCode(u);h+="<tr><td><span class='badge "+(lv===0?"badge-root":lv===1?"badge-l1":lv===2?"badge-l2":"badge-l3")+"'>"+(lv===0?"ROOT":"L"+lv)+"</span></td><td>"+(u.name||"—")+"</td><td>"+(u.phone||"—")+"</td><td>"+(u.email||"—")+"</td><td>"+money(u.balance)+"</td><td>"+sharesCount(u)+"</td><td><code>"+(userCode(u)||"—")+"</code></td><td>"+(used===ROOT_CODE?"ROOT":(used||"—"))+"</td></tr>"});document.getElementById("memTable").innerHTML=h+"</tbody></table>"}
+function depAct(id,uid,action){api("/api/admin/deposits/action","POST",{id:id,user_id:uid,action:action}).then(function(){toast("Deposit updated");refreshAll()}).catch(function(e){toast(e.message)})}
+function wdAct(id,action){api("/api/admin/withdrawals/action","POST",{id:id,action:action}).then(function(){toast("Withdrawal updated");refreshAll()}).catch(function(e){toast(e.message)})}
+if(TOKEN){api("/api/me").then(function(r){if(r.user&&(r.user.is_admin||r.user.is_support))showShell()}).catch(function(){TOKEN="";localStorage.removeItem("oc_sys_token")})}
+</script></body></html>
