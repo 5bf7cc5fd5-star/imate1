@@ -1,107 +1,156 @@
-/* iPhone 15 Pro: whole login on one screen, no middle hole */
-html.auth-open, body.auth-open {
+/* Facebook app login spacing + circular Own Club mark */
+html, body, body.auth-open, html.auth-open {
+  background: #1c1c1e !important;
   overflow: hidden !important;
   height: 100dvh !important;
-  background: #f0f2f5 !important;
 }
-#authScreen,
-.auth-screen {
+#authScreen, .auth-screen {
   position: fixed !important;
   inset: 0 !important;
   height: 100dvh !important;
   max-height: 100dvh !important;
-  width: 100% !important;
   overflow: hidden !important;
+  background: #1c1c1e !important;
+  color: #fff !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: flex-start !important;
-  align-items: center !important;
-  gap: 0 !important;
-  padding: 28px 18px 12px !important;
-  background: #f0f2f5 !important;
-  z-index: 50 !important;
-}
-#authScreen > * {
-  flex: 0 0 auto !important;
-  min-height: 0 !important;
+  align-items: stretch !important;
+  padding: 0 22px calc(18px + env(safe-area-inset-bottom)) !important;
+  z-index: 80 !important;
 }
 #authScreen .auth-bg,
 #authScreen .auth-hero,
-#authScreen .spacer,
-#authScreen .auth-gap,
 #authScreen canvas,
-#ocPack + .auth-bg {
-  display: none !important;
-  height: 0 !important;
-  flex: 0 0 0 !important;
-}
-#authScreen img,
-#authScreen svg,
+#authScreen .wy-sky,
 #authScreen .skyline,
-#authScreen .city,
-#authScreen .brand-art {
-  max-height: 56px !important;
-  height: 56px !important;
-  width: auto !important;
-  object-fit: contain !important;
-  margin: 0 auto 4px !important;
-}
-#authScreen .auth-logo,
-#authScreen .brand {
-  margin: 0 0 8px !important;
-  padding: 0 !important;
-}
 #authScreen .auth-logo h1,
-#authScreen h1 {
-  font-size: 22px !important;
-  line-height: 1.15 !important;
-  margin: 0 !important;
-}
 #authScreen .auth-logo p,
-#authScreen .auth-sub {
-  margin: 2px 0 0 !important;
-  font-size: 11px !important;
+#authScreen .wy-brand-text {
+  display: none !important;
 }
-#ocPack {
+#fbBack {
+  position: absolute;
+  top: 14px;
+  left: 10px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 28px;
+  line-height: 44px;
+  z-index: 5;
+}
+#fbMarkWrap {
+  width: 78px;
+  height: 78px;
+  margin: 86px auto 54px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid #2a2a2a;
+  flex: 0 0 78px;
+}
+#fbMarkWrap img {
   width: 100% !important;
-  max-width: 390px !important;
-  margin: 0 auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 8px !important;
+  height: 100% !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  display: block !important;
 }
 #authScreen .auth-center,
 #authScreen .auth-card,
-#authScreen form {
+#loginForm, #signupForm, .wy-form, #ocPack {
   width: 100% !important;
-  max-width: 390px !important;
+  max-width: 430px !important;
   margin: 0 auto !important;
+  background: transparent !important;
+  box-shadow: none !important;
   position: static !important;
-  top: auto !important;
-  bottom: auto !important;
-  transform: none !important;
-  gap: 8px !important;
 }
 #authScreen .tabs {
-  margin: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  gap: 28px !important;
+  margin: 0 0 14px !important;
+  background: none !important;
+  border: 0 !important;
 }
-#authScreen input,
-#authScreen select,
-#authScreen textarea {
-  margin: 0 !important;
-  padding: 10px 12px !important;
-  min-height: 40px !important;
-  height: 40px !important;
-  border-radius: 8px !important;
+#authScreen .tabs button {
+  background: none !important;
+  border: 0 !important;
+  color: #8e8e93 !important;
+  border-radius: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  padding: 6px 0 !important;
+}
+#authScreen .tabs button.active {
+  color: #fff !important;
+  border-bottom-color: #1877f2 !important;
+}
+#authScreen input, #authScreen select {
+  width: 100% !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  margin: 0 0 12px !important;
+  padding: 0 16px !important;
+  border-radius: 12px !important;
+  border: 1px solid #3a3a3c !important;
+  background: #2c2c2e !important;
+  color: #fff !important;
   font-size: 16px !important;
 }
+#authScreen input::placeholder { color: #8e8e93 !important; }
 #authScreen .btn,
 #authScreen button.btn,
-#authScreen button[type="submit"] {
-  min-height: 42px !important;
-  height: 42px !important;
-  margin: 2px 0 !important;
-  border-radius: 8px !important;
+#authScreen button[type="submit"],
+#authScreen .wy-btn,
+#authScreen .wy-primary {
+  width: 100% !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  margin: 6px 0 14px !important;
+  border: 0 !important;
+  border-radius: 24px !important;
+  background: #1877f2 !important;
+  color: #fff !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
 }
-#authScreen .field { margin: 0 !important; }
-#authScreen .field label { margin: 0 0 3px !important; font-size: 12px !important; }
+#authScreen .wy-link,
+#authScreen a.wy-link,
+#authScreen .wy-muted button {
+  display: block !important;
+  width: 100% !important;
+  text-align: center !important;
+  color: #fff !important;
+  background: none !important;
+  border: 0 !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  margin: 4px 0 0 !important;
+}
+#fbCreate {
+  margin-top: auto !important;
+  width: 100% !important;
+  max-width: 430px !important;
+  height: 44px !important;
+  border-radius: 22px !important;
+  border: 1px solid #4a90d9 !important;
+  background: transparent !important;
+  color: #4a90d9 !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  align-self: center;
+}
+#fbMeta {
+  text-align: center;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  margin: 14px 0 6px;
+}
+#authScreen .field label { display: none !important; }
+#authScreen .wy-eye { color: #8e8e93 !important; }

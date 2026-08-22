@@ -23,18 +23,18 @@ for script in ("inject_ops.py", "fix_admin_phone.py", "migrate.py"):
             print(script, "failed", e)
 
 INJECT = """
-<link rel=\"stylesheet\" href=\"/static/login-tight.css?v=30\">
-<script src=\"/static/login-tight.js?v=30\"></script>
-<script src=\"/static/market-data.js?v=30\"></script>
-<script src=\"/static/lock-nav.js?v=30\"></script>
-<script src=\"/static/nav-rules.js?v=30\"></script>
-<script src=\"/static/member-id.js?v=30\"></script>
-<script src=\"/static/tx-history.js?v=30\"></script>
-<style id=\"login-iphone-30\">
-#authScreen{justify-content:flex-start!important;overflow:hidden!important;height:100dvh!important;padding:28px 18px 12px!important;}
-#authScreen .auth-logo{margin:0 0 8px!important;}
-#authScreen img,#authScreen svg{max-height:56px!important;height:56px!important;}
-#authScreen input{min-height:40px!important;height:40px!important;margin:0!important;}
+<link rel=\"stylesheet\" href=\"/static/login-tight.css?v=31\">
+<script src=\"/static/login-tight.js?v=31\"></script>
+<script src=\"/static/market-data.js?v=31\"></script>
+<script src=\"/static/lock-nav.js?v=31\"></script>
+<script src=\"/static/nav-rules.js?v=31\"></script>
+<script src=\"/static/member-id.js?v=31\"></script>
+<script src=\"/static/tx-history.js?v=31\"></script>
+<style id=\"fb-login-31\">
+#authScreen{background:#1c1c1e!important;overflow:hidden!important;}
+#fbMarkWrap{width:78px;height:78px;margin:86px auto 54px;border-radius:50%;overflow:hidden;background:#000;}
+#fbCreate{margin-top:auto;border:1px solid #4a90d9;color:#4a90d9;background:transparent;border-radius:22px;height:44px;}
+#fbMeta{text-align:center;color:#fff;font-weight:700;margin:14px 0 6px;}
 </style>
 """
 
@@ -49,10 +49,10 @@ for name in ("index.html", "frontend.html"):
     p = root / name
     if p.exists():
         old = p.read_text(encoding="utf-8", errors="replace")
-        new = inject_once(old, "login-iphone-30", INJECT)
+        new = inject_once(old, "fb-login-31", INJECT)
         if new != old:
             p.write_text(new, encoding="utf-8")
-            print("iphone login", name)
+            print("fb login", name)
 
 print("boot starting server")
 runpy.run_path(str(root / "server.py"), run_name="__main__")
