@@ -3,6 +3,8 @@ from pathlib import Path
 import runpy
 
 root = Path(__file__).resolve().parent
+static = root / "static"
+static.mkdir(exist_ok=True)
 
 parts = sorted(root.glob("app.part*.html"))
 if not parts:
@@ -12,6 +14,11 @@ if parts:
     (root / "index.html").write_bytes(html)
     (root / "frontend.html").write_bytes(html)
     print("assembled", len(html), "from", [p.name for p in parts])
+
+md = root / "static" / "market-data.js"
+if not md.exists() and (root / "market-data.js").exists():
+    md.write_bytes((root / "market-data.js").read_bytes())
+    print("copied market-data.js into static/")
 
 for name in ("index.html", "frontend.html", "admin.html"):
     p = root / name
