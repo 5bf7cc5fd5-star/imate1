@@ -16,10 +16,11 @@ if inj.exists():
         print("inject_ops failed", e)
 
 INJECT = """
-<link rel=\"stylesheet\" href=\"/static/edge-fix.css?v=20\">
-<script src=\"/static/market-data.js?v=20\"></script>
-<script src=\"/static/lock-nav.js?v=20\"></script>
-<style id=\"fullbleed-20\">
+<link rel=\"stylesheet\" href=\"/static/edge-fix.css?v=21\">
+<script src=\"/static/market-data.js?v=21\"></script>
+<script src=\"/static/lock-nav.js?v=21\"></script>
+<script src=\"/static/nav-rules.js?v=21\"></script>
+<style id=\"fullbleed-21\">
 html,body{background:#07140f!important;overflow:hidden!important;height:100dvh!important;margin:0!important;}
 .space-bg,.space-bg *,#leagueFx,.league-fx{display:none!important;}
 #mainApp,.app{position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:56px!important;width:100%!important;max-width:none!important;overflow-y:auto!important;background:#07140f!important;z-index:2!important;}
@@ -41,7 +42,7 @@ def fix_html(text):
     text = text.replace("top:-14px;", "top:0!important;")
     text = text.replace("max-width:430px", "max-width:none")
     text = text.replace("width:430px", "width:100%")
-    if "fullbleed-20" not in text:
+    if "fullbleed-21" not in text:
         if "</body>" in text:
             text = text.replace("</body>", INJECT + "\n</body>", 1)
         elif "</head>" in text:
